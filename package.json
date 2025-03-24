@@ -2,6 +2,14 @@
   "name": "my-react-router-app",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "not IE 11"
+  ],
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",

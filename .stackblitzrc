@@ -1,0 +1,5 @@
+{
+  "installDependencies": true,
+  "startCommand": "bun run dev",
+  "node": "20"
+} 
