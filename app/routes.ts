@@ -5,19 +5,16 @@ export default [
   index("routes/home.tsx"),
   route("features", "routes/landing/features.tsx"),
   route("pricing", "routes/landing/pricing.tsx"),
-  // route("about", "routes/about.tsx"),
-  // route("contact", "routes/contact.tsx"),
-  route("faq", "routes/faq.tsx"),
-
-  // Blog section
-  route("blog", "routes/blog/index.tsx"),
+  route("about", "routes/landing/about.tsx"),
+  route("contact", "routes/landing/contact.tsx"),
+  route("faq", "routes/landing/faq.tsx"),
+  route("blog", "routes/landing/blog.tsx"),
 
   // Documentation section
   route("docs", "routes/landing/docs.tsx"),
 
   // Dashboard section (MainLayout)
   route("dashboard", "routes/dashboard/index.tsx", [
-    index("routes/dashboard/overview.tsx"),
     route("analytics", "routes/dashboard/analytics.tsx"),
     route("settings", "routes/dashboard/settings.tsx")
   ]),
@@ -36,7 +33,7 @@ export default [
   ]),
 
   // Auth routes with layout (AuthLayout)
-  route("", "routes/auth/layout.tsx", [
+  route("auth", "routes/auth/layout.tsx", [
     route("login", "routes/auth/login.tsx"),
     route("register", "routes/auth/register.tsx"),
     route("forgot-password", "routes/auth/forgot-password.tsx"),

@@ -16,20 +16,21 @@ export function LandingLayout({
   showFooter = true,
   navLinks = [
     { label: "Home", href: "/" },
+    { label: "About", href: "/about" },
     { label: "Features", href: "/features" },
     { label: "Pricing", href: "/pricing" },
-    { label: "About", href: "/about" },
     { label: "FAQ", href: "/faq" },
     { label: "Blog", href: "/blog" },
-    { label: "Docs", href: "/docs" }
+    { label: "Docs", href: "/docs" },
+    { label: "Dashboard", href: "/dashboard" }
   ],
   logoText = "React Router v7"
 }: LandingLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex h-16 items-center justify-between p-5">
+          <div className="flex items-center gap-2 ml-5">
             <Link to="/" className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground text-xs font-semibold">R</span>
@@ -48,12 +49,12 @@ export function LandingLayout({
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link to="/login">
+            <Link to="/auth/login">
               <Button variant="ghost" size="sm">
                 Log in
               </Button>
             </Link>
-            <Link to="/register">
+            <Link to="/auth/register">
               <Button size="sm">Sign up</Button>
             </Link>
 
@@ -73,12 +74,12 @@ export function LandingLayout({
                     </Link>
                   ))}
                   <div className="h-px bg-border my-4" />
-                  <Link to="/login" className="w-full">
+                  <Link to="/auth/login" className="w-full">
                     <Button variant="outline" className="w-full justify-start">
                       Log in
                     </Button>
                   </Link>
-                  <Link to="/register" className="w-full">
+                  <Link to="/auth/register" className="w-full">
                     <Button className="w-full justify-start">Sign up</Button>
                   </Link>
                 </nav>
@@ -91,7 +92,7 @@ export function LandingLayout({
       <main className="flex-1">{children || <Outlet />}</main>
 
       {showFooter && (
-        <footer className="border-t py-12 bg-muted/40">
+        <footer className="border-t py-12 bg-muted/40 p-5">
           <div className="container grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <Link to="/" className="flex items-center gap-2 mb-4">

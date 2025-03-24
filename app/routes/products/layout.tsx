@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { MainLayout } from "../../components/layout";
+import { DashboardLayout } from "~/components/layout";
 
 export function meta() {
   return [
@@ -10,7 +10,7 @@ export function meta() {
 
 export default function ProdutosLayout() {
   return (
-    <MainLayout>
+    <DashboardLayout>
       <div className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white -mt-4 -mx-4 mb-4">
         <div className="container mx-auto px-4 py-12">
           <h1 className="text-3xl font-bold mb-2">Produtos</h1>
@@ -27,10 +27,10 @@ export default function ProdutosLayout() {
           <div className="bg-slate-950 text-slate-200 p-4 rounded-md text-sm mb-4 overflow-x-auto">
             <pre>
               {`layout("routes/products/layout.tsx", [
-  index("routes/products/index.tsx"),
-  route("categorias", "routes/products/categorias.tsx"),
-  route(":produtoId", "routes/products/productstsx"),
-])`}
+                index("routes/products/index.tsx"),
+                route("categorias", "routes/products/categorias.tsx"),
+                route(":produtoId", "routes/products/productstsx"),
+              ])`}
             </pre>
           </div>
           <p className="text-slate-600 dark:text-slate-400 mb-6">
@@ -42,6 +42,6 @@ export default function ProdutosLayout() {
           <Outlet />
         </div>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }

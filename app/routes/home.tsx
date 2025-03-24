@@ -10,15 +10,7 @@ export function meta() {
 
 export default function HomePage() {
   return (
-    <LandingLayout
-      navLinks={[
-        { label: "Home", href: "/" },
-        { label: "Features", href: "#features" },
-        { label: "Blog", href: "/blog" },
-        { label: "Docs", href: "/docs" },
-        { label: "Dashboard", href: "/dashboard" }
-      ]}
-    >
+    <LandingLayout>
       {/* Hero Section */}
       <section className="px-4 py-24 md:py-32 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto text-center">
@@ -109,7 +101,7 @@ export default function HomePage() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Link to="/login">
+                <Link to="/auth/login">
                   <Button variant="ghost" className="gap-1 p-0">
                     Try it out <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -174,7 +166,7 @@ export default function HomePage() {
               <p className="text-muted-foreground mb-4">
                 A clean, minimal layout for authentication pages like login and registration.
               </p>
-              <Link to="/login">
+              <Link to="/auth/login">
                 <Button variant="outline" size="sm">
                   View Example
                 </Button>

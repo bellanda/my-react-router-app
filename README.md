@@ -1,6 +1,6 @@
 # Welcome to React Router!
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A modern, production-ready template for building full-stack React applications using React Router with Bun.
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
 
@@ -12,16 +12,19 @@ A modern, production-ready template for building full-stack React applications u
 - 🔄 Data loading and mutations
 - 🔒 TypeScript by default
 - 🎉 TailwindCSS for styling
+- 🚄 Powered by Bun for fast performance
 - 📖 [React Router docs](https://reactrouter.com/)
 
 ## Getting Started
 
 ### Installation
 
+Make sure you have [Bun installed](https://bun.sh/docs/installation).
+
 Install the dependencies:
 
 ```bash
-npm install
+bun install
 ```
 
 ### Development
@@ -29,7 +32,7 @@ npm install
 Start the development server with HMR:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Your application will be available at `http://localhost:5173`.
@@ -39,7 +42,7 @@ Your application will be available at `http://localhost:5173`.
 Create a production build:
 
 ```bash
-npm run build
+bun run build
 ```
 
 ## Deployment
@@ -66,13 +69,13 @@ The containerized application can be deployed to any platform that supports Dock
 
 ### DIY Deployment
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
+If you're familiar with deploying Bun applications, the built-in app server is production-ready.
 
-Make sure to deploy the output of `npm run build`
+Make sure to deploy the output of `bun run build`
 
 ```
 ├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
+├── bun.lockb
 ├── build/
 │   ├── client/    # Static assets
 │   └── server/    # Server-side code
@@ -84,4 +87,4 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ using React Router and Bun.

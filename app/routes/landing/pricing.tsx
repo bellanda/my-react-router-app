@@ -44,7 +44,7 @@ export default function PricingPage() {
                 <PricingListItem>Unlimited public projects</PricingListItem>
               </ul>
 
-              <Link to="/register" className="mt-auto">
+              <Link to="/auth/register" className="mt-auto">
                 <Button variant="outline" className="w-full">
                   Get Started
                 </Button>
@@ -73,7 +73,7 @@ export default function PricingPage() {
                 <PricingListItem>Unlimited private projects</PricingListItem>
               </ul>
 
-              <Link to="/register" className="mt-auto">
+              <Link to="/auth/register" className="mt-auto">
                 <Button className="w-full">Get Started</Button>
               </Link>
             </div>
@@ -150,7 +150,7 @@ export default function PricingPage() {
             Join thousands of developers already using React Router v7 to build better web applications.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
+            <Link to="/auth/register">
               <Button size="lg" variant="secondary" className="gap-2">
                 Sign Up Now <ArrowRight className="h-4 w-4" />
               </Button>

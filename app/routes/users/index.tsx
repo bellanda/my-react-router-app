@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { MainLayout } from "../../components/layout/main-layout";
+import { DashboardLayout } from "~/components/layout";
 import { Button } from "../../components/ui/button";
 
 export function meta() {
@@ -20,7 +20,7 @@ const users = [
 
 export default function UsersIndex() {
   return (
-    <MainLayout>
+    <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
@@ -72,10 +72,18 @@ export default function UsersIndex() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Link to={`/users/${user.id}`} className="text-blue-600 dark:text-blue-400 hover:underline px-2">
+                        <Link
+                          to={`/users/${user.id}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline px-2"
+                          prefetch="intent"
+                        >
                           View
                         </Link>
-                        <Link to={`/users/${user.id}/edit`} className="text-slate-600 dark:text-slate-400 hover:underline px-2">
+                        <Link
+                          to={`/users/${user.id}/edit`}
+                          className="text-slate-600 dark:text-slate-400 hover:underline px-2"
+                          prefetch="intent"
+                        >
                           Edit
                         </Link>
                       </td>
@@ -121,6 +129,6 @@ export default function UsersIndex() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }

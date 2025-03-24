@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { MainLayout } from "../../components/layout/main-layout";
+import { LandingLayout } from "~/components/layout";
 import { Button } from "../../components/ui/button";
 
 export function meta() {
@@ -77,7 +77,7 @@ export default function Blog() {
   const selectedCategory = category ? categories.find((c) => c.id === category) : null;
 
   return (
-    <MainLayout>
+    <LandingLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
@@ -163,6 +163,6 @@ export default function Blog() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </LandingLayout>
   );
 }

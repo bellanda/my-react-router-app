@@ -1,71 +1,104 @@
 import React from "react";
 import { Outlet, Link, useLocation } from "react-router";
-import { MainLayout } from "./main-layout";
+import { ChevronRight } from "lucide-react";
+
+import { AppSidebar } from "~/components/sidebar/app-sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "~/components/ui/breadcrumb";
+import { Separator } from "~/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
 
 type DashboardLayoutProps = {
   children?: React.ReactNode;
-  sidebarLinks?: Array<{ label: string; href: string }>;
+  showFooter?: boolean;
+  showBreadcrumbs?: boolean;
 };
 
-export function DashboardLayout({
-  children,
-  sidebarLinks = [
-    { label: "Overview", href: "/dashboard" },
-    { label: "Analytics", href: "/dashboard/analytics" },
-    { label: "Settings", href: "/dashboard/settings" }
-  ]
-}: DashboardLayoutProps) {
+// Função para capitalizar a primeira letra
+function capitalizeFirstLetter(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+export function DashboardLayout({ children, showFooter = true, showBreadcrumbs = true }: DashboardLayoutProps) {
   const location = useLocation();
 
+  // Cria um array com os segmentos da rota atual
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+
+  // Verifica se estamos em uma rota do dashboard
+  const isDashboardRoute = pathSegments[0] === "dashboard";
+
+  // Função para criar a URL de cada segmento do breadcrumb
+  const getPathUrl = (index: number) => {
+    return "/" + pathSegments.slice(0, index + 1).join("/");
+  };
+
   return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Sidebar Navigation */}
-            <div className="md:col-span-1">
-              <div className="bg-card border rounded-lg shadow-sm p-4">
-                <nav className="space-y-1">
-                  {sidebarLinks.map((link) => {
-                    const isActive =
-                      location.pathname === link.href ||
-                      (link.href === "/dashboard" &&
-                        location.pathname.startsWith("/dashboard") &&
-                        location.pathname === "/dashboard");
-
-                    return (
-                      <Link
-                        key={link.href}
-                        to={link.href}
-                        className={`block px-4 py-2 rounded-md transition-colors ${
-                          isActive
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "text-foreground hover:bg-muted hover:text-foreground/80 font-medium"
-                        }`}
-                      >
-                        {link.label}
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            {showBreadcrumbs && (
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/" prefetch="intent">
+                        Home
                       </Link>
-                    );
-                  })}
-                </nav>
-              </div>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
 
-              <div className="mt-6 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-900 rounded-lg p-4">
-                <h3 className="font-semibold text-orange-800 dark:text-orange-300 mb-2">Nested Routes</h3>
-                <p className="text-orange-700 dark:text-orange-400 text-sm">
-                  This dashboard demonstrates nested routes in React Router v7. The sidebar links to different sections, and the
-                  content area displays the corresponding route component.
-                </p>
-              </div>
-            </div>
+                  {pathSegments.length > 0 && pathSegments[0] !== "" && (
+                    <>
+                      {pathSegments.map((segment, index) => {
+                        // Último segmento é renderizado como BreadcrumbPage
+                        const isLast = index === pathSegments.length - 1;
 
-            {/* Main Content Area */}
-            <div className="md:col-span-3 bg-card border rounded-lg shadow-sm p-6">{children || <Outlet />}</div>
+                        return (
+                          <React.Fragment key={index}>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                              {isLast ? (
+                                <BreadcrumbPage>{capitalizeFirstLetter(segment)}</BreadcrumbPage>
+                              ) : (
+                                <BreadcrumbLink asChild>
+                                  <Link to={getPathUrl(index)} prefetch="intent">
+                                    {capitalizeFirstLetter(segment)}
+                                  </Link>
+                                </BreadcrumbLink>
+                              )}
+                            </BreadcrumbItem>
+                          </React.Fragment>
+                        );
+                      })}
+                    </>
+                  )}
+                </BreadcrumbList>
+              </Breadcrumb>
+            )}
           </div>
-        </div>
-      </div>
-    </MainLayout>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-6">{children || <Outlet />}</div>
+        {showFooter && (
+          <footer className="border-t py-4 px-6">
+            <div className="container mx-auto">
+              <p className="text-center text-sm text-muted-foreground">
+                © {new Date().getFullYear()} React Router v7 Demo. All rights reserved.
+              </p>
+            </div>
+          </footer>
+        )}
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

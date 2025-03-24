@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { MainLayout } from "../../components/layout/main-layout";
+import { DashboardLayout } from "~/components/layout";
 import { Button } from "../../components/ui/button";
 
 export function meta() {
@@ -75,7 +75,7 @@ export default function EditUser() {
 
   if (!user) {
     return (
-      <MainLayout>
+      <DashboardLayout>
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-md mx-auto text-center">
             <h1 className="text-2xl font-bold mb-4">User Not Found</h1>
@@ -85,12 +85,12 @@ export default function EditUser() {
             </Button>
           </div>
         </div>
-      </MainLayout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <MainLayout>
+    <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-8">
@@ -231,6 +231,6 @@ export default function EditUser() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }

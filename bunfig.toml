@@ -1,0 +1,17 @@
+[install]
+# Use exact versions for production dependencies
+exact = true
+# Avoid optional dependencies unless needed
+optional = false
+
+[test]
+# Use Bun's built-in test runner
+preload = "./test/setup.ts"
+
+[dev]
+# Set environment variables for development
+env = { NODE_ENV = "development" }
+
+[build]
+# Set environment variables for production builds
+env = { NODE_ENV = "production" } 

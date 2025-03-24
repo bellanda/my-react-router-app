@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router";
-import { MainLayout } from "../../components/layout/main-layout";
+import { LandingLayout } from "../../components/layout";
 import { Button } from "../../components/ui/button";
 
 export function meta() {
@@ -30,7 +30,7 @@ const docs: Record<string, DocSection> = {
     content: "Este guia rápido mostrará como configurar o React Router v7 em um novo projeto."
   },
   concepts: {
-    title: "Conceitos",
+    title: "Visão Geral",
     content: "O React Router v7 introduz novos conceitos importantes para entender como funciona o roteamento."
   },
   "concepts/routing": {
@@ -42,7 +42,7 @@ const docs: Record<string, DocSection> = {
     content: "As rotas aninhadas permitem criar interfaces de usuário complexas com múltiplos níveis de navegação."
   },
   api: {
-    title: "API",
+    title: "Visão Geral",
     content: "Documentação completa da API do React Router v7."
   },
   "api/components": {
@@ -74,7 +74,7 @@ export default function Docs() {
     : [];
 
   return (
-    <MainLayout>
+    <LandingLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center mb-6 text-sm">
@@ -229,6 +229,6 @@ export default function Docs() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </LandingLayout>
   );
 }

@@ -19,7 +19,7 @@ export function AuthLayout({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-md">
-        <div className="mx-auto flex w-full flex-col items-center justify-center space-y-6 sm:w-[350px]">
+        <div className="mx-auto flex w-full flex-col items-center justify-center space-y-6">
           <div className="flex flex-col items-center space-y-2 text-center">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">

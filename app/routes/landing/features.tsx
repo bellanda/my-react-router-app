@@ -102,13 +102,13 @@ export default [
             >
               <pre className="bg-muted p-4 rounded-md text-sm mt-4 overflow-x-auto">
                 {`// Auth middleware example
-export const loader = async ({ request }) => {
-  const user = await getUser(request);
-  if (!user) {
-    return redirect("/login");
-  }
-  return { user };
-};`}
+                  export const loader = async ({ request }) => {
+                    const user = await getUser(request);
+                    if (!user) {
+                      return redirect("/auth/login");
+                    }
+                    return { user };
+                  };`}
               </pre>
             </FeatureItem>
 

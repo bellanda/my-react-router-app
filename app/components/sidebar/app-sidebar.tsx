@@ -28,7 +28,6 @@ const data = {
       title: "Home",
       url: "/",
       icon: Home,
-      isActive: true,
       items: []
     },
     {
@@ -54,64 +53,42 @@ const data = {
       title: "Produtos",
       url: "/products",
       icon: Package,
-      items: [
-        {
-          title: "Todos os Produtos",
-          url: "/products"
-        },
-        {
-          title: "Detalhes do Produto",
-          url: "/products/product"
-        }
-      ]
+      items: []
     },
     {
       title: "Usuários",
       url: "/users",
       icon: User,
       items: []
-    },
-    {
-      title: "Blog",
-      url: "/blog",
-      icon: FileText,
-      items: []
-    },
-    {
-      title: "Documentação",
-      url: "/docs",
-      icon: BookOpen,
-      items: []
-    }
-  ],
-  projects: [
-    {
-      name: "E-commerce",
-      url: "/produc",
-      icon: ShoppingCart
-    },
-    {
-      name: "Analytics",
-      url: "/dashboard/analytics",
-      icon: BarChart3
-    },
-    {
-      name: "Configurações",
-      url: "/dashboard/settings",
-      icon: Settings
     }
   ]
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Usando uma abordagem que força a navegação completa para as páginas do dashboard
+  const forceRefresh = (url: string) => `${url}${url.includes("?") ? "&" : "?"}forceRefresh=${Date.now()}`;
+
+  // Modificar URLs dos itens do dashboard para forçar a navegação
+  const navItemsWithForcedRefresh = data.navMain.map((item) => {
+    if (item.title === "Dashboard" && item.items) {
+      return {
+        ...item,
+        items: item.items.map((subItem) => ({
+          ...subItem,
+          url: forceRefresh(subItem.url)
+        }))
+      };
+    }
+    return item;
+  });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={navItemsWithForcedRefresh} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

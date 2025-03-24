@@ -148,7 +148,7 @@ export default function AboutPage() {
             Become part of our growing community of developers building amazing applications with React Router v7.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
+            <Link to="/auth/register">
               <Button size="lg" variant="secondary" className="gap-2">
                 Sign Up Now <ArrowRight className="h-4 w-4" />
               </Button>
