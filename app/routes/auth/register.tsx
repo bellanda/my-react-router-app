@@ -1,100 +1,129 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { Button } from "../../components/ui/button";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Separator } from "~/components/ui/separator";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 export function meta() {
   return [{ title: "Register - React Router v7 Demo" }, { name: "description", content: "Registration page example" }];
 }
 
 export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("You must agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
+    // Simulação de cadastro bem-sucedido
+    toast.success("Account created successfully!");
+    navigate("/auth/login");
+  };
+
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-6 text-center">Create Your Account</h2>
+    <Card className="w-full">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+        <CardDescription className="text-center">Enter your information to create an account</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+            </div>
+          </div>
 
-      <form className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              First Name
-            </label>
-            <input
-              type="text"
-              id="firstName"
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              type="email"
+              id="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Last Name
-            </label>
-            <input
-              type="text"
-              id="lastName"
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              type="password"
+              id="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
-        </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Email Address
-          </label>
-          <input
-            type="email"
-            id="email"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              type="password"
+              id="confirmPassword"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
-          />
-        </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(checked === true)} />
+            <Label htmlFor="terms" className="text-sm font-normal">
+              I agree to the{" "}
+              <Link to="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+            </Label>
+          </div>
 
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
-          />
-        </div>
+          <Button type="submit" className="w-full">
+            Create Account
+          </Button>
+        </form>
 
-        <div className="flex items-center">
-          <input type="checkbox" id="terms" className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-          <label htmlFor="terms" className="ml-2 text-sm text-slate-700 dark:text-slate-300">
-            I agree to the{" "}
-            <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">
-              Privacy Policy
+        <div className="mt-4 text-center text-sm">
+          <Separator className="my-4" />
+          <div className="text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/auth/login" className="text-primary hover:underline font-medium">
+              Sign in
             </Link>
-          </label>
+          </div>
         </div>
-
-        <div>
-          <Button className="w-full">Create Account</Button>
-        </div>
-      </form>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Already have an account?{" "}
-          <Link to="/auth/login" className="text-blue-600 dark:text-blue-400 hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import type { TableConfig, TableState, Filter, SortingState } from "../../lib/types/data-table";
 import { fetchTableData } from "../../lib/services/api";
 import FilterPanel from "./FilterPanel";
@@ -36,142 +36,313 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   // Referência para o container de scroll
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Referência para evitar requisições duplicadas
+  // Referência para o elemento "Scroll para ver mais"
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+
+  // Flags para evitar requisições duplicadas
   const fetchingRef = useRef(false);
+  const initialLoadDoneRef = useRef(false);
+
+  // Flag para verificação de preenchimento inicial da tela
+  const initialScreenCheckRef = useRef(false);
+
+  // Referência estável para o estado atual
+  const stableTableState = useRef(tableState);
+
+  // Referência para controlar mudanças manuais de filtro/ordenação
+  const manualFilterSortChangeRef = useRef(false);
+
+  // Atualizar a ref quando o tableState muda
+  useEffect(() => {
+    stableTableState.current = tableState;
+  }, [tableState]);
 
   // Função para buscar dados
   const fetchData = useCallback(
     async (page: number, append = false) => {
-      // Evitar requisições duplicadas
-      if (fetchingRef.current) return;
-      fetchingRef.current = true;
+      console.log(`Iniciando fetchData (página: ${page}, append: ${append})`);
 
-      if (append) {
-        setIsFetchingMore(true);
-      } else {
-        setIsLoading(true);
+      // Se já estamos carregando dados, não iniciar nova requisição
+      if (isLoading || isFetchingMore) {
+        console.log(`Já existe um carregamento em andamento, ignorando nova requisição`);
+        return;
       }
 
+      // Definir flag para evitar mais requisições enquanto esta estiver em andamento
+      fetchingRef.current = true;
+
       try {
+        // Se não houver mais páginas e estamos anexando, não fazer nada
+        if (append && !hasNextPage) {
+          console.log("Não há mais páginas para carregar");
+          return;
+        }
+
+        // Atualizar estado de carregamento
+        if (append) {
+          setIsFetchingMore(true);
+        } else {
+          setIsLoading(true);
+        }
+
+        // Usar a versão mais recente do estado
+        const currentState = stableTableState.current;
+
         const response = await fetchTableData(
           config.endpoint,
-          tableState.filters,
-          tableState.sorting,
+          currentState.filters,
+          currentState.sorting,
           page,
-          tableState.pagination.pageSize
+          currentState.pagination.pageSize
         );
 
-        if (append) {
-          setData((prev) => [...prev, ...response.data]);
+        console.log(`Dados recebidos: ${response.data.length} registros, página ${page + 1} de ${response.pageCount}`);
+
+        // Verificar se temos dados para adicionar
+        if (response.data.length === 0) {
+          console.log("Sem dados para adicionar");
+          setHasNextPage(false);
+        } else if (append) {
+          // Adicionar dados ao estado existente
+          setData((prev) => {
+            console.log(`Adicionando ${response.data.length} novos itens aos ${prev.length} existentes`);
+            return [...prev, ...response.data];
+          });
         } else {
+          // Substituir dados existentes
+          console.log(`Substituindo dados por ${response.data.length} novos itens`);
           setData(response.data);
         }
 
+        // Atualizar metadados
         setTotalPages(response.pageCount);
         setTotalItems(response.totalCount);
-        setHasNextPage(page < response.pageCount - 1);
+
+        // Verificar se há mais páginas
+        const hasMore = page < response.pageCount - 1 && response.data.length > 0;
+        setHasNextPage(hasMore);
+        console.log(`Mais páginas disponíveis: ${hasMore}`);
+
         setIsError(false);
         setError(null);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Erro ao buscar dados:", err);
         setIsError(true);
         setError(err instanceof Error ? err : new Error("Erro ao buscar dados"));
         if (!append) {
           setData([]);
         }
       } finally {
+        // Limpar estados de carregamento
         setIsLoading(false);
         setIsFetchingMore(false);
+
+        // Resetar flag de requisição em andamento
         fetchingRef.current = false;
+        console.log("Finalizado fetchData, fetchingRef resetado");
       }
     },
-    [config.endpoint, tableState.filters, tableState.sorting, tableState.pagination.pageSize]
+    [config.endpoint, hasNextPage, isLoading, isFetchingMore]
   );
 
-  // Carregar dados iniciais ou quando mudam os filtros/ordenação
+  // Carregar dados iniciais
   useEffect(() => {
-    setTableState((prev) => ({
-      ...prev,
-      pagination: {
-        ...prev.pagination,
-        pageIndex: 0
-      }
-    }));
-    setData([]); // Limpar dados existentes ao mudar filtros/ordenação
+    if (initialLoadDoneRef.current) return;
+
+    console.log("Carregando dados iniciais");
+
+    // Marcar como inicializado imediatamente para evitar múltiplas cargas
+    initialLoadDoneRef.current = true;
+
+    // Carregar primeira página
     fetchData(0, false);
-  }, [fetchData, tableState.filters, tableState.sorting]);
+  }, [fetchData]);
 
-  // Função que verifica o scroll e carrega mais dados quando necessário
-  const checkScrollAndLoadMore = useCallback(() => {
-    if (!containerRef.current || isLoading || isFetchingMore || !hasNextPage || fetchingRef.current) return;
+  // Atualizar ao mudar filtros ou ordenação
+  useEffect(() => {
+    // Ignorar primeiro render
+    if (!initialLoadDoneRef.current) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    // Distância do final da página
-    const distanceToBottom = scrollHeight - scrollTop - clientHeight;
-    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+    // Ignorar se não foi uma alteração manual de filtro/ordenação
+    if (!manualFilterSortChangeRef.current) {
+      return;
+    }
 
-    // Depuração para entender o comportamento do scroll
-    console.log("Scroll info:", {
-      scrollTop,
-      scrollHeight,
-      clientHeight,
-      distanceToBottom,
-      scrollPercentage,
-      hasNextPage,
-      current: tableState.pagination.pageIndex
-    });
+    console.log("Filtros ou ordenação alterados, recarregando dados");
 
-    // Carregar mais quando estiver próximo do final da página
-    // Usar distância absoluta em pixels para maior confiabilidade
-    if (distanceToBottom < 200) {
-      console.log("Carregando página", tableState.pagination.pageIndex + 1);
-      const nextPage = tableState.pagination.pageIndex + 1;
+    // Resetar flag após processar
+    manualFilterSortChangeRef.current = false;
 
-      // Atualizar o estado imediatamente para evitar múltiplas chamadas
-      fetchingRef.current = true;
-      setIsFetchingMore(true);
+    // Debounce para evitar múltiplas requisições rápidas
+    const timeoutId = setTimeout(() => {
+      // Não iniciar nova requisição se já houver uma em andamento
+      if (isLoading || isFetchingMore) {
+        console.log("Já existe carregamento em andamento, não recarregar devido a filtros/ordenação");
+        return;
+      }
 
-      // Atualizar página atual
+      // Resetar para a primeira página
       setTableState((prev) => ({
         ...prev,
         pagination: {
           ...prev.pagination,
-          pageIndex: nextPage
+          pageIndex: 0
         }
       }));
 
-      // Buscar próxima página
-      fetchData(nextPage, true);
-    }
-  }, [fetchData, hasNextPage, isLoading, isFetchingMore, tableState.pagination.pageIndex]);
+      // Limpar dados atuais
+      setData([]);
 
-  // Configurar o scroll infinito com otimização para evitar chamadas frequentes
+      // Carregar nova página 0
+      fetchData(0, false);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [tableState.filters, tableState.sorting, fetchData, isLoading, isFetchingMore]);
+
+  // Função para detectar necessidade de carregar mais dados
+  const loadMoreData = useCallback(() => {
+    // Não carregar se já estiver carregando, não houver próxima página, ou requisição em andamento
+    if (isLoading || isFetchingMore || !hasNextPage || fetchingRef.current) {
+      console.log("Não é possível carregar mais dados no momento");
+      return;
+    }
+
+    // Carregar próxima página
+    const nextPage = stableTableState.current.pagination.pageIndex + 1;
+    console.log(`Carregando mais dados: página ${nextPage + 1}`);
+
+    // Atualizar página atual
+    setTableState((prev) => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination,
+        pageIndex: nextPage
+      }
+    }));
+
+    // Carregar próxima página, anexando ao conteúdo existente
+    fetchData(nextPage, true);
+  }, [fetchData, hasNextPage, isLoading, isFetchingMore]);
+
+  // Configurar o detector de scroll
   useEffect(() => {
     const scrollContainer = containerRef.current;
-    if (scrollContainer) {
-      let ticking = false;
+    if (!scrollContainer) return;
 
-      const handleScroll = () => {
-        if (!ticking) {
-          // Usar requestAnimationFrame para limitar as chamadas de scroll
-          window.requestAnimationFrame(() => {
-            checkScrollAndLoadMore();
-            ticking = false;
-          });
-          ticking = true;
+    // Evitar múltiplos eventos de scroll em curto espaço de tempo
+    let scrollTimeout: number | null = null;
+
+    // Handler que detecta quando o usuário está próximo do final
+    const handleScroll = () => {
+      if (isLoading || isFetchingMore || !hasNextPage || fetchingRef.current || data.length >= totalItems) return;
+
+      // Limpar timeout anterior para evitar múltiplas chamadas
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      // Definir um novo timeout para processar o scroll após pausa breve
+      scrollTimeout = window.setTimeout(() => {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+        const scrollBottom = scrollHeight - scrollTop - clientHeight;
+
+        // Carregar mais dados quando estiver a 200px do final
+        if (scrollBottom < 200) {
+          console.log(`Scroll detectado próximo ao fim: ${scrollBottom}px do final`);
+          loadMoreData();
         }
-      };
+      }, 100);
+    };
 
-      scrollContainer.addEventListener("scroll", handleScroll);
+    // Adicionar detector de scroll
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
 
-      return () => {
-        scrollContainer.removeEventListener("scroll", handleScroll);
-      };
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+    };
+  }, [loadMoreData, hasNextPage, isLoading, isFetchingMore, data.length, totalItems]);
+
+  // Verificar se precisa carregar mais dados quando a tela não está preenchida
+  useEffect(() => {
+    // Se já verificamos, ou não temos dados, ou não temos mais páginas, não fazer nada
+    if (
+      initialScreenCheckRef.current ||
+      !initialLoadDoneRef.current ||
+      !hasNextPage ||
+      isLoading ||
+      isFetchingMore ||
+      fetchingRef.current ||
+      data.length === 0 ||
+      data.length >= totalItems
+    ) {
+      return;
     }
-  }, [checkScrollAndLoadMore]);
 
-  // Manipuladores para ordenação e filtros
+    const scrollContainer = containerRef.current;
+    if (!scrollContainer) return;
+
+    // Marcar que já fizemos a verificação
+    initialScreenCheckRef.current = true;
+
+    // Verificar uma única vez com delay adequado para garantir que os elementos foram renderizados
+    const timeoutId = window.setTimeout(() => {
+      // Verificar se o conteúdo preenche o container
+      const { scrollHeight, clientHeight } = scrollContainer;
+
+      if (scrollHeight <= clientHeight) {
+        console.log("Conteúdo não preenche a tela, carregando mais dados");
+        // Chamar a função que foi passada como dependência
+        loadMoreData();
+      }
+    }, 100); // Reduzido para 500ms para melhor responsividade
+
+    // Limpar o timeout se o componente desmontar
+    return () => clearTimeout(timeoutId);
+  }, [data.length, hasNextPage, isLoading, isFetchingMore, loadMoreData, totalItems]);
+
+  // Usar Intersection Observer para detectar quando o elemento "Scroll para ver mais" aparece na tela
+  useEffect(() => {
+    // Se não tiver mais páginas ou já estiver carregando, não configurar o observer
+    if (!hasNextPage || isLoading || isFetchingMore || fetchingRef.current) return;
+
+    // Elemento que queremos observar
+    const loadMoreElement = loadMoreTriggerRef.current;
+    if (!loadMoreElement) return;
+
+    // Função chamada quando o elemento entra/sai da viewport
+    const onIntersect = (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isLoading && !isFetchingMore && !fetchingRef.current) {
+        console.log("Elemento 'Scroll para ver mais' visível na tela, carregando automaticamente");
+        loadMoreData();
+      }
+    };
+
+    // Criar e configurar o observer
+    const observer = new IntersectionObserver(onIntersect, {
+      root: null, // viewport
+      rootMargin: "0px",
+      threshold: 0.1 // 10% do elemento visível é suficiente
+    });
+
+    // Iniciar observação
+    observer.observe(loadMoreElement);
+
+    // Limpar observer ao desmontar
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasNextPage, isLoading, isFetchingMore, loadMoreData]);
+
+  // Manipuladores para ordenação
   const handleSort = useCallback((columnId: string) => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
+
     // Verificar se temos um comando especial de ordenação
     if (columnId.includes(":")) {
       const [realColumnId, command] = columnId.split(":");
@@ -241,7 +412,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       return;
     }
 
-    // Comportamento padrão para cliques no cabeçalho (sem comando especial)
+    // Comportamento padrão para cliques no cabeçalho
     setTableState((prev) => {
       const existingSortIndex = prev.sorting.findIndex((sort) => sort.id === columnId);
 
@@ -268,7 +439,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         }
       }
 
-      // Adicionar nova ordenação mantendo as existentes
+      // Adicionar nova ordenação
       return {
         ...prev,
         sorting: [...prev.sorting, { id: columnId, desc: false }],
@@ -277,8 +448,11 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     });
   }, []);
 
-  // Adicionar/atualizar filtro
+  // Manipulador para filtros
   const handleFilter = useCallback((filter: Filter & { _updatedFilters?: Filter[] }) => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
+
     setTableState((prev) => {
       // Caso especial para atualização de múltiplos filtros
       if (filter.value === "__UPDATE_FILTERS__" && filter._updatedFilters) {
@@ -290,7 +464,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       }
 
       // Verificar se já existe filtro para esta coluna
-      const existingFilterIndex = prev.filters.findIndex((f) => f.id === filter.id && f.value === filter.value);
+      const existingFilterIndex = prev.filters.findIndex(
+        (f) => f.id === filter.id && f.operator === filter.operator && f.value === filter.value
+      );
 
       // Se o filtro já existe e tem o mesmo valor, remover (toggle)
       if (existingFilterIndex > -1) {
@@ -312,6 +488,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
   // Remover filtro
   const handleRemoveFilter = useCallback((columnId: string, value: any) => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
+
     setTableState((prev) => ({
       ...prev,
       filters: prev.filters.filter((f) => !(f.id === columnId && f.value === value)),
@@ -321,6 +500,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
   // Limpar todos os filtros
   const handleClearAllFilters = useCallback(() => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
+
     setTableState((prev) => ({
       ...prev,
       filters: [],
@@ -330,6 +512,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
   // Limpar todas as ordenações
   const handleClearAllSorts = useCallback(() => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
+
     setTableState((prev) => ({
       ...prev,
       sorting: [],
@@ -337,8 +522,11 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     }));
   }, []);
 
-  // Remover uma ordenação específica
+  // Remover ordenação específica
   const handleRemoveSort = useCallback((columnId: string) => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
+
     setTableState((prev) => ({
       ...prev,
       sorting: prev.sorting.filter((s) => s.id !== columnId),
@@ -346,13 +534,25 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     }));
   }, []);
 
-  // Calcular largura da célula (distribuição uniforme por padrão)
-  const visibleColumns = config.columns.filter((col) => !col.hidden);
-  const columnCount = visibleColumns.length;
-  const cellWidth = `${100 / columnCount}%`;
+  // Reordenar ordenações
+  const handleReorderSorts = useCallback((newOrder: SortingState[]) => {
+    // Marcar que é uma alteração manual
+    manualFilterSortChangeRef.current = true;
 
-  // Renderizar cabeçalho
-  const renderHeader = () => {
+    setTableState((prev) => ({
+      ...prev,
+      sorting: newOrder,
+      pagination: { ...prev.pagination, pageIndex: 0 }
+    }));
+  }, []);
+
+  // Calcular colunas visíveis e largura das células
+  const visibleColumns = useMemo(() => config.columns.filter((col) => !col.hidden), [config.columns]);
+  const columnCount = visibleColumns.length;
+  const cellWidth = useMemo(() => `${100 / columnCount}%`, [columnCount]);
+
+  // Memoizar cabeçalho da tabela
+  const headerComponent = useMemo(() => {
     return (
       <div className="flex border-b bg-muted/50">
         {visibleColumns.map((column) => (
@@ -370,14 +570,23 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         ))}
       </div>
     );
-  };
+  }, [
+    visibleColumns,
+    tableState.sorting,
+    tableState.filters,
+    cellWidth,
+    handleSort,
+    handleFilter,
+    handleRemoveFilter,
+    config.endpoint
+  ]);
 
-  // Renderizar linhas
-  const renderRows = () => {
+  // Memoizar linhas da tabela
+  const rowsComponent = useMemo(() => {
     return data.map((row, rowIndex) => (
       <div key={`row-${rowIndex}`} className={cn("flex border-b", rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20")}>
         {visibleColumns.map((column) => {
-          // Suporte a accessors aninhados (como 'additional_info.total_stock_quantity')
+          // Suporte a accessors aninhados
           const keys = column.accessor.split(".");
           let value = row;
           for (const key of keys) {
@@ -389,7 +598,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           return (
             <div
               key={`${rowIndex}-${column.accessor}`}
-              className="py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap"
+              className="py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm"
               style={{ width: cellWidth }}
               title={String(displayValue)}
             >
@@ -399,12 +608,12 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         })}
       </div>
     ));
-  };
+  }, [data, visibleColumns, cellWidth]);
 
-  // Renderizar corpo da tabela
+  // Renderizar componente
   return (
     <div className={cn("flex flex-col border rounded-md", className)}>
-      {/* Barra de filtros */}
+      {/* Painéis de filtro e ordenação */}
       {tableState.filters.length > 0 && (
         <FilterPanel
           filters={tableState.filters}
@@ -414,18 +623,18 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         />
       )}
 
-      {/* Barra de ordenação */}
       {tableState.sorting.length > 0 && (
         <SortingPanel
           sorting={tableState.sorting}
           onRemoveSort={handleRemoveSort}
           onClearAllSorts={handleClearAllSorts}
+          onReorderSorts={handleReorderSorts}
           columns={config.columns}
         />
       )}
 
       {/* Cabeçalho da tabela */}
-      {renderHeader()}
+      {headerComponent}
 
       {/* Corpo da tabela com scroll */}
       <div ref={containerRef} className="flex-1 overflow-auto" style={{ height: "600px" }}>
@@ -446,13 +655,23 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           </div>
         ) : (
           <>
-            {renderRows()}
+            {rowsComponent}
             {isFetchingMore && (
               <div className="py-4 text-center">
                 <div className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   <span className="text-sm text-muted-foreground">Carregando mais...</span>
                 </div>
+              </div>
+            )}
+            {/* Indicador de final da lista com mais dados - com ref para detecção */}
+            {data.length > 0 && hasNextPage && !isFetchingMore && !isLoading && (
+              <div
+                ref={loadMoreTriggerRef}
+                className="py-4 text-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/20"
+                onClick={loadMoreData}
+              >
+                Clique para carregar mais itens ou continue rolando
               </div>
             )}
           </>
@@ -463,18 +682,42 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       <div className="px-4 py-2 border-t bg-muted/20 text-sm flex justify-between">
         <div>
           {totalItems > 0
-            ? `${Math.min(data.length, totalItems)} de ${totalItems} itens ${
-                hasNextPage ? "(Mais disponíveis)" : "(Todos carregados)"
+            ? `${data.length} de ${totalItems} itens carregados${
+                hasNextPage ? " (Role para carregar mais)" : " (Todos carregados)"
               }`
             : "0 itens"}
         </div>
         <div className="flex items-center gap-2">
-          {isFetchingMore && (
+          {isLoading || isFetchingMore ? (
             <div className="flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin text-primary" />
-              <span className="text-muted-foreground">Carregando mais...</span>
+              <span className="text-muted-foreground">{isLoading ? "Carregando..." : "Carregando mais itens..."}</span>
             </div>
-          )}
+          ) : hasNextPage ? (
+            <div className="text-blue-500 text-xs">Scroll para ver mais</div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Debug Info (remover em produção) */}
+      <div className="px-4 py-2 bg-gray-100 text-xs">
+        <div>
+          <strong>fetchingRef:</strong> {fetchingRef.current ? "true" : "false"}
+        </div>
+        <div>
+          <strong>hasNextPage:</strong> {hasNextPage ? "true" : "false"}
+        </div>
+        <div>
+          <strong>isLoading:</strong> {isLoading ? "true" : "false"}
+        </div>
+        <div>
+          <strong>isFetchingMore:</strong> {isFetchingMore ? "true" : "false"}
+        </div>
+        <div>
+          <strong>Dados carregados:</strong> {data.length}
+        </div>
+        <div>
+          <strong>Página atual:</strong> {tableState.pagination.pageIndex + 1}
         </div>
       </div>
     </div>

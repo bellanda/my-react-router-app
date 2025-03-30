@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import { Menu, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
 
 type LandingLayoutProps = {
   children?: React.ReactNode;
@@ -49,6 +50,7 @@ export function LandingLayout({
           </nav>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link to="/auth/login">
               <Button variant="ghost" size="sm">
                 Log in
@@ -74,6 +76,10 @@ export function LandingLayout({
                     </Link>
                   ))}
                   <div className="h-px bg-border my-4" />
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-sm">Toggle theme</span>
+                    <ThemeToggle />
+                  </div>
                   <Link to="/auth/login" className="w-full">
                     <Button variant="outline" className="w-full justify-start">
                       Log in

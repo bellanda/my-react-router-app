@@ -132,12 +132,38 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
     return Object.keys(filtersByColumn).every((columnId) => {
       const columnFilters = filtersByColumn[columnId];
 
-      // Determinar se a coluna é numérica para aplicar uma lógica especial
-      const isNumericColumn = columnFilters.some((filter) => ["gt", "gte", "lt", "lte"].includes(filter.operator));
+      // Separar filtros por tipo de operador
+      const exactFilters = columnFilters.filter((f) => f.operator === "exact");
+      const textFilters = columnFilters.filter((f) => ["contains", "startswith", "endswith"].includes(f.operator));
+      const numericFilters = columnFilters.filter((f) => ["gt", "gte", "lt", "lte"].includes(f.operator));
+      const otherFilters = columnFilters.filter(
+        (f) => !["exact", "contains", "startswith", "endswith", "gt", "gte", "lt", "lte"].includes(f.operator)
+      );
 
-      // Para filtros numéricos em uma mesma coluna, usamos AND em vez de OR
-      if (isNumericColumn) {
-        return columnFilters.every((filter) => {
+      // Verificações combinadas:
+      // 1. Se houver filtros "exact", pelo menos um deve ser verdadeiro (OR)
+      const exactFiltersPass =
+        exactFilters.length === 0 ||
+        exactFilters.some((filter) => {
+          const { id, value } = filter;
+
+          // Lidar com acessores aninhados
+          const keys = id.split(".");
+          let itemValue = item as any;
+          for (const key of keys) {
+            itemValue = itemValue?.[key];
+            if (itemValue === undefined || itemValue === null) {
+              return filter.operator === "isnull";
+            }
+          }
+
+          return itemValue == value;
+        });
+
+      // 2. Se houver filtros de texto (contains, startswith, endswith), todos devem ser verdadeiros (AND)
+      const textFiltersPass =
+        textFilters.length === 0 ||
+        textFilters.every((filter) => {
           const { id, operator, value } = filter;
 
           // Lidar com acessores aninhados
@@ -151,8 +177,34 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
           }
 
           switch (operator) {
-            case "exact":
-              return itemValue == value;
+            case "contains":
+              return String(itemValue).toLowerCase().includes(String(value).toLowerCase());
+            case "startswith":
+              return String(itemValue).toLowerCase().startsWith(String(value).toLowerCase());
+            case "endswith":
+              return String(itemValue).toLowerCase().endsWith(String(value).toLowerCase());
+            default:
+              return true;
+          }
+        });
+
+      // 3. Filtros numéricos já usam AND
+      const numericFiltersPass =
+        numericFilters.length === 0 ||
+        numericFilters.every((filter) => {
+          const { id, operator, value } = filter;
+
+          // Lidar com acessores aninhados
+          const keys = id.split(".");
+          let itemValue = item as any;
+          for (const key of keys) {
+            itemValue = itemValue?.[key];
+            if (itemValue === undefined || itemValue === null) {
+              return operator === "isnull";
+            }
+          }
+
+          switch (operator) {
             case "lt":
               return itemValue < value;
             case "lte":
@@ -161,6 +213,28 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
               return itemValue > value;
             case "gte":
               return itemValue >= value;
+            default:
+              return true;
+          }
+        });
+
+      // 4. Para outros filtros, usar a abordagem padrão (OR)
+      const otherFiltersPass =
+        otherFilters.length === 0 ||
+        otherFilters.some((filter) => {
+          const { id, operator, value } = filter;
+
+          // Lidar com acessores aninhados
+          const keys = id.split(".");
+          let itemValue = item as any;
+          for (const key of keys) {
+            itemValue = itemValue?.[key];
+            if (itemValue === undefined || itemValue === null) {
+              return operator === "isnull";
+            }
+          }
+
+          switch (operator) {
             case "range":
               if (Array.isArray(value) && value.length === 2) {
                 return itemValue >= value[0] && itemValue <= value[1];
@@ -172,50 +246,9 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
               return true;
           }
         });
-      }
 
-      // Para outros tipos de filtros (texto, etc.), manter o comportamento OR
-      return columnFilters.some((filter) => {
-        const { id, operator, value } = filter;
-
-        // Lidar com acessores aninhados
-        const keys = id.split(".");
-        let itemValue = item as any;
-        for (const key of keys) {
-          itemValue = itemValue?.[key];
-          if (itemValue === undefined || itemValue === null) {
-            return operator === "isnull";
-          }
-        }
-
-        switch (operator) {
-          case "exact":
-            return itemValue == value;
-          case "contains":
-            return String(itemValue).toLowerCase().includes(String(value).toLowerCase());
-          case "startswith":
-            return String(itemValue).toLowerCase().startsWith(String(value).toLowerCase());
-          case "endswith":
-            return String(itemValue).toLowerCase().endsWith(String(value).toLowerCase());
-          case "lt":
-            return itemValue < value;
-          case "lte":
-            return itemValue <= value;
-          case "gt":
-            return itemValue > value;
-          case "gte":
-            return itemValue >= value;
-          case "range":
-            if (Array.isArray(value) && value.length === 2) {
-              return itemValue >= value[0] && itemValue <= value[1];
-            }
-            return true;
-          case "isnull":
-            return itemValue === null || itemValue === undefined;
-          default:
-            return true;
-        }
-      });
+      // O resultado final é a combinação de todas as verificações
+      return exactFiltersPass && textFiltersPass && numericFiltersPass && otherFiltersPass;
     });
   });
 }
@@ -269,7 +302,13 @@ function applySorting<T>(data: T[], sorting: SortingState[]): T[] {
 // Função para paginar um array
 function applyPagination<T>(data: T[], pageIndex: number, pageSize: number): T[] {
   const start = pageIndex * pageSize;
-  return data.slice(start, start + pageSize);
+
+  // Certificar que não ultrapasse o limite do array
+  const end = Math.min(start + pageSize, data.length);
+
+  console.log(`[API] Aplicando paginação: start=${start}, end=${end}, tamanho=${end - start}, total=${data.length}`);
+
+  return data.slice(start, end);
 }
 
 // Interface para o resultado da API
@@ -277,6 +316,14 @@ interface ApiResult<T> {
   data: T[];
   totalCount: number;
   pageCount: number;
+  meta: {
+    start: number;
+    end: number;
+    pageSize: number;
+    pageIndex: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 // Cache para resultados filtrados e ordenados
@@ -291,9 +338,8 @@ export function mockFetchData(
   pageSize: number
 ): Promise<ApiResult<Product>> {
   console.log(`[API] mockFetchData chamado para página ${pageIndex}, tamanho ${pageSize}`);
-
-  // Gerar uma chave para o cache baseada nos parâmetros
-  const cacheKey = JSON.stringify({ endpoint, filters, sorting });
+  console.log(`[API] Filtros:`, filters);
+  console.log(`[API] Ordenação:`, sorting);
 
   // Escolha o conjunto de dados com base no endpoint
   let data: Product[] = [];
@@ -301,42 +347,50 @@ export function mockFetchData(
     data = [...mockProducts];
   }
 
-  // Verificar se já processamos esta combinação de filtros e ordenação
-  let processedData: Product[];
-  if (dataCache[cacheKey]) {
-    processedData = dataCache[cacheKey];
-    console.log("[API] Usando dados em cache para filtros/ordenação");
-  } else {
-    // Aplicar filtros
-    const filteredData = applyFilters(data, filters);
+  // Aplicar filtros
+  const filteredData = applyFilters(data, filters);
 
-    // Aplicar ordenação
-    processedData = applySorting(filteredData, sorting);
-
-    // Armazenar no cache
-    dataCache[cacheKey] = processedData;
-  }
+  // Aplicar ordenação
+  const sortedData = applySorting(filteredData, sorting);
 
   // Calcular contagem total
-  const totalCount = processedData.length;
-
-  // Aplicar paginação
-  const paginatedData = applyPagination(processedData, pageIndex, pageSize);
+  const totalCount = sortedData.length;
 
   // Calcular número total de páginas
   const pageCount = Math.ceil(totalCount / pageSize);
 
-  console.log(`[API] Retornando ${paginatedData.length} registros, página ${pageIndex + 1} de ${pageCount}, total ${totalCount}`);
+  // Verificar se o pageIndex está dentro dos limites válidos
+  const validPageIndex = Math.min(pageIndex, pageCount - 1);
 
-  // Simular atraso de rede mais curto e mais consistente
+  // Aplicar paginação
+  const start = validPageIndex * pageSize;
+  const end = Math.min(start + pageSize, sortedData.length);
+  const paginatedData = sortedData.slice(start, end);
+
+  // Determinar se existem mais páginas
+  const hasMore = validPageIndex < pageCount - 1;
+
+  console.log(`[API] Retornando ${paginatedData.length} registros, página ${validPageIndex + 1} de ${pageCount}`);
+  console.log(`[API] Posições ${start} a ${end - 1} de ${totalCount} total`);
+  console.log(`[API] Mais páginas disponíveis: ${hasMore}`);
+
+  // Simular atraso de rede para ter tempo de ver o indicador de carregamento
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         data: paginatedData,
         totalCount,
-        pageCount
+        pageCount,
+        meta: {
+          start,
+          end,
+          pageSize,
+          pageIndex: validPageIndex,
+          hasNextPage: hasMore,
+          hasPreviousPage: validPageIndex > 0
+        }
       });
-    }, 150 + Math.random() * 100); // Atraso de 150-250ms para simular rede rápida
+    }, 100);
   });
 }
 

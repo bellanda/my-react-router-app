@@ -1,4 +1,4 @@
-export type ColumnType = "string" | "number" | "date" | "boolean";
+export type ColumnType = "text" | "number" | "date" | "boolean";
 
 export type FilterOperator =
   | "exact"
@@ -22,10 +22,14 @@ export interface ColumnDefinition {
   filterable?: boolean;
   hidden?: boolean;
   formatFn?: (value: any) => any;
+  width?: string;
 }
 
 export interface ApiEndpoint {
   url: string;
+  sortParam?: string;
+  pageParam?: string;
+  limitParam?: string;
   params?: Record<string, any>;
 }
 

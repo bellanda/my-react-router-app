@@ -79,22 +79,20 @@ export default function AboutPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             <TeamMember
-              name="Alex Johnson"
-              role="Founder & Lead Developer"
-              bio="Alex has been working with React since 2015 and is passionate about building tools that make developers' lives easier."
-              image="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=300&h=300&fit=crop&q=80"
-              github="#"
-              twitter="#"
-              linkedin="#"
+              name="Gustavo C. Bellanda"
+              role="AI Engineer"
+              bio="Passionate about AI and its applications in various fields."
+              image="/public/images/bellanda.jpg"
+              github="https://github.com/bellanda"
+              linkedin="https://www.linkedin.com/in/gustavo-casadei-bellanda-410a351bb/"
             />
 
             <TeamMember
               name="Samantha Lee"
               role="Senior Frontend Engineer"
               bio="Samantha specializes in UI/UX and has contributed to numerous open source projects in the React ecosystem."
-              image="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&q=80"
+              image=""
               github="#"
-              twitter="#"
               linkedin="#"
             />
 
@@ -102,9 +100,8 @@ export default function AboutPage() {
               name="Marcus Chen"
               role="Developer Advocate"
               bio="Marcus loves teaching and helping developers understand complex concepts through clear documentation and examples."
-              image="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&q=80"
+              image=""
               github="#"
-              twitter="#"
               linkedin="#"
             />
           </div>
@@ -195,17 +192,12 @@ function TeamMember({
         <p className="text-muted-foreground mb-4">{bio}</p>
         <div className="flex gap-3">
           {github && (
-            <a href={github} className="text-muted-foreground hover:text-foreground">
+            <a href={github} className="text-muted-foreground hover:text-foreground" target="_blank">
               <Github className="h-5 w-5" />
             </a>
           )}
-          {twitter && (
-            <a href={twitter} className="text-muted-foreground hover:text-foreground">
-              <Twitter className="h-5 w-5" />
-            </a>
-          )}
           {linkedin && (
-            <a href={linkedin} className="text-muted-foreground hover:text-foreground">
+            <a href={linkedin} className="text-muted-foreground hover:text-foreground" target="_blank">
               <Linkedin className="h-5 w-5" />
             </a>
           )}

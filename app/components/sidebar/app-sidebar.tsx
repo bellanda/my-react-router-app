@@ -1,7 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { BarChart3, BookOpen, Home, LayoutDashboard, Package, Settings, ShoppingCart, User, FileText } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  Home,
+  LayoutDashboard,
+  Package,
+  Settings,
+  ShoppingCart,
+  User,
+  FileText,
+  GalleryVerticalEnd
+} from "lucide-react";
 
 import { NavMain } from "~/components/sidebar/nav-main";
 import { NavProjects } from "~/components/sidebar/nav-projects";

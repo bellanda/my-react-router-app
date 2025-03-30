@@ -13,30 +13,79 @@ interface FilterPanelProps {
 const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onRemoveFilter, onClearAllFilters, columns }) => {
   if (filters.length === 0) return null;
 
+  // Formatar o valor do filtro para exibição
+  const formatFilterValue = (value: any): string => {
+    if (value === null) return "(vazio)";
+    if (value === undefined) return "(indefinido)";
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
+  };
+
+  // Formatar o operador do filtro para exibição
+  const formatOperator = (operator: string): string => {
+    switch (operator) {
+      case "exact":
+        return "=";
+      case "contains":
+        return "contém";
+      case "startswith":
+        return "começa com";
+      case "endswith":
+        return "termina com";
+      case "gt":
+        return ">";
+      case "gte":
+        return ">=";
+      case "lt":
+        return "<";
+      case "lte":
+        return "<=";
+      case "date":
+        return "na data";
+      default:
+        return operator;
+    }
+  };
+
+  const handleRemoveFilter = (id: string, value: any) => {
+    console.log(`[FilterPanel] Removendo filtro: ${id} = ${formatFilterValue(value)}`);
+    onRemoveFilter(id, value);
+  };
+
+  const handleClearAllFilters = () => {
+    console.log(`[FilterPanel] Limpando todos os ${filters.length} filtros`);
+    onClearAllFilters();
+  };
+
   return (
     <div className="p-2 border-b bg-muted/30">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-sm font-medium">Filtros ativos:</span>
         {filters.map((filter, index) => {
           const column = columns.find((c) => c.accessor === filter.id);
+          const columnName = column?.header || filter.id;
+
           return (
-            <div key={index} className="bg-muted px-2 py-1 rounded-md text-sm flex items-center gap-1">
-              {column?.header}: {filter.operator} {String(filter.value)}
+            <div key={index} className="bg-muted/70 px-2 py-1 rounded-md text-sm flex items-center gap-1">
+              <span className="font-medium">{columnName}</span>
+              <span className="text-muted-foreground">{formatOperator(filter.operator)}</span>
+              <span>{formatFilterValue(filter.value)}</span>
               <button
-                className="ml-1 text-muted-foreground hover:text-foreground"
-                onClick={() => onRemoveFilter(filter.id, filter.value)}
+                className="ml-1 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveFilter(filter.id, filter.value);
+                }}
+                title="Remover este filtro"
               >
                 <X size={14} />
               </button>
             </div>
           );
         })}
-        <div className="ml-auto flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onClearAllFilters} className="text-primary hover:text-primary/90">
+        <div className="ml-auto">
+          <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="text-primary hover:text-primary/90">
             Limpar filtros
-          </Button>
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
-            Fechar
           </Button>
         </div>
       </div>

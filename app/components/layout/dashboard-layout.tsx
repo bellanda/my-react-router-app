@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, Link, useLocation } from "react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Bell, User } from "lucide-react";
 
 import { AppSidebar } from "~/components/sidebar/app-sidebar";
 import {
@@ -13,6 +13,17 @@ import {
 } from "~/components/ui/breadcrumb";
 import { Separator } from "~/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "~/components/ui/dropdown-menu";
 
 type DashboardLayoutProps = {
   children?: React.ReactNode;
@@ -43,8 +54,8 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear">
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             {showBreadcrumbs && (
@@ -87,9 +98,37 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
               </Breadcrumb>
             )}
           </div>
+
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5" />
+              <span className="sr-only">Notifications</span>
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+                    <AvatarFallback>US</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-6">{children || <Outlet />}</div>
-        {showFooter && (
+        <div className="flex flex-1 flex-col gap-2 p-6">{children || <Outlet />}</div>
+        {/* {showFooter && (
           <footer className="border-t py-4 px-6">
             <div className="container mx-auto">
               <p className="text-center text-sm text-muted-foreground">
@@ -97,7 +136,7 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
               </p>
             </div>
           </footer>
-        )}
+        )} */}
       </SidebarInset>
     </SidebarProvider>
   );

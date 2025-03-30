@@ -7,6 +7,7 @@ import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { fetchUniqueValues } from "../../lib/services/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
+import { Checkbox } from "../ui/checkbox";
 
 interface DataTableHeaderProps {
   column: ColumnDefinition;
@@ -100,7 +101,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
     if (menuOpen && column.filterable) {
       const timer = setTimeout(() => {
         loadUniqueValues(true);
-      }, 300);
+      }, 100);
 
       return () => clearTimeout(timer);
     }
@@ -112,18 +113,27 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
       const rect = headerRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
+      // Posicionar diretamente abaixo do cabeçalho
+      let top = rect.bottom + 2; // Margem mínima de 2px
+      const left = rect.left;
+
+      // Converter para posição absoluta considerando o scroll
+      top += window.scrollY;
+      const leftAbsolute = left + window.scrollX;
+
       // Verificar se o menu vai ultrapassar a parte inferior da janela
-      let top = rect.bottom + window.scrollY;
-      if (top + 400 > windowHeight + window.scrollY) {
-        // 400 é uma estimativa da altura do menu
+      const estimatedMenuHeight = 350; // altura estimada do menu
+      if (top + estimatedMenuHeight > windowHeight + window.scrollY) {
         // Posicionar acima do header se não couber abaixo
-        top = rect.top - 400 + window.scrollY;
-        if (top < window.scrollY) top = window.scrollY; // Não permitir que fique acima da janela
+        top = rect.top - estimatedMenuHeight + window.scrollY;
+        if (top < window.scrollY) top = window.scrollY + 5; // Não permitir que fique acima da janela
       }
+
+      console.log(`[DataTableHeader] Menu position: top=${top}, left=${leftAbsolute}`);
 
       setPopoverPosition({
         top,
-        left: rect.left + window.scrollX
+        left: leftAbsolute
       });
     }
   }, [menuOpen]);
@@ -173,6 +183,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
   // Função para lidar com o clique no cabeçalho
   const handleHeaderClick = () => {
+    console.log(
+      `[DataTableHeader] Cabeçalho clicado: ${column.header}, sortable: ${column.sortable}, filterable: ${column.filterable}`
+    );
+
+    // Sempre abre o menu ao clicar no cabeçalho, sem ordenar
     setMenuOpen((prev) => !prev);
   };
 
@@ -199,75 +214,98 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   };
 
   // Aplicar filtro para um valor específico
-  const toggleValueFilter = (value: any) => {
-    const isSelected = selectedValues.some((v) => v === value);
+  const toggleValueFilter = (value: any, e?: React.SyntheticEvent) => {
+    // Impedir propagação e comportamento padrão do evento
+    if (e) {
+      e.stopPropagation();
+      if ("preventDefault" in e) {
+        e.preventDefault();
+      }
+    }
+
+    const isSelected = selectedValues.some(
+      (v) =>
+        // Comparação mais robusta para diferentes tipos de valores
+        v === value || (typeof v === "object" && typeof value === "object" && JSON.stringify(v) === JSON.stringify(value))
+    );
+
+    console.log(`[DataTableHeader] Toggle filtro para ${column.accessor}, valor: ${value}, estava selecionado: ${isSelected}`);
 
     if (isSelected) {
       // Remover este filtro específico
-      const updatedFilters = filters.filter((f) => !(f.id === column.accessor && f.value === value));
-
-      // Se removemos todos os filtros para esta coluna
-      if (!updatedFilters.some((f) => f.id === column.accessor)) {
-        onRemoveFilter(column.accessor, value);
-      } else {
-        // Atualizar o estado com a lista de filtros atualizada
-        onFilter({
-          id: column.accessor,
-          operator: "exact", // Usar um operador padrão para sinalizar atualização
-          value: "__UPDATE_FILTERS__",
-          _updatedFilters: updatedFilters // Passar os filtros atualizados
-        });
-      }
+      console.log(`[DataTableHeader] Removendo filtro: ${column.accessor} = ${value}`);
+      onRemoveFilter(column.accessor, value);
     } else {
       // Adicionar novo filtro
+      console.log(`[DataTableHeader] Adicionando filtro: ${column.accessor} = ${value}`);
       onFilter({
         id: column.accessor,
-        operator: selectedFilterOperator,
+        operator: "exact",
         value: value
       });
     }
+
+    // Importante: Não fechar o menu para permitir seleção de múltiplos valores
   };
 
   // Remover filtro
   const removeFilter = () => {
-    onRemoveFilter(column.accessor, null);
+    for (const filter of filters) {
+      if (filter.id === column.accessor) {
+        onRemoveFilter(column.accessor, filter.value);
+      }
+    }
     setMenuOpen(false);
   };
 
   // Aplicar ordenação
   const applySorting = (desc: boolean | null) => {
-    console.log("DataTableHeader.applySorting:", { desc, sortingState });
+    if (!column.sortable) return;
 
-    // Limpar ordenação explicitamente
+    console.log(`[DataTableHeader] Aplicando ordenação: ${desc === null ? "remover" : desc ? "DESC" : "ASC"}`);
+
+    // Se o parâmetro desc é nulo, significa que queremos remover a ordenação
     if (desc === null) {
-      if (sortingState) {
-        onSort(column.accessor + ":remove");
-      }
+      console.log(`[DataTableHeader] Removendo ordenação para ${column.accessor}`);
+      onSort(`${column.accessor}:remove`);
+      setMenuOpen(false);
       return;
     }
 
-    // Caso A: Usuário clicou no botão A-Z
-    if (desc === false) {
-      // Se já está em A-Z, remover ordenação
-      if (sortingState && !sortingState.desc) {
-        onSort(column.accessor + ":remove");
-      } else {
-        // Se não existe ordenação ou está em Z-A, definir para A-Z
-        onSort(column.accessor + ":asc");
-      }
-      return;
-    }
+    // Ordenações são aplicadas em sequência:
+    // 1. Sempre removemos qualquer ordenação existente primeiro
+    if (sortingState) {
+      console.log(`[DataTableHeader] Removendo ordenação existente para ${column.accessor}`);
+      onSort(`${column.accessor}:remove`);
 
-    // Caso B: Usuário clicou no botão Z-A
-    if (desc === true) {
-      // Se já está em Z-A, remover ordenação
-      if (sortingState && sortingState.desc) {
-        onSort(column.accessor + ":remove");
-      } else {
-        // Se não existe ordenação ou está em A-Z, definir para Z-A
-        onSort(column.accessor + ":desc");
+      // Pequeno delay para garantir que a remoção seja processada antes da nova ordenação
+      setTimeout(() => {
+        // 2. Aplicamos a ordenação ascendente (padrão)
+        console.log(`[DataTableHeader] Aplicando ordenação ASC para ${column.accessor}`);
+        onSort(column.accessor);
+
+        // 3. Se a ordenação solicitada for descendente, aplicamos novamente para inverter
+        if (desc) {
+          console.log(`[DataTableHeader] Invertendo para DESC para ${column.accessor}`);
+          setTimeout(() => onSort(column.accessor), 50);
+        }
+
+        // 4. Fechar o menu após aplicar a ordenação
+        setTimeout(() => setMenuOpen(false), 100);
+      }, 50);
+    } else {
+      // Se não havia ordenação anterior, podemos simplesmente aplicar direto
+      console.log(`[DataTableHeader] Aplicando nova ordenação para ${column.accessor}`);
+      onSort(column.accessor); // Isso aplica ASC
+
+      // Se queremos DESC, temos que chamar novamente para inverter
+      if (desc) {
+        console.log(`[DataTableHeader] Invertendo nova ordenação para DESC para ${column.accessor}`);
+        setTimeout(() => onSort(column.accessor), 50);
       }
-      return;
+
+      // Fechar o menu após aplicar a ordenação
+      setTimeout(() => setMenuOpen(false), 100);
     }
   };
 
@@ -346,7 +384,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   return (
     <div
       ref={headerRef}
-      className="flex items-center justify-between border-r last:border-r-0 py-2 px-4 select-none bg-muted/40 relative"
+      className="flex items-center justify-between border-r last:border-r-0 py-1 px-4 select-none bg-muted/40 relative"
       style={style}
     >
       <div className="w-full">
@@ -426,13 +464,33 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
               {column.filterable && (
                 <div>
                   {/* Menu dropdown para filtros de texto com hover */}
-                  <div ref={filterOptionsRef} className="relative">
+                  <div ref={filterOptionsRef} className="relative w-full">
                     <div
-                      className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-muted cursor-pointer"
+                      className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-muted cursor-pointer w-full"
                       onClick={() => setShowFilterOptions(!showFilterOptions)}
                       onMouseEnter={() => setShowFilterOptions(true)}
+                      onMouseLeave={(e) => {
+                        // Verifica se o mouse não está indo para o submenu
+                        const submenuEl = document.querySelector('[data-filter-submenu="true"]');
+                        if (submenuEl) {
+                          const rect = submenuEl.getBoundingClientRect();
+                          // Aumentar a área de detecção para evitar "gaps"
+                          const buffer = 30;
+                          const isMovingToSubmenu =
+                            e.clientX >= rect.left - buffer &&
+                            e.clientX <= rect.right + buffer &&
+                            e.clientY >= rect.top - buffer &&
+                            e.clientY <= rect.bottom + buffer;
+
+                          if (!isMovingToSubmenu) {
+                            setShowFilterOptions(false);
+                          }
+                        } else {
+                          setShowFilterOptions(false);
+                        }
+                      }}
                     >
-                      <span className="font-medium text-sm">
+                      <span className="font-medium text-[13px]">
                         Filtros de {column.type === "number" ? "número" : column.type === "date" ? "data" : "texto"}
                       </span>
                       <ChevronRight className="h-3 w-3" />
@@ -441,6 +499,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                     {/* Menu de opções de filtro que aparece ao passar o mouse */}
                     {showFilterOptions && (
                       <div
+                        data-filter-submenu="true"
                         className="fixed shadow-md rounded-md border bg-popover z-50"
                         style={{
                           width: "170px",
@@ -456,7 +515,10 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                             <div
                               key={idx}
                               className="px-2 py-1.5 text-sm hover:bg-muted cursor-pointer rounded-sm"
-                              onClick={() => openFilterDialog(option.value)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevenir propagação de eventos
+                                openFilterDialog(option.value);
+                              }}
                             >
                               {option.label}
                             </div>
@@ -481,7 +543,12 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   </div>
 
                   {/* Lista de valores únicos para seleção */}
-                  <div ref={scrollAreaRef} className="h-[140px] overflow-auto border rounded-md mt-1.5" onScroll={handleScroll}>
+                  <div
+                    ref={scrollAreaRef}
+                    className="h-[140px] overflow-auto border rounded-md mt-1.5"
+                    style={{ scrollbarWidth: "thin" }}
+                    onScroll={handleScroll}
+                  >
                     {isLoading && uniqueValues.length === 0 ? (
                       <div className="flex items-center justify-center h-full">
                         <span className="text-sm text-muted-foreground">Carregando...</span>
@@ -499,29 +566,29 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                               "flex items-center px-2 py-1 text-sm hover:bg-muted cursor-pointer",
                               isValueSelected(item.value) && "bg-primary/20"
                             )}
-                            onClick={() => toggleValueFilter(item.value)}
+                            onClick={(e) => toggleValueFilter(item.value, e)}
                           >
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={isValueSelected(item.value)}
-                              onChange={() => {}}
-                              className="mr-2 h-3 w-3"
-                            />
-                            <span className="flex-1 truncate">{item.label === null ? "(Vazio)" : item.label}</span>
+                              onChange={(e) => toggleValueFilter(item.value, e)}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              className="mr-2 text-white"
+                            ></Checkbox>
+                            <span className="flex-1 truncate text-[12px]">{item.label === null ? "(Vazio)" : item.label}</span>
                             <span className="text-muted-foreground text-xs">{item.count}</span>
                           </div>
                         ))}
                         {isLoading && uniqueValues.length > 0 && (
-                          <div className="text-center py-1 text-sm text-muted-foreground">Carregando mais...</div>
+                          <div className="text-center py-1 text-xs text-muted-foreground">Carregando mais...</div>
                         )}
                       </div>
                     )}
                   </div>
 
                   {/* Botões de ação */}
-                  <div className="mt-2">
+                  <div className="my-2">
                     {hasActiveFilter && (
-                      <Button variant="outline" size="sm" className="w-full h-7 text-sm" onClick={removeFilter}>
+                      <Button variant="outline" size="sm" className="w-full h-7 text-sm my-1" onClick={removeFilter}>
                         Limpar Filtro
                       </Button>
                     )}

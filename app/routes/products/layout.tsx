@@ -11,8 +11,8 @@ export function meta() {
 export default function ProdutosLayout() {
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-1">
-        <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm p-6">
+      <div className="p-0 w-full">
+        <div className="bg-white dark:bg-slate-900 p-0">
           <Outlet />
         </div>
       </div>
