@@ -3,19 +3,14 @@
 import { ChevronsUpDown, Plus } from "lucide-react";
 import * as React from "react";
 
-import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger
 } from "~/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "~/components/ui/sidebar";
@@ -36,18 +31,15 @@ export function TeamSwitcher({
 
   // Add handlers for debugging
   const handleTriggerClick = (e: React.MouseEvent) => {
-    console.log("Test dropdown trigger clicked", e);
     // Set open state directly
     setOpen(true);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    console.log("Dropdown open state changing to:", newOpen);
     setOpen(newOpen);
   };
 
   const handleStandaloneOpenChange = (newOpen: boolean) => {
-    console.log("Standalone dropdown state changing to:", newOpen);
     setStandaloneOpen(newOpen);
   };
 

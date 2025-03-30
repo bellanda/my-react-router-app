@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import type { TableConfig, TableState, Filter, SortingState } from "../lib/types/data-table";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchTableData } from "../lib/services/api";
+import type { Filter, SortingState, TableConfig, TableState } from "../lib/types/data-table";
 import { inferColumnType } from "../lib/utils";
 
 export function useDataTable(config: TableConfig) {
@@ -10,11 +10,8 @@ export function useDataTable(config: TableConfig) {
       const storageKey = `data-table-state-${config.endpoint}`;
       const savedState = sessionStorage.getItem(storageKey);
 
-      console.log(`Tentando carregar estado salvo para ${storageKey}`, { savedState });
-
       if (savedState) {
         const parsed = JSON.parse(savedState);
-        console.log("Estado restaurado da sessão:", parsed);
         return parsed;
       }
     } catch (e) {
@@ -40,7 +37,6 @@ export function useDataTable(config: TableConfig) {
       }
     };
 
-    console.log("Usando estado padrão da tabela:", defaultState);
     return defaultState;
   };
 
@@ -63,7 +59,6 @@ export function useDataTable(config: TableConfig) {
       const storageKey = `data-table-state-${config.endpoint}`;
       // Não salvar o estado durante o carregamento inicial
       if (isLoading && data.length === 0) {
-        console.log("Ignorando salvamento durante carregamento inicial");
         return;
       }
 
@@ -120,7 +115,6 @@ export function useDataTable(config: TableConfig) {
     async (page: number, append = false, itemLimit?: number, finalPage = false) => {
       // Evitar requisições duplicadas
       if (fetchingRef.current) {
-        console.log(`[useDataTable] Ignorando fetchData para página ${page}, outra requisição em andamento`);
         return;
       }
 
@@ -134,10 +128,6 @@ export function useDataTable(config: TableConfig) {
         setIsLoading(true);
       }
 
-      console.log(
-        `[useDataTable] Iniciando fetchData para página ${page}, append=${append}, pageSize=${tableState.pagination.pageSize}, itemLimit=${itemLimit}`
-      );
-
       try {
         const response = await fetchTableData(
           config.endpoint,
@@ -147,17 +137,8 @@ export function useDataTable(config: TableConfig) {
           tableState.pagination.pageSize
         );
 
-        console.log(`[useDataTable] Resposta recebida para página ${page}:`, {
-          dataLength: response.data.length,
-          pageCount: response.pageCount,
-          totalCount: response.totalCount,
-          currentlyLoaded: append ? data.length : 0,
-          meta: response.meta
-        });
-
         // Verificar se esta ainda é a requisição mais recente
         if (page !== lastPageRequestedRef.current) {
-          console.log(`[useDataTable] Ignorando resultado para página ${page}, página atual é ${lastPageRequestedRef.current}`);
           return;
         }
 
@@ -191,10 +172,6 @@ export function useDataTable(config: TableConfig) {
           nextPageAvailable = false;
         }
 
-        console.log(
-          `[useDataTable] Página ${page} carregada, itens carregados: ${totalLoadedItems}/${response.totalCount}, próxima página disponível: ${nextPageAvailable}`
-        );
-
         setHasNextPage(nextPageAvailable);
 
         setIsError(false);
@@ -223,12 +200,6 @@ export function useDataTable(config: TableConfig) {
     if (!initialLoadCompleteRef.current) {
       // Primeira carga - não depende de alterações de filtro/ordenação
       initialLoadCompleteRef.current = true;
-
-      console.log(`[useDataTable] Realizando carregamento inicial para ${config.endpoint}`, {
-        filters: tableState.filters,
-        sorting: tableState.sorting,
-        pageSize: tableState.pagination.pageSize
-      });
 
       // Resetar para a primeira página
       setTableState((prev) => ({
@@ -259,8 +230,6 @@ export function useDataTable(config: TableConfig) {
   const fetchNextPage = useCallback(() => {
     if (fetchingRef.current || !hasNextPage) return;
 
-    console.log(`[useDataTable] fetchNextPage: Solicitando página ${tableState.pagination.pageIndex + 1}`);
-
     // Incrementar o pageIndex antes de carregar
     setTableState((prev) => ({
       ...prev,
@@ -279,7 +248,6 @@ export function useDataTable(config: TableConfig) {
       if (fetchingRef.current || !hasNextPage) return;
 
       const nextPage = tableState.pagination.pageIndex + 1;
-      console.log(`[useDataTable] loadChunk: Solicitando ${itemCount} itens a partir da página ${nextPage}`);
 
       // Incrementar o pageIndex antes de carregar
       setTableState((prev) => ({
@@ -299,16 +267,12 @@ export function useDataTable(config: TableConfig) {
   const goToPage = useCallback(
     (pageIndex: number) => {
       if (fetchingRef.current) {
-        console.log(`[useDataTable] Ignorando goToPage(${pageIndex}), outra requisição em andamento`);
         return;
       }
 
       if (pageIndex < 0 || pageIndex >= totalPages) {
-        console.log(`[useDataTable] Página ${pageIndex} fora dos limites (total páginas: ${totalPages})`);
         return;
       }
-
-      console.log(`[useDataTable] Pulando para a página ${pageIndex}`);
 
       // Atualizar estado da página
       setTableState((prev) => ({
@@ -343,7 +307,6 @@ export function useDataTable(config: TableConfig) {
       // Processar comando especial de remoção
       if (column.endsWith(":remove")) {
         const id = column.replace(":remove", "");
-        console.log(`[useDataTable] Removendo ordenação para coluna ${id}`);
 
         // Primeiro limpar dados existentes para dar feedback visual
         setData([]);
@@ -367,8 +330,6 @@ export function useDataTable(config: TableConfig) {
         return;
       }
 
-      console.log(`[useDataTable] Alternando ordenação para coluna ${column}`);
-
       // Primeiro limpar dados existentes para dar feedback visual
       setData([]);
 
@@ -381,17 +342,14 @@ export function useDataTable(config: TableConfig) {
 
         if (!existingSort) {
           // Adicionar nova ordenação
-          console.log(`[useDataTable] Adicionando nova ordenação ASC para coluna ${column}`);
           newSorting = [...prev.sorting, { id: column, desc: false }];
         } else {
           // Alternar entre asc -> desc -> remover
           if (!existingSort.desc) {
             // Alterar de asc para desc
-            console.log(`[useDataTable] Alterando ordenação de ASC para DESC para coluna ${column}`);
             newSorting = prev.sorting.map((sort) => (sort.id === column ? { ...sort, desc: true } : sort));
           } else {
             // Remover ordenação
-            console.log(`[useDataTable] Removendo ordenação para coluna ${column} (ciclo completo)`);
             newSorting = prev.sorting.filter((sort) => sort.id !== column);
           }
         }
@@ -420,8 +378,6 @@ export function useDataTable(config: TableConfig) {
       // Marcar que esta é uma alteração manual
       isManualFilterSortChangeRef.current = true;
 
-      console.log(`[useDataTable] Aplicando filtros:`, filters);
-
       // Primeiro limpar dados existentes para dar feedback visual
       setData([]);
 
@@ -434,14 +390,12 @@ export function useDataTable(config: TableConfig) {
           // Caso especial para atualização em massa de filtros
           if (filter.value === "__UPDATE_FILTERS__" && (filter as any)._updatedFilters) {
             // Substituir completamente os filtros pelo conjunto fornecido
-            console.log(`[useDataTable] Atualizando filtros em massa: ${(filter as any)._updatedFilters.length} filtros`);
             updatedFilters = (filter as any)._updatedFilters;
             continue;
           }
 
           // Handle remove operation
           if (filter.operator === "remove") {
-            console.log(`[useDataTable] Removendo filtro: ${filter.id} = ${filter.value}`);
             updatedFilters = updatedFilters.filter((f) => !(f.id === filter.id && f.value === filter.value));
           } else {
             // Check if this filter already exists
@@ -449,11 +403,9 @@ export function useDataTable(config: TableConfig) {
 
             // If filter exists, replace it (or remove for toggle behavior)
             if (existingFilterIndex > -1) {
-              console.log(`[useDataTable] Removendo filtro existente: ${filter.id} = ${filter.value}`);
               updatedFilters = updatedFilters.filter((_, idx) => idx !== existingFilterIndex);
             } else {
               // Add new filter
-              console.log(`[useDataTable] Adicionando novo filtro: ${filter.id} ${filter.operator} ${filter.value}`);
               updatedFilters.push(filter);
             }
           }
@@ -481,8 +433,6 @@ export function useDataTable(config: TableConfig) {
   const handleResetFilters = useCallback(() => {
     // Marcar que esta é uma alteração manual
     isManualFilterSortChangeRef.current = true;
-
-    console.log(`[useDataTable] Resetando todos os filtros`);
 
     // Primeiro limpar dados existentes para dar feedback visual
     setData([]);
@@ -518,8 +468,6 @@ export function useDataTable(config: TableConfig) {
     (newOrder: SortingState[]) => {
       // Definir que esta é uma alteração manual de filtro/ordenação
       isManualFilterSortChangeRef.current = true;
-
-      console.log(`[useDataTable] Reordenando ordenações: ${newOrder.map((s) => s.id).join(", ")}`);
 
       // Primeiro limpar dados existentes para dar feedback visual
       setData([]);

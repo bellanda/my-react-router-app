@@ -1,11 +1,11 @@
-import React, { useCallback, useRef, useEffect, useState } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useDataTable } from "../../hooks/useDataTable";
 import type { TableConfig } from "../../lib/types/data-table";
 import { cn } from "../../lib/utils";
-import { useDataTable } from "../../hooks/useDataTable";
 import DataTableHeader from "./DataTableHeader";
 import FilterPanel from "./FilterPanel";
 import SortingPanel from "./SortingPanel";
-import { ChevronDown, Loader2, RefreshCw } from "lucide-react";
 
 interface EnhancedDataTableProps {
   config: TableConfig;
@@ -55,22 +55,8 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
     const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceToBottom = scrollHeight - scrollTop - clientHeight;
 
-    // Debug info
-    if (showDebugInfo) {
-      console.log("Scroll info:", {
-        scrollTop,
-        scrollHeight,
-        clientHeight,
-        distanceToBottom,
-        hasNextPage,
-        dataLength: data.length,
-        totalCount
-      });
-    }
-
     // Carregar quando estiver a 150px do fim e verificar se já não carregamos todos os dados
     if (distanceToBottom < 150 && data.length < totalCount) {
-      console.log(`[Scroll Detection] Próximo do fim (${distanceToBottom}px), carregando mais...`);
       isLoadingMoreRef.current = true; // Sinalizar que estamos carregando
       fetchNextPage();
 
@@ -87,7 +73,6 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
 
     // Calcular tamanho do chunk baseado no total restante
     const remainingItems = totalCount - data.length;
-    console.log(`[Manual Load] Carregando ${remainingItems} itens restantes de uma vez`);
 
     loadChunk(remainingItems);
   }, [hasNextPage, isFetching, totalCount, data.length, loadChunk]);
@@ -97,7 +82,6 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
     if (!hasNextPage || isFetching) return;
 
     const chunkSize = 100;
-    console.log(`[Manual Load] Carregando chunk de ${chunkSize} itens`);
     loadChunk(chunkSize);
   }, [hasNextPage, isFetching, loadChunk]);
 
@@ -105,7 +89,6 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
-      console.log("[UI] Scroll forçado para o fim da tabela");
     }
   }, []);
 
@@ -144,7 +127,6 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
 
       // Se o conteúdo não preenche o container
       if (scrollHeight <= clientHeight) {
-        console.log("[Initial Load] Container não está cheio, carregando mais dados");
         fetchNextPage();
       }
     }
@@ -218,13 +200,11 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
         <FilterPanel
           filters={tableState.filters}
           onRemoveFilter={(id, value) => {
-            console.log(`[EnhancedDataTable] Removendo filtro: ${id} = ${value}`);
             // Garantir que a flag de alteração manual seja definida
             isManualFilterSortChange.current = true;
             handleFilter([{ id, operator: "remove", value }]);
           }}
           onClearAllFilters={() => {
-            console.log(`[EnhancedDataTable] Limpando todos os filtros`);
             // Garantir que a flag de alteração manual seja definida
             isManualFilterSortChange.current = true;
             handleResetFilters();
@@ -238,18 +218,15 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
         <SortingPanel
           sorting={tableState.sorting}
           onRemoveSort={(id) => {
-            console.log(`[EnhancedDataTable] Removendo ordenação: ${id}`);
             // Garantir que a flag de alteração manual seja definida
             isManualFilterSortChange.current = true;
             handleSort(id + ":remove");
           }}
           onReorderSorts={(newOrder) => {
-            console.log(`[EnhancedDataTable] Reordenando ordenações`);
             // Usar a função especializada do hook para reordenar
             reorderSorting(newOrder);
           }}
           onClearAllSorts={() => {
-            console.log(`[EnhancedDataTable] Limpando todas as ordenações`);
             // Garantir que a flag de alteração manual seja definida
             isManualFilterSortChange.current = true;
 
@@ -275,19 +252,16 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
               sorting={tableState.sorting}
               filters={tableState.filters}
               onSort={(column) => {
-                console.log(`[EnhancedDataTable] Alterando ordenação: ${column}`);
                 // Garantir que a flag de alteração manual seja definida
                 isManualFilterSortChange.current = true;
                 handleSort(column);
               }}
               onFilter={(filter) => {
-                console.log(`[EnhancedDataTable] Aplicando filtro: ${filter.id} ${filter.operator} ${filter.value}`);
                 // Garantir que a flag de alteração manual seja definida
                 isManualFilterSortChange.current = true;
                 handleFilter([filter]);
               }}
               onRemoveFilter={(id, value) => {
-                console.log(`[EnhancedDataTable] Removendo filtro: ${id} = ${value}`);
                 // Garantir que a flag de alteração manual seja definida
                 isManualFilterSortChange.current = true;
                 handleFilter([{ id, operator: "remove", value }]);

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
-import { ArrowUpDown, ArrowUp, ArrowDown, Filter, Check, ChevronRight, Search } from "lucide-react";
-import type { ColumnDefinition, SortingState, Filter as DataFilter, FilterOperator } from "../../lib/types/data-table";
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronRight, Filter, Search } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { fetchUniqueValues } from "../../lib/services/api";
+import type { ColumnDefinition, Filter as DataFilter, FilterOperator, SortingState } from "../../lib/types/data-table";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
-import { Input } from "../ui/input";
-import { fetchUniqueValues } from "../../lib/services/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Checkbox } from "../ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Separator } from "../ui/separator";
 
 interface DataTableHeaderProps {
   column: ColumnDefinition;
@@ -129,8 +129,6 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
         if (top < window.scrollY) top = window.scrollY + 5; // Não permitir que fique acima da janela
       }
 
-      console.log(`[DataTableHeader] Menu position: top=${top}, left=${leftAbsolute}`);
-
       setPopoverPosition({
         top,
         left: leftAbsolute
@@ -183,10 +181,6 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
   // Função para lidar com o clique no cabeçalho
   const handleHeaderClick = () => {
-    console.log(
-      `[DataTableHeader] Cabeçalho clicado: ${column.header}, sortable: ${column.sortable}, filterable: ${column.filterable}`
-    );
-
     // Sempre abre o menu ao clicar no cabeçalho, sem ordenar
     setMenuOpen((prev) => !prev);
   };
@@ -229,15 +223,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
         v === value || (typeof v === "object" && typeof value === "object" && JSON.stringify(v) === JSON.stringify(value))
     );
 
-    console.log(`[DataTableHeader] Toggle filtro para ${column.accessor}, valor: ${value}, estava selecionado: ${isSelected}`);
-
     if (isSelected) {
       // Remover este filtro específico
-      console.log(`[DataTableHeader] Removendo filtro: ${column.accessor} = ${value}`);
       onRemoveFilter(column.accessor, value);
     } else {
       // Adicionar novo filtro
-      console.log(`[DataTableHeader] Adicionando filtro: ${column.accessor} = ${value}`);
       onFilter({
         id: column.accessor,
         operator: "exact",
@@ -262,50 +252,35 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   const applySorting = (desc: boolean | null) => {
     if (!column.sortable) return;
 
-    console.log(`[DataTableHeader] Aplicando ordenação: ${desc === null ? "remover" : desc ? "DESC" : "ASC"}`);
-
     // Se o parâmetro desc é nulo, significa que queremos remover a ordenação
     if (desc === null) {
-      console.log(`[DataTableHeader] Removendo ordenação para ${column.accessor}`);
       onSort(`${column.accessor}:remove`);
-      setMenuOpen(false);
       return;
     }
 
     // Ordenações são aplicadas em sequência:
     // 1. Sempre removemos qualquer ordenação existente primeiro
     if (sortingState) {
-      console.log(`[DataTableHeader] Removendo ordenação existente para ${column.accessor}`);
       onSort(`${column.accessor}:remove`);
 
       // Pequeno delay para garantir que a remoção seja processada antes da nova ordenação
       setTimeout(() => {
         // 2. Aplicamos a ordenação ascendente (padrão)
-        console.log(`[DataTableHeader] Aplicando ordenação ASC para ${column.accessor}`);
         onSort(column.accessor);
 
         // 3. Se a ordenação solicitada for descendente, aplicamos novamente para inverter
         if (desc) {
-          console.log(`[DataTableHeader] Invertendo para DESC para ${column.accessor}`);
           setTimeout(() => onSort(column.accessor), 50);
         }
-
-        // 4. Fechar o menu após aplicar a ordenação
-        setTimeout(() => setMenuOpen(false), 100);
       }, 50);
     } else {
       // Se não havia ordenação anterior, podemos simplesmente aplicar direto
-      console.log(`[DataTableHeader] Aplicando nova ordenação para ${column.accessor}`);
       onSort(column.accessor); // Isso aplica ASC
 
       // Se queremos DESC, temos que chamar novamente para inverter
       if (desc) {
-        console.log(`[DataTableHeader] Invertendo nova ordenação para DESC para ${column.accessor}`);
         setTimeout(() => onSort(column.accessor), 50);
       }
-
-      // Fechar o menu após aplicar a ordenação
-      setTimeout(() => setMenuOpen(false), 100);
     }
   };
 
@@ -417,14 +392,14 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
             }}
           >
             <div className="p-1.5 font-semibold border-b bg-muted/20 text-sm">{column.header}</div>
-            <div className="p-1.5 space-y-2">
+            <div className="p-1.5">
               {/* Opções de ordenação */}
               {column.sortable && (
                 <div className="space-y-0.5">
                   <Button
                     variant={sortingState && !sortingState.desc ? "secondary" : "ghost"}
                     size="sm"
-                    className={`w-full justify-start pl-8 relative h-8 text-xs ${
+                    className={`w-full justify-start pl-8 relative h-7 text-xs ${
                       sortingState && !sortingState.desc ? "bg-primary/20 font-medium" : ""
                     }`}
                     onClick={() => applySorting(false)}
@@ -436,7 +411,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   <Button
                     variant={sortingState && sortingState.desc ? "secondary" : "ghost"}
                     size="sm"
-                    className={`w-full justify-start pl-8 relative h-8 text-xs ${
+                    className={`w-full justify-start pl-8 relative h-7 text-xs ${
                       sortingState && sortingState.desc ? "bg-primary/20 font-medium" : ""
                     }`}
                     onClick={() => applySorting(true)}
@@ -449,7 +424,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start pl-8 relative h-8 text-xs text-muted-foreground hover:text-foreground"
+                      className="w-full justify-start pl-8 relative h-7 text-xs text-muted-foreground hover:text-foreground"
                       onClick={() => applySorting(null)}
                     >
                       <ArrowUpDown className="mr-2 h-3 w-3" />
@@ -466,7 +441,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   {/* Menu dropdown para filtros de texto com hover */}
                   <div ref={filterOptionsRef} className="relative w-full">
                     <div
-                      className="flex items-center justify-between px-2 py-1 rounded-md hover:bg-muted cursor-pointer w-full"
+                      className="flex items-center justify-between px-2 py-0 rounded-md hover:bg-muted cursor-pointer w-full"
                       onClick={() => setShowFilterOptions(!showFilterOptions)}
                       onMouseEnter={() => setShowFilterOptions(true)}
                       onMouseLeave={(e) => {
@@ -545,7 +520,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   {/* Lista de valores únicos para seleção */}
                   <div
                     ref={scrollAreaRef}
-                    className="h-[140px] overflow-auto border rounded-md mt-1.5"
+                    className="h-[120px] overflow-auto border rounded-md mt-1.5"
                     style={{ scrollbarWidth: "thin" }}
                     onScroll={handleScroll}
                   >
@@ -588,11 +563,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   {/* Botões de ação */}
                   <div className="my-2">
                     {hasActiveFilter && (
-                      <Button variant="outline" size="sm" className="w-full h-7 text-sm my-1" onClick={removeFilter}>
+                      <Button variant="outline" size="sm" className="w-full h-6 text-sm my-1" onClick={removeFilter}>
                         Limpar Filtro
                       </Button>
                     )}
-                    <Button variant="default" size="sm" className="w-full h-7 text-sm" onClick={() => setMenuOpen(false)}>
+                    <Button variant="default" size="sm" className="w-full h-6 text-sm" onClick={() => setMenuOpen(false)}>
                       Fechar
                     </Button>
                   </div>

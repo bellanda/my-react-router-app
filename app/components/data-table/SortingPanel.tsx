@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { ArrowDown, ArrowUp, GripVertical, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import type { SortingState } from "../../lib/types/data-table";
 import { Button } from "../ui/button";
-import { X, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 
 interface SortingPanelProps {
   sorting: SortingState[];
@@ -24,7 +24,6 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
   if (sorting.length === 0) return null;
 
   const handleDragStart = (index: number, e: React.DragEvent) => {
-    console.log(`[SortingPanel] Iniciando arrasto do item ${index}`);
     setDraggedItem(index);
 
     // Melhorar experiência em navegadores modernos
@@ -66,8 +65,6 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
     if (draggedItem === null) return;
     if (draggedItem === index) return;
 
-    console.log(`[SortingPanel] Soltando item ${draggedItem} na posição ${index}`);
-
     // Executar reordenação localmente primeiro para feedback visual imediato
     const newItems = [...items];
     const draggedItemContent = newItems[draggedItem];
@@ -78,7 +75,6 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
     setItems(newItems);
 
     // Notificar o componente pai
-    console.log("[SortingPanel] Notificando componente pai da reordenação:", newItems);
     onReorderSorts(newItems);
 
     // Limpar estados
@@ -88,7 +84,6 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
 
   const handleDragEnd = (e: React.DragEvent) => {
     e.preventDefault();
-    console.log("[SortingPanel] Drag terminado");
     setDraggedItem(null);
     setDraggedOver(null);
   };
@@ -96,7 +91,6 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
   const handleRemoveSort = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Impedir propagação do evento
-    console.log(`[SortingPanel] Removendo ordenação para ${id}`);
 
     // Limpar estados de drag para evitar conflitos
     setDraggedItem(null);
@@ -109,7 +103,6 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
   };
 
   const handleClearAll = () => {
-    console.log("[SortingPanel] Limpando todas as ordenações");
     onClearAllSorts();
   };
 

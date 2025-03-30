@@ -1,5 +1,5 @@
-import type { TableConfig, ColumnDefinition } from "./types/data-table";
-import { formatDisplayValue, inferColumnType } from "./utils";
+import type { ColumnDefinition, TableConfig } from "./types/data-table";
+import { formatDisplayValue } from "./utils";
 
 /**
  * Interface para configuração rápida de uma tabela
@@ -82,13 +82,13 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
     // Campos de usuário
     created_by: {
       header: "Criado por",
-      type: "foreignKey",
+      type: "text",
       sortable: true,
       filterable: true
     },
     updated_by: {
       header: "Atualizado por",
-      type: "foreignKey",
+      type: "text",
       sortable: true,
       filterable: true
     }

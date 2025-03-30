@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import type { TableConfig, TableState, Filter, SortingState } from "../../lib/types/data-table";
+import { Loader2 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchTableData } from "../../lib/services/api";
+import type { Filter, SortingState, TableConfig, TableState } from "../../lib/types/data-table";
+import { cn } from "../../lib/utils";
+import DataTableHeader from "./DataTableHeader";
 import FilterPanel from "./FilterPanel";
 import SortingPanel from "./SortingPanel";
-import DataTableHeader from "./DataTableHeader";
-import { cn } from "../../lib/utils";
-import { Loader2 } from "lucide-react";
 
 interface DataTableProps {
   config: TableConfig;
@@ -60,8 +60,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   // Função para buscar dados
   const fetchData = useCallback(
     async (page: number, append = false) => {
-      console.log(`Iniciando fetchData (página: ${page}, append: ${append})`);
-
       // Se já estamos carregando dados, não iniciar nova requisição
       if (isLoading || isFetchingMore) {
         console.log(`Já existe um carregamento em andamento, ignorando nova requisição`);
@@ -96,21 +94,16 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           currentState.pagination.pageSize
         );
 
-        console.log(`Dados recebidos: ${response.data.length} registros, página ${page + 1} de ${response.pageCount}`);
-
         // Verificar se temos dados para adicionar
         if (response.data.length === 0) {
-          console.log("Sem dados para adicionar");
           setHasNextPage(false);
         } else if (append) {
           // Adicionar dados ao estado existente
           setData((prev) => {
-            console.log(`Adicionando ${response.data.length} novos itens aos ${prev.length} existentes`);
             return [...prev, ...response.data];
           });
         } else {
           // Substituir dados existentes
-          console.log(`Substituindo dados por ${response.data.length} novos itens`);
           setData(response.data);
         }
 
@@ -121,7 +114,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         // Verificar se há mais páginas
         const hasMore = page < response.pageCount - 1 && response.data.length > 0;
         setHasNextPage(hasMore);
-        console.log(`Mais páginas disponíveis: ${hasMore}`);
 
         setIsError(false);
         setError(null);
@@ -139,7 +131,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
         // Resetar flag de requisição em andamento
         fetchingRef.current = false;
-        console.log("Finalizado fetchData, fetchingRef resetado");
       }
     },
     [config.endpoint, hasNextPage, isLoading, isFetchingMore]
@@ -148,8 +139,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   // Carregar dados iniciais
   useEffect(() => {
     if (initialLoadDoneRef.current) return;
-
-    console.log("Carregando dados iniciais");
 
     // Marcar como inicializado imediatamente para evitar múltiplas cargas
     initialLoadDoneRef.current = true;
@@ -168,8 +157,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       return;
     }
 
-    console.log("Filtros ou ordenação alterados, recarregando dados");
-
     // Resetar flag após processar
     manualFilterSortChangeRef.current = false;
 
@@ -177,7 +164,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     const timeoutId = setTimeout(() => {
       // Não iniciar nova requisição se já houver uma em andamento
       if (isLoading || isFetchingMore) {
-        console.log("Já existe carregamento em andamento, não recarregar devido a filtros/ordenação");
         return;
       }
 
@@ -204,13 +190,11 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   const loadMoreData = useCallback(() => {
     // Não carregar se já estiver carregando, não houver próxima página, ou requisição em andamento
     if (isLoading || isFetchingMore || !hasNextPage || fetchingRef.current) {
-      console.log("Não é possível carregar mais dados no momento");
       return;
     }
 
     // Carregar próxima página
     const nextPage = stableTableState.current.pagination.pageIndex + 1;
-    console.log(`Carregando mais dados: página ${nextPage + 1}`);
 
     // Atualizar página atual
     setTableState((prev) => ({
@@ -249,7 +233,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
         // Carregar mais dados quando estiver a 200px do final
         if (scrollBottom < 200) {
-          console.log(`Scroll detectado próximo ao fim: ${scrollBottom}px do final`);
           loadMoreData();
         }
       }, 100);
@@ -294,7 +277,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       const { scrollHeight, clientHeight } = scrollContainer;
 
       if (scrollHeight <= clientHeight) {
-        console.log("Conteúdo não preenche a tela, carregando mais dados");
         // Chamar a função que foi passada como dependência
         loadMoreData();
       }
@@ -317,7 +299,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     const onIntersect = (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasNextPage && !isLoading && !isFetchingMore && !fetchingRef.current) {
-        console.log("Elemento 'Scroll para ver mais' visível na tela, carregando automaticamente");
         loadMoreData();
       }
     };
@@ -346,7 +327,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     // Verificar se temos um comando especial de ordenação
     if (columnId.includes(":")) {
       const [realColumnId, command] = columnId.split(":");
-      console.log("Comando especial de ordenação:", { realColumnId, command });
 
       setTableState((prev) => {
         // Comando para remover ordenação
@@ -696,28 +676,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           ) : hasNextPage ? (
             <div className="text-blue-500 text-xs">Scroll para ver mais</div>
           ) : null}
-        </div>
-      </div>
-
-      {/* Debug Info (remover em produção) */}
-      <div className="px-4 py-2 bg-gray-100 text-xs">
-        <div>
-          <strong>fetchingRef:</strong> {fetchingRef.current ? "true" : "false"}
-        </div>
-        <div>
-          <strong>hasNextPage:</strong> {hasNextPage ? "true" : "false"}
-        </div>
-        <div>
-          <strong>isLoading:</strong> {isLoading ? "true" : "false"}
-        </div>
-        <div>
-          <strong>isFetchingMore:</strong> {isFetchingMore ? "true" : "false"}
-        </div>
-        <div>
-          <strong>Dados carregados:</strong> {data.length}
-        </div>
-        <div>
-          <strong>Página atual:</strong> {tableState.pagination.pageIndex + 1}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
+import { X } from "lucide-react";
 import React from "react";
 import type { Filter } from "../../lib/types/data-table";
 import { Button } from "../ui/button";
-import { X } from "lucide-react";
 
 interface FilterPanelProps {
   filters: Filter[];
@@ -48,12 +48,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onRemoveFilter, onCl
   };
 
   const handleRemoveFilter = (id: string, value: any) => {
-    console.log(`[FilterPanel] Removendo filtro: ${id} = ${formatFilterValue(value)}`);
     onRemoveFilter(id, value);
   };
 
   const handleClearAllFilters = () => {
-    console.log(`[FilterPanel] Limpando todos os ${filters.length} filtros`);
     onClearAllFilters();
   };
 

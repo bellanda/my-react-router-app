@@ -306,8 +306,6 @@ function applyPagination<T>(data: T[], pageIndex: number, pageSize: number): T[]
   // Certificar que não ultrapasse o limite do array
   const end = Math.min(start + pageSize, data.length);
 
-  console.log(`[API] Aplicando paginação: start=${start}, end=${end}, tamanho=${end - start}, total=${data.length}`);
-
   return data.slice(start, end);
 }
 
@@ -337,10 +335,6 @@ export function mockFetchData(
   pageIndex: number,
   pageSize: number
 ): Promise<ApiResult<Product>> {
-  console.log(`[API] mockFetchData chamado para página ${pageIndex}, tamanho ${pageSize}`);
-  console.log(`[API] Filtros:`, filters);
-  console.log(`[API] Ordenação:`, sorting);
-
   // Escolha o conjunto de dados com base no endpoint
   let data: Product[] = [];
   if (endpoint.includes("products")) {
@@ -370,10 +364,6 @@ export function mockFetchData(
   // Determinar se existem mais páginas
   const hasMore = validPageIndex < pageCount - 1;
 
-  console.log(`[API] Retornando ${paginatedData.length} registros, página ${validPageIndex + 1} de ${pageCount}`);
-  console.log(`[API] Posições ${start} a ${end - 1} de ${totalCount} total`);
-  console.log(`[API] Mais páginas disponíveis: ${hasMore}`);
-
   // Simular atraso de rede para ter tempo de ver o indicador de carregamento
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -399,5 +389,4 @@ export function clearDataCache() {
   for (const key in dataCache) {
     delete dataCache[key];
   }
-  console.log("[API] Cache de dados limpo");
 }
