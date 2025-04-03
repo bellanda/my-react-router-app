@@ -1,21 +1,9 @@
 "use client";
 
+import { Home, LayoutDashboard, Package, User } from "lucide-react";
 import * as React from "react";
-import {
-  BarChart3,
-  BookOpen,
-  Home,
-  LayoutDashboard,
-  Package,
-  Settings,
-  ShoppingCart,
-  User,
-  FileText,
-  GalleryVerticalEnd
-} from "lucide-react";
 
 import { NavMain } from "~/components/sidebar/nav-main";
-import { NavProjects } from "~/components/sidebar/nav-projects";
 import { NavUser } from "~/components/sidebar/nav-user";
 import { TeamSwitcher } from "~/components/sidebar/team-switcher";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "~/components/ui/sidebar";
@@ -94,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   });
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
