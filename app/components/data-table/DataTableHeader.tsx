@@ -31,6 +31,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   style
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuReady, setMenuReady] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [uniqueValues, setUniqueValues] = useState<Array<{ value: any; label: string; count: number }>>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,32 +108,99 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
     }
   }, [menuOpen, searchTerm, column.filterable]);
 
-  // Efeito para calcular a posição do popover
-  useEffect(() => {
-    if (menuOpen && headerRef.current) {
-      const rect = headerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
+  // Função para lidar com o clique no cabeçalho
+  const handleHeaderClick = () => {
+    if (menuOpen) {
+      // Se o menu já está aberto, apenas fechamos
+      setMenuOpen(false);
+      setMenuReady(false);
+    } else {
+      // Se o menu está fechado, definimos uma posição inicial baseada no header
+      if (headerRef.current) {
+        const rect = headerRef.current.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const menuWidth = 290;
+        const estimatedMenuHeight = 350; // altura estimada do menu
 
-      // Posicionar diretamente abaixo do cabeçalho
-      let top = rect.bottom + 2; // Margem mínima de 2px
-      const left = rect.left;
+        // Calcular uma posição inicial aproximada
+        let initialLeft = rect.left;
+        let initialTop = rect.bottom + window.scrollY + 2;
 
-      // Converter para posição absoluta considerando o scroll
-      top += window.scrollY;
-      const leftAbsolute = left + window.scrollX;
+        // Verificar se o menu ultrapassaria a largura da tela
+        if (initialLeft + menuWidth > windowWidth) {
+          initialLeft = windowWidth - menuWidth - 10;
+          if (initialLeft < 0) initialLeft = 0;
+        }
 
-      // Verificar se o menu vai ultrapassar a parte inferior da janela
-      const estimatedMenuHeight = 350; // altura estimada do menu
-      if (top + estimatedMenuHeight > windowHeight + window.scrollY) {
-        // Posicionar acima do header se não couber abaixo
-        top = rect.top - estimatedMenuHeight + window.scrollY;
-        if (top < window.scrollY) top = window.scrollY + 5; // Não permitir que fique acima da janela
+        // Verificar se o menu vai ultrapassar a parte inferior da janela
+        if (initialTop + estimatedMenuHeight > windowHeight + window.scrollY) {
+          // Posicionar acima do header se não couber abaixo
+          initialTop = rect.top - estimatedMenuHeight + window.scrollY;
+          if (initialTop < window.scrollY) initialTop = window.scrollY + 5; // Não permitir que fique acima da janela
+        }
+
+        setPopoverPosition({
+          top: initialTop,
+          left: initialLeft + window.scrollX
+        });
       }
 
-      setPopoverPosition({
-        top,
-        left: leftAbsolute
-      });
+      // Define o menu como aberto e pronto em um mesmo ciclo de renderização
+      setMenuOpen(true);
+      setMenuReady(true);
+    }
+  };
+
+  // Efeito para calcular a posição do popover (apenas ajustes finos agora)
+  useEffect(() => {
+    // Apenas monitorar mudanças de scroll ou resize para manter o menu na posição correta
+    if (menuOpen && headerRef.current) {
+      const handleResize = () => {
+        const rect = headerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+        const menuWidth = 290; // Width of the menu as defined in the style
+
+        // Posicionar diretamente abaixo do cabeçalho
+        let top = rect.bottom + 2; // Margem mínima de 2px
+        let left = rect.left;
+
+        // Verificar se o menu vai ultrapassar a largura da tela
+        if (left + menuWidth > windowWidth) {
+          // Ajustar para que o menu fique totalmente visível
+          left = windowWidth - menuWidth - 10; // 10px de margem da borda
+          if (left < 0) left = 0; // Garantir que não fique fora da tela à esquerda
+        }
+
+        // Converter para posição absoluta considerando o scroll
+        top += window.scrollY;
+        const leftAbsolute = left + window.scrollX;
+
+        // Verificar se o menu vai ultrapassar a parte inferior da janela
+        const estimatedMenuHeight = 350; // altura estimada do menu
+        if (top + estimatedMenuHeight > windowHeight + window.scrollY) {
+          // Posicionar acima do header se não couber abaixo
+          top = rect.top - estimatedMenuHeight + window.scrollY;
+          if (top < window.scrollY) top = window.scrollY + 5; // Não permitir que fique acima da janela
+        }
+
+        setPopoverPosition({
+          top,
+          left: leftAbsolute
+        });
+      };
+
+      // Escutar eventos de scroll e resize
+      window.addEventListener("scroll", handleResize);
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("scroll", handleResize);
+        window.removeEventListener("resize", handleResize);
+      };
     }
   }, [menuOpen]);
 
@@ -148,7 +216,13 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           const viewportWidth = window.innerWidth;
 
           // Se o menu ultrapassar a largura da tela, posicionar à esquerda
-          const left = proposedLeft + menuWidth > viewportWidth ? rect.left - menuWidth - 5 : proposedLeft;
+          const left =
+            proposedLeft + menuWidth > viewportWidth
+              ? rect.left - menuWidth - 5 // Posicionar à esquerda se não couber à direita
+              : proposedLeft;
+
+          // Garantir que o menu não fique parcialmente fora da tela à esquerda
+          const adjustedLeft = Math.max(10, left); // Pelo menos 10px da borda esquerda
 
           // Verificar se o menu ultrapassaria a altura da tela
           const proposedTop = rect.top;
@@ -160,7 +234,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
           setSubmenuPosition({
             top: Math.max(10, top), // Nunca ficar muito no topo
-            left
+            left: adjustedLeft
           });
         }
       };
@@ -178,12 +252,6 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
       };
     }
   }, [showFilterOptions]);
-
-  // Função para lidar com o clique no cabeçalho
-  const handleHeaderClick = () => {
-    // Sempre abre o menu ao clicar no cabeçalho, sem ordenar
-    setMenuOpen((prev) => !prev);
-  };
 
   // Aplicar filtro do diálogo
   const applyDialogFilter = () => {
@@ -347,6 +415,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
       ) {
         setMenuOpen(false);
         setShowFilterOptions(false);
+        // setMenuReady é definido automaticamente quando menuOpen se torna false
       }
     };
 
@@ -380,202 +449,213 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           </span>
         </Button>
 
-        {menuOpen && (
-          <div
-            className="fixed shadow-lg rounded-md border bg-popover z-50"
-            style={{
-              top: `${popoverPosition.top}px`,
-              left: `${popoverPosition.left}px`,
-              width: "290px",
-              maxHeight: "90vh",
-              overflowY: "auto"
-            }}
-          >
-            <div className="p-1.5 font-semibold border-b bg-muted/20 text-sm">{column.header}</div>
-            <div className="p-1.5">
-              {/* Opções de ordenação */}
-              {column.sortable && (
-                <div className="space-y-0.5">
+        {/* O menu com transição suave para evitar o 'piscar' */}
+        <div
+          className={cn(
+            "fixed shadow-lg rounded-md border bg-popover z-50 transition-opacity duration-75",
+            menuOpen && menuReady ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
+          style={{
+            top: `${popoverPosition.top}px`,
+            left: `${popoverPosition.left}px`,
+            width: "260px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            maxWidth: "calc(100vw - 20px)"
+          }}
+        >
+          <div className="p-1.5 font-semibold border-b bg-muted/20 text-sm">{column.header}</div>
+          <div className="p-1.5">
+            {/* Opções de ordenação */}
+            {column.sortable && (
+              <div className="space-y-0.5">
+                <Button
+                  variant={sortingState && !sortingState.desc ? "secondary" : "ghost"}
+                  size="sm"
+                  className={`w-full justify-start pl-8 relative h-7 text-xs ${
+                    sortingState && !sortingState.desc ? "bg-primary/20 font-medium" : ""
+                  }`}
+                  onClick={() => applySorting(false)}
+                >
+                  {sortingState && !sortingState.desc && <Check className="h-3 w-3 absolute left-2 text-primary" />}
+                  <ArrowUp className={`mr-2 h-3 w-3 ${sortingState && !sortingState.desc ? "text-primary" : ""}`} />
+                  <span>Ordenar de A a Z</span>
+                </Button>
+                <Button
+                  variant={sortingState && sortingState.desc ? "secondary" : "ghost"}
+                  size="sm"
+                  className={`w-full justify-start pl-8 relative h-7 text-xs ${
+                    sortingState && sortingState.desc ? "bg-primary/20 font-medium" : ""
+                  }`}
+                  onClick={() => applySorting(true)}
+                >
+                  {sortingState && sortingState.desc && <Check className="h-3 w-3 absolute left-2 text-primary" />}
+                  <ArrowDown className={`mr-2 h-3 w-3 ${sortingState && sortingState.desc ? "text-primary" : ""}`} />
+                  <span>Ordenar de Z a A</span>
+                </Button>
+                {sortingState && (
                   <Button
-                    variant={sortingState && !sortingState.desc ? "secondary" : "ghost"}
+                    variant="ghost"
                     size="sm"
-                    className={`w-full justify-start pl-8 relative h-7 text-xs ${
-                      sortingState && !sortingState.desc ? "bg-primary/20 font-medium" : ""
-                    }`}
-                    onClick={() => applySorting(false)}
+                    className="w-full justify-start pl-8 relative h-7 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => applySorting(null)}
                   >
-                    {sortingState && !sortingState.desc && <Check className="h-3 w-3 absolute left-2 text-primary" />}
-                    <ArrowUp className={`mr-2 h-3 w-3 ${sortingState && !sortingState.desc ? "text-primary" : ""}`} />
-                    <span>Ordenar de A a Z</span>
+                    <ArrowUpDown className="mr-2 h-3 w-3" />
+                    <span>Limpar ordenação</span>
                   </Button>
-                  <Button
-                    variant={sortingState && sortingState.desc ? "secondary" : "ghost"}
-                    size="sm"
-                    className={`w-full justify-start pl-8 relative h-7 text-xs ${
-                      sortingState && sortingState.desc ? "bg-primary/20 font-medium" : ""
-                    }`}
-                    onClick={() => applySorting(true)}
-                  >
-                    {sortingState && sortingState.desc && <Check className="h-3 w-3 absolute left-2 text-primary" />}
-                    <ArrowDown className={`mr-2 h-3 w-3 ${sortingState && sortingState.desc ? "text-primary" : ""}`} />
-                    <span>Ordenar de Z a A</span>
-                  </Button>
-                  {sortingState && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start pl-8 relative h-7 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => applySorting(null)}
-                    >
-                      <ArrowUpDown className="mr-2 h-3 w-3" />
-                      <span>Limpar ordenação</span>
-                    </Button>
-                  )}
-                  {column.filterable && <Separator className="my-1" />}
-                </div>
-              )}
+                )}
+                {column.filterable && <Separator className="my-1" />}
+              </div>
+            )}
 
-              {/* Opções de filtro */}
-              {column.filterable && (
-                <div>
-                  {/* Menu dropdown para filtros de texto com hover */}
-                  <div ref={filterOptionsRef} className="relative w-full">
-                    <div
-                      className="flex items-center justify-between px-2 py-0 rounded-md hover:bg-muted cursor-pointer w-full"
-                      onClick={() => setShowFilterOptions(!showFilterOptions)}
-                      onMouseEnter={() => setShowFilterOptions(true)}
-                      onMouseLeave={(e) => {
-                        // Verifica se o mouse não está indo para o submenu
-                        const submenuEl = document.querySelector('[data-filter-submenu="true"]');
-                        if (submenuEl) {
-                          const rect = submenuEl.getBoundingClientRect();
-                          // Aumentar a área de detecção para evitar "gaps"
-                          const buffer = 30;
-                          const isMovingToSubmenu =
-                            e.clientX >= rect.left - buffer &&
-                            e.clientX <= rect.right + buffer &&
-                            e.clientY >= rect.top - buffer &&
-                            e.clientY <= rect.bottom + buffer;
+            {/* Opções de filtro */}
+            {column.filterable && (
+              <div>
+                {/* Menu dropdown para filtros de texto com hover */}
+                <div ref={filterOptionsRef} className="relative w-full">
+                  <div
+                    className="flex items-center justify-between px-2 py-0 rounded-md hover:bg-muted cursor-pointer w-full"
+                    onClick={() => setShowFilterOptions(!showFilterOptions)}
+                    onMouseEnter={() => setShowFilterOptions(true)}
+                    onMouseLeave={(e) => {
+                      // Verifica se o mouse não está indo para o submenu
+                      const submenuEl = document.querySelector('[data-filter-submenu="true"]');
+                      if (submenuEl) {
+                        const rect = submenuEl.getBoundingClientRect();
+                        // Aumentar a área de detecção para evitar "gaps"
+                        const buffer = 30;
+                        const isMovingToSubmenu =
+                          e.clientX >= rect.left - buffer &&
+                          e.clientX <= rect.right + buffer &&
+                          e.clientY >= rect.top - buffer &&
+                          e.clientY <= rect.bottom + buffer;
 
-                          if (!isMovingToSubmenu) {
-                            setShowFilterOptions(false);
-                          }
-                        } else {
+                        if (!isMovingToSubmenu) {
                           setShowFilterOptions(false);
                         }
-                      }}
-                    >
-                      <span className="font-medium text-[13px]">
-                        Filtros de {column.type === "number" ? "número" : column.type === "date" ? "data" : "texto"}
-                      </span>
-                      <ChevronRight className="h-3 w-3" />
-                    </div>
-
-                    {/* Menu de opções de filtro que aparece ao passar o mouse */}
-                    {showFilterOptions && (
-                      <div
-                        data-filter-submenu="true"
-                        className="fixed shadow-md rounded-md border bg-popover z-50"
-                        style={{
-                          width: "170px",
-                          zIndex: 61,
-                          top: submenuPosition.top,
-                          left: submenuPosition.left
-                        }}
-                        onMouseLeave={() => setShowFilterOptions(false)}
-                        onMouseEnter={() => setShowFilterOptions(true)}
-                      >
-                        <div className="p-1">
-                          {getFilterOptions().map((option, idx) => (
-                            <div
-                              key={idx}
-                              className="px-2 py-1.5 text-sm hover:bg-muted cursor-pointer rounded-sm"
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevenir propagação de eventos
-                                openFilterDialog(option.value);
-                              }}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator className="my-1.5" />
-
-                  {/* Barra de pesquisa de valores */}
-                  <div className="relative mt-1.5">
-                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Pesquisar valores..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-7 pl-8 text-sm"
-                    />
-                  </div>
-
-                  {/* Lista de valores únicos para seleção */}
-                  <div
-                    ref={scrollAreaRef}
-                    className="h-[120px] overflow-auto border rounded-md mt-1.5"
-                    style={{ scrollbarWidth: "thin" }}
-                    onScroll={handleScroll}
+                      } else {
+                        setShowFilterOptions(false);
+                      }
+                    }}
                   >
-                    {isLoading && uniqueValues.length === 0 ? (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-sm text-muted-foreground">Carregando...</span>
-                      </div>
-                    ) : uniqueValues.length === 0 ? (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-sm text-muted-foreground">Nenhum valor encontrado</span>
-                      </div>
-                    ) : (
-                      <div className="px-1">
-                        {uniqueValues.map((item, index) => (
+                    <span className="font-medium text-[13px]">
+                      Filtros de {column.type === "number" ? "número" : column.type === "date" ? "data" : "texto"}
+                    </span>
+                    <ChevronRight className="h-3 w-3" />
+                  </div>
+
+                  {/* Menu de opções de filtro que aparece ao passar o mouse */}
+                  {showFilterOptions && (
+                    <div
+                      data-filter-submenu="true"
+                      className="fixed shadow-md rounded-md border bg-popover z-50"
+                      style={{
+                        width: "170px",
+                        zIndex: 61,
+                        top: submenuPosition.top,
+                        left: submenuPosition.left
+                      }}
+                      onMouseLeave={() => setShowFilterOptions(false)}
+                      onMouseEnter={() => setShowFilterOptions(true)}
+                    >
+                      <div className="p-1">
+                        {getFilterOptions().map((option, idx) => (
                           <div
-                            key={index}
-                            className={cn(
-                              "flex items-center px-2 py-1 text-sm hover:bg-muted cursor-pointer",
-                              isValueSelected(item.value) && "bg-primary/20"
-                            )}
-                            onClick={(e) => toggleValueFilter(item.value, e)}
+                            key={idx}
+                            className="px-2 py-1.5 text-sm hover:bg-muted cursor-pointer rounded-sm"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevenir propagação de eventos
+                              openFilterDialog(option.value);
+                            }}
                           >
-                            <Checkbox
-                              checked={isValueSelected(item.value)}
-                              onChange={(e) => toggleValueFilter(item.value, e)}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              className="mr-2 text-white"
-                            ></Checkbox>
-                            <span className="flex-1 truncate text-[12px]">{item.label === null ? "(Vazio)" : item.label}</span>
-                            <span className="text-muted-foreground text-xs">{item.count}</span>
+                            {option.label}
                           </div>
                         ))}
-                        {isLoading && uniqueValues.length > 0 && (
-                          <div className="text-center py-1 text-xs text-muted-foreground">Carregando mais...</div>
-                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Botões de ação */}
-                  <div className="my-2">
-                    {hasActiveFilter && (
-                      <Button variant="outline" size="sm" className="w-full h-6 text-sm my-1" onClick={removeFilter}>
-                        Limpar Filtro
-                      </Button>
-                    )}
-                    <Button variant="default" size="sm" className="w-full h-6 text-sm" onClick={() => setMenuOpen(false)}>
-                      Fechar
-                    </Button>
-                  </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+
+                <Separator className="my-1.5" />
+
+                {/* Barra de pesquisa de valores */}
+                <div className="relative mt-1.5">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Pesquisar valores..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-7 pl-8 text-sm"
+                  />
+                </div>
+
+                {/* Lista de valores únicos para seleção */}
+                <div
+                  ref={scrollAreaRef}
+                  className="h-[120px] overflow-auto border rounded-md mt-1.5"
+                  style={{ scrollbarWidth: "thin" }}
+                  onScroll={handleScroll}
+                >
+                  {isLoading && uniqueValues.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <span className="text-sm text-muted-foreground">Carregando...</span>
+                    </div>
+                  ) : uniqueValues.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <span className="text-sm text-muted-foreground">Nenhum valor encontrado</span>
+                    </div>
+                  ) : (
+                    <div className="px-1">
+                      {uniqueValues.map((item, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center px-2 py-1 text-sm hover:bg-muted cursor-pointer",
+                            isValueSelected(item.value) && "bg-primary/20"
+                          )}
+                          onClick={(e) => toggleValueFilter(item.value, e)}
+                        >
+                          <Checkbox
+                            checked={isValueSelected(item.value)}
+                            onChange={(e) => toggleValueFilter(item.value, e)}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="mr-2 text-white border-1 border-stone-900"
+                          ></Checkbox>
+                          <span className="flex-1 truncate text-[12px]">{item.label === null ? "(Vazio)" : item.label}</span>
+                          <span className="text-muted-foreground text-xs">{item.count}</span>
+                        </div>
+                      ))}
+                      {isLoading && uniqueValues.length > 0 && (
+                        <div className="text-center py-1 text-xs text-muted-foreground">Carregando mais...</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Botões de ação */}
+                <div className="my-2">
+                  {hasActiveFilter && (
+                    <Button variant="outline" size="sm" className="w-full h-6 text-sm my-1" onClick={removeFilter}>
+                      Limpar Filtro
+                    </Button>
+                  )}
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-full h-6 text-sm"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setMenuReady(false);
+                    }}
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Diálogo para adicionar filtro */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
