@@ -1,11 +1,11 @@
 import { Loader2 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchTableData } from "../../lib/services/api";
-import type { Filter, SortingState, TableConfig, TableState } from "../../lib/types/data-table";
-import { cn } from "../../lib/utils";
-import DataTableHeader from "./DataTableHeader";
-import FilterPanel from "./FilterPanel";
-import SortingPanel from "./SortingPanel";
+import DataTableHeader from "~/components/data-table/DataTableHeader";
+import FilterPanel from "~/components/data-table/FilterPanel";
+import SortingPanel from "~/components/data-table/SortingPanel";
+import { fetchTableData } from "~/lib/services/api";
+import type { Filter, SortingState, TableConfig, TableState } from "~/lib/types/data-table";
+import { cn } from "~/lib/utils";
 
 interface DataTableProps {
   config: TableConfig;

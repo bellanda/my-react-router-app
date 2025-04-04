@@ -2,8 +2,8 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import { Toaster } from "~/components/ui/sonner";
 import { ThemeProvider } from "~/lib/theme-provider";
 
+import "~/app.css";
 import type { Route } from "./+types/root";
-import "./app.css";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

@@ -1,7 +1,7 @@
+import { ArrowRight, BarChart, Check, Globe, Layers, Shield, Zap } from "lucide-react";
 import { Link } from "react-router";
-import { ArrowRight, Check, Zap, Shield, Globe, BarChart, Layers } from "lucide-react";
-import { Button } from "~/components/ui/button";
 import { LandingLayout } from "~/components/layout";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [

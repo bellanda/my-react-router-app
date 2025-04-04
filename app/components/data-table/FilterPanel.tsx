@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import React from "react";
-import type { Filter } from "../../lib/types/data-table";
-import { Button } from "../ui/button";
+import { Button } from "~/components/ui/button";
+import type { Filter } from "~/lib/types/data-table";
 
 interface FilterPanelProps {
   filters: Filter[];

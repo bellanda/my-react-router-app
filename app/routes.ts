@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route, layout, prefix } from "@react-router/dev/routes";
+import { type RouteConfig, index, prefix, route } from "@react-router/dev/routes";
 
 export default [
   // Landing page usando LandingLayout

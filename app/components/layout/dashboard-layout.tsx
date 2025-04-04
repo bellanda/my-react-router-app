@@ -1,8 +1,9 @@
+import { Bell } from "lucide-react";
 import React from "react";
-import { Outlet, Link, useLocation } from "react-router";
-import { ChevronRight, Bell, User } from "lucide-react";
+import { Link, Outlet, useLocation } from "react-router";
 
 import { AppSidebar } from "~/components/sidebar/app-sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,10 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "~/components/ui/breadcrumb";
-import { Separator } from "~/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
-import { ThemeToggle } from "~/components/ui/theme-toggle";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +21,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "~/components/ui/dropdown-menu";
+import { Separator } from "~/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
 
 type DashboardLayoutProps = {
   children?: React.ReactNode;

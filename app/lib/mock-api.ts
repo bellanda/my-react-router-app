@@ -1,4 +1,4 @@
-import type { Filter, SortingState } from "./types/data-table";
+import type { Filter, SortingState } from "~/lib/types/data-table";
 
 // Dados de exemplo para produtos
 export const mockProducts = Array.from({ length: 500 }).map((_, index) => ({

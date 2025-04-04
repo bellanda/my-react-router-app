@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchTableData } from "../lib/services/api";
-import type { Filter, SortingState, TableConfig, TableState } from "../lib/types/data-table";
-import { inferColumnType } from "../lib/utils";
+import { fetchTableData } from "~/lib/services/api";
+import type { Filter, SortingState, TableConfig, TableState } from "~/lib/types/data-table";
+import { inferColumnType } from "~/lib/utils";
 
 export function useDataTable(config: TableConfig) {
   // Load previous state from sessionStorage if exists

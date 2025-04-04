@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { Checkbox } from "~/components/ui/checkbox";
 import { Separator } from "~/components/ui/separator";
-import { toast } from "sonner";
-import { useNavigate } from "react-router";
 
 export function meta() {
   return [{ title: "Register - React Router v7 Demo" }, { name: "description", content: "Registration page example" }];

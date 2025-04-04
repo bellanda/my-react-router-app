@@ -4,18 +4,18 @@ import { format } from "date-fns";
 import { CalendarIcon, ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
-import { fetchUniqueValues } from "../../lib/services/api";
-import type { ColumnDefinition, FilterOperator, UniqueValueOption } from "../../lib/types/data-table";
-import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
-import { Checkbox } from "../ui/checkbox";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "../ui/command";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Separator } from "../ui/separator";
-import { Switch } from "../ui/switch";
+import { Button } from "~/components/ui/button";
+import { Calendar } from "~/components/ui/calendar";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "~/components/ui/command";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { Separator } from "~/components/ui/separator";
+import { Switch } from "~/components/ui/switch";
+import { fetchUniqueValues } from "~/lib/services/api";
+import type { ColumnDefinition, FilterOperator, UniqueValueOption } from "~/lib/types/data-table";
+import { cn } from "~/lib/utils";
 
 // Operadores de filtro por tipo de coluna
 const FILTER_OPERATORS: Record<string, FilterOperator[]> = {

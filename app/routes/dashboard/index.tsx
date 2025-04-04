@@ -1,15 +1,15 @@
+import { ArrowDownRight, ArrowUpRight, BarChart3, CreditCard, FileText, Users } from "lucide-react";
 import { Outlet, useLocation } from "react-router";
 import { DashboardLayout } from "~/components/layout";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Progress } from "~/components/ui/progress";
 import { Separator } from "~/components/ui/separator";
-import { Badge } from "~/components/ui/badge";
-import { BarChart3, Users, CreditCard, Activity, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 export function meta() {
   return [

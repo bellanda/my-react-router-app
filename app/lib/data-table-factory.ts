@@ -1,5 +1,5 @@
-import type { ColumnDefinition, TableConfig } from "./types/data-table";
-import { formatDisplayValue } from "./utils";
+import type { ColumnDefinition, TableConfig } from "~/lib/types/data-table";
+import { formatDisplayValue } from "~/lib/utils";
 
 /**
  * Interface para configuração rápida de uma tabela

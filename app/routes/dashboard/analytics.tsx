@@ -1,5 +1,3 @@
-import React from "react";
-
 export function meta() {
   return [
     { title: "Dashboard Analytics - React Router v7 Demo" },

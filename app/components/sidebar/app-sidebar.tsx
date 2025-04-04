@@ -1,5 +1,3 @@
-"use client";
-
 import { Home, LayoutDashboard, Package, User } from "lucide-react";
 import * as React from "react";
 

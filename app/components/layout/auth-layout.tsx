@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet, Link } from "react-router";
+import { Link, Outlet } from "react-router";
 
 type AuthLayoutProps = {
   children?: React.ReactNode;

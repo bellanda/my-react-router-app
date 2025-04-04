@@ -1,13 +1,13 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronRight, Filter, Search } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { fetchUniqueValues } from "../../lib/services/api";
-import type { ColumnDefinition, Filter as DataFilter, FilterOperator, SortingState } from "../../lib/types/data-table";
-import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
-import { Checkbox } from "../ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Separator } from "../ui/separator";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Separator } from "~/components/ui/separator";
+import { fetchUniqueValues } from "~/lib/services/api";
+import type { ColumnDefinition, Filter as DataFilter, FilterOperator, SortingState } from "~/lib/types/data-table";
+import { cn } from "~/lib/utils";
 
 interface DataTableHeaderProps {
   column: ColumnDefinition;

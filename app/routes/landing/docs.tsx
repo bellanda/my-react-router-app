@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useParams } from "react-router";
-import { LandingLayout } from "../../components/layout";
+import { LandingLayout } from "~/components/layout";
 
 export function meta() {
   return [

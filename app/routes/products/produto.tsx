@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router";
 import { DashboardLayout } from "~/components/layout";
-import { Button } from "../../components/ui/button";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [

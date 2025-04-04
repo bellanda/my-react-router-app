@@ -1,6 +1,6 @@
-import type { ApiEndpoint, Filter, SortingState } from "../types/data-table";
-import { mockFetchData, mockProducts, getUniqueFieldValues } from "../mock-api";
-import type { Product } from "../mock-api";
+import type { Product } from "~/lib/mock-api";
+import { getUniqueFieldValues, mockFetchData, mockProducts } from "~/lib/mock-api";
+import type { ApiEndpoint, Filter, SortingState } from "~/lib/types/data-table";
 
 export const fetchTableData = async (
   endpoint: ApiEndpoint,

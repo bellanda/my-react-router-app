@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Button } from "../../components/ui/button";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [{ title: "Forgot Password - React Router v7 Demo" }, { name: "description", content: "Password recovery page example" }];

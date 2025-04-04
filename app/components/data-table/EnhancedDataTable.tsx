@@ -1,11 +1,11 @@
 import { ChevronDown, Loader2 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useDataTable } from "../../hooks/useDataTable";
-import type { TableConfig } from "../../lib/types/data-table";
-import { cn } from "../../lib/utils";
-import DataTableHeader from "./DataTableHeader";
-import FilterPanel from "./FilterPanel";
-import SortingPanel from "./SortingPanel";
+import DataTableHeader from "~/components/data-table/DataTableHeader";
+import FilterPanel from "~/components/data-table/FilterPanel";
+import SortingPanel from "~/components/data-table/SortingPanel";
+import { useDataTable } from "~/hooks/useDataTable";
+import type { TableConfig } from "~/lib/types/data-table";
+import { cn } from "~/lib/utils";
 
 interface EnhancedDataTableProps {
   config: TableConfig;

@@ -1,7 +1,7 @@
-import { Link } from "react-router";
 import { ArrowLeft, Home } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { Link } from "react-router";
 import { LandingLayout } from "~/components/layout";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [

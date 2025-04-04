@@ -1,6 +1,6 @@
-import DataTable from "../../components/data-table/DataTable";
-import type { TableConfig } from "../../lib/types/data-table";
-import { formatDisplayValue } from "../../lib/utils";
+import DataTable from "~/components/data-table/DataTable";
+import type { TableConfig } from "~/lib/types/data-table";
+import { formatDisplayValue } from "~/lib/utils";
 
 export function meta() {
   return [

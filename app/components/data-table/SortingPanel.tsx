@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, GripVertical, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import type { SortingState } from "../../lib/types/data-table";
-import { Button } from "../ui/button";
+import { Button } from "~/components/ui/button";
+import type { SortingState } from "~/lib/types/data-table";
 
 interface SortingPanelProps {
   sorting: SortingState[];
