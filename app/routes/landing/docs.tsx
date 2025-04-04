@@ -1,7 +1,6 @@
 import React from "react";
-import { useParams, Link } from "react-router";
+import { Link, useParams } from "react-router";
 import { LandingLayout } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 
 export function meta() {
   return [
@@ -93,7 +92,7 @@ export default function Docs() {
 
           <div className="flex flex-col lg:flex-row gap-8">
             <aside className="lg:w-64 shrink-0">
-              <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg p-4 sticky top-20">
+              <div className="bg-white dark:bg-(--background) border dark:border-slate-800 rounded-lg p-4 sticky top-20">
                 <h2 className="font-semibold mb-4">Seções</h2>
                 <nav className="space-y-6">
                   <div>
@@ -187,7 +186,7 @@ export default function Docs() {
             </aside>
 
             <main className="flex-1">
-              <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-(--background) border dark:border-slate-800 rounded-lg shadow-sm p-6">
                 <h1 className="text-3xl font-bold mb-4">{section.title}</h1>
                 <div className="prose dark:prose-invert max-w-none">
                   <p>{section.content}</p>

@@ -1,11 +1,10 @@
+import { ArrowRight, CheckCircle, Code2, Database, Lock, Server, Zap } from "lucide-react";
 import { Link } from "react-router";
-import { ArrowRight, CheckCircle, Code2, Database, Lock, Layers, Server, Zap, ArrowLeft, ArrowUp } from "lucide-react";
+import { LandingLayout } from "~/components/layout";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { LandingLayout } from "~/components/layout";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "~/components/ui/carousel";
-import { Badge } from "~/components/ui/badge";
-import { Separator } from "~/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 export function meta() {
@@ -41,7 +40,7 @@ export default function HomePage() {
       </section>
 
       {/* Features with Carousel */}
-      <section id="features" className="px-4 py-24 bg-muted/30">
+      <section id="features" className="px-4 py-24">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <Badge className="mb-2">Features</Badge>
@@ -336,15 +335,15 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 py-24 bg-primary text-primary-foreground">
+      <section className="px-4 py-24">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
             Try our demo dashboard or check out the documentation to see how React Router v7 can help you build better applications.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/dashboard">
-              <Button size="lg" variant="secondary" className="gap-2">
+              <Button size="lg" className="gap-2">
                 Try Dashboard <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

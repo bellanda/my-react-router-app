@@ -1,7 +1,7 @@
+import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router";
-import { Check, ArrowRight } from "lucide-react";
-import { Button } from "~/components/ui/button";
 import { LandingLayout } from "~/components/layout";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [
@@ -142,26 +142,26 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="px-4 py-20 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-3xl font-bold mb-6">Ready to get started?</h2>
-          <p className="text-xl text-primary-foreground/90 mb-8">
-            Join thousands of developers already using React Router v7 to build better web applications.
+      {/* CTA */}
+      <section className="px-4 py-24">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Get Started?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Try our demo dashboard or check out the documentation to see how React Router v7 can help you build better applications.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth/register">
-              <Button size="lg" variant="secondary" className="gap-2">
-                Sign Up Now <ArrowRight className="h-4 w-4" />
+            <Link to="/dashboard">
+              <Button size="lg" className="gap-2">
+                Try Dashboard <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/contact">
+            <Link to="/docs">
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10"
               >
-                Contact Sales
+                Read the Docs
               </Button>
             </Link>
           </div>

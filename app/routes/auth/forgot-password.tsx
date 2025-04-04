@@ -22,7 +22,7 @@ export default function ForgotPassword() {
           <input
             type="email"
             id="email"
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
           />
         </div>
 

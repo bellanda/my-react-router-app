@@ -1,7 +1,7 @@
+import { ArrowRight, Building2, Calendar, Github, Linkedin, Users } from "lucide-react";
 import { Link } from "react-router";
-import { Users, Building2, Calendar, ArrowRight, Github, Twitter, Linkedin } from "lucide-react";
-import { Button } from "~/components/ui/button";
 import { LandingLayout } from "~/components/layout";
+import { Button } from "~/components/ui/button";
 
 export function meta() {
   return [
@@ -138,15 +138,15 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 py-20 bg-primary text-primary-foreground">
+      <section className="px-4 py-20">
         <div className="container mx-auto text-center max-w-3xl">
           <h2 className="text-3xl font-bold mb-6">Join Our Community</h2>
-          <p className="text-xl text-primary-foreground/90 mb-8">
+          <p className="text-xl mb-8">
             Become part of our growing community of developers building amazing applications with React Router v7.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/auth/register">
-              <Button size="lg" variant="secondary" className="gap-2">
+              <Button size="lg" className="gap-2">
                 Sign Up Now <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

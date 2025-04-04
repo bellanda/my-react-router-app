@@ -1,6 +1,6 @@
+import { Menu } from "lucide-react";
 import React from "react";
-import { Outlet, Link, useLocation } from "react-router";
-import { Menu, X } from "lucide-react";
+import { Link, Outlet } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
@@ -95,10 +95,10 @@ export function LandingLayout({
         </div>
       </header>
 
-      <main className="flex-1">{children || <Outlet />}</main>
+      <main className="flex-1 bg-(--background)">{children || <Outlet />}</main>
 
       {showFooter && (
-        <footer className="border-t py-12 bg-muted/40 p-5">
+        <footer className="border-t p-12 bg-(--background)">
           <div className="container grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <Link to="/" className="flex items-center gap-2 mb-4">

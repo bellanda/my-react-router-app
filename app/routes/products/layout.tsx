@@ -12,7 +12,7 @@ export default function ProdutosLayout() {
   return (
     <DashboardLayout>
       <div className="p-0 w-full">
-        <div className="bg-white dark:bg-slate-900 p-0">
+        <div className="bg-white dark:bg-(--background) p-0">
           <Outlet />
         </div>
       </div>

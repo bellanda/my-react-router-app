@@ -100,7 +100,7 @@ export default function EditUser() {
             <h1 className="text-3xl font-bold">Edit User</h1>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg overflow-hidden shadow-sm mb-8">
+          <div className="bg-white dark:bg-(--background) border dark:border-slate-800 rounded-lg overflow-hidden shadow-sm mb-8">
             <div className="p-6">
               <form className="space-y-6">
                 <div>
@@ -111,7 +111,7 @@ export default function EditUser() {
                     type="text"
                     id="name"
                     defaultValue={user.name}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
                   />
                 </div>
 
@@ -123,7 +123,7 @@ export default function EditUser() {
                     type="email"
                     id="email"
                     defaultValue={user.email}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
                   />
                 </div>
 
@@ -134,7 +134,7 @@ export default function EditUser() {
                   <select
                     id="role"
                     defaultValue={user.role}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
                   >
                     <option value="Administrator">Administrator</option>
                     <option value="Editor">Editor</option>
@@ -150,7 +150,7 @@ export default function EditUser() {
                     id="bio"
                     defaultValue={user.bio}
                     rows={4}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
                   />
                 </div>
 
@@ -191,7 +191,7 @@ export default function EditUser() {
                   <select
                     id="status"
                     defaultValue={user.status}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>

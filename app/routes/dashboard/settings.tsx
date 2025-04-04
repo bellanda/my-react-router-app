@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "../../components/ui/button";
 
 export function meta() {
@@ -17,7 +16,7 @@ export default function DashboardSettings() {
       </p>
 
       <div className="space-y-8">
-        <div className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
+        <div className="bg-white dark:bg-(--background) border dark:border-slate-700 rounded-lg p-6">
           <h3 className="text-lg font-medium mb-4">Profile Settings</h3>
           <div className="space-y-4">
             <div>
@@ -28,7 +27,7 @@ export default function DashboardSettings() {
                 type="text"
                 id="name"
                 defaultValue="John Doe"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
               />
             </div>
             <div>
@@ -39,7 +38,7 @@ export default function DashboardSettings() {
                 type="email"
                 id="email"
                 defaultValue="john.doe@example.com"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
               />
             </div>
             <div className="pt-2">
@@ -48,7 +47,7 @@ export default function DashboardSettings() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
+        <div className="bg-white dark:bg-(--background) border dark:border-slate-700 rounded-lg p-6">
           <h3 className="text-lg font-medium mb-4">Notification Preferences</h3>
           <div className="space-y-3">
             {notifications.map((notification) => (
@@ -66,7 +65,7 @@ export default function DashboardSettings() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg p-6">
+        <div className="bg-white dark:bg-(--background) border dark:border-slate-700 rounded-lg p-6">
           <h3 className="text-lg font-medium mb-4">Security</h3>
           <div className="space-y-4">
             <div>
@@ -76,7 +75,7 @@ export default function DashboardSettings() {
               <input
                 type="password"
                 id="current-password"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
               />
             </div>
             <div>
@@ -86,7 +85,7 @@ export default function DashboardSettings() {
               <input
                 type="password"
                 id="new-password"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
               />
             </div>
             <div>
@@ -96,7 +95,7 @@ export default function DashboardSettings() {
               <input
                 type="password"
                 id="confirm-password"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-(--background)"
               />
             </div>
             <div className="pt-2">

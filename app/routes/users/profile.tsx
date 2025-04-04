@@ -120,13 +120,13 @@ export default function UserProfile() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-(--background) border dark:border-slate-800 rounded-lg shadow-sm p-6">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900 flex items-center justify-center rounded-full text-2xl font-bold text-blue-800 dark:text-blue-300 mb-4">
                     {user.avatar}
                   </div>
                   <h2 className="text-xl font-semibold mb-1">{user.name}</h2>
-                  <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-sm mb-4">{user.role}</div>
+                  <div className="px-3 py-1 bg-slate-100 dark:bg-(--background) rounded-full text-sm mb-4">{user.role}</div>
                   <div
                     className={`px-2 py-1 text-xs rounded-full mb-6 ${
                       user.status === "Active"
@@ -156,7 +156,7 @@ export default function UserProfile() {
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-(--background) border dark:border-slate-800 rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Bio</h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4">{user.bio}</p>
 
@@ -173,7 +173,7 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-sm p-6">
+              <div className="bg-white dark:bg-(--background) border dark:border-slate-800 rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Actions</h3>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild variant="outline">

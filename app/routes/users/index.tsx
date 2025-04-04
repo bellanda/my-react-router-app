@@ -31,7 +31,7 @@ export default function UsersIndex() {
           <div className="bg-white dark:bg-slate-950 border dark:border-slate-800 rounded-lg overflow-hidden shadow-sm mb-8">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-900 border-b dark:border-slate-800">
+                <thead className="bg-slate-50 dark:bg-(--background) border-b dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Name
@@ -57,7 +57,7 @@ export default function UsersIndex() {
                         <div className="font-medium">{user.name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs rounded-full bg-slate-100 dark:bg-slate-800">{user.role}</span>
+                        <span className="px-2 py-1 text-xs rounded-full bg-slate-100 dark:bg-(--background)">{user.role}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400">{user.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
