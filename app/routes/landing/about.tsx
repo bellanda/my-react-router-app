@@ -82,28 +82,13 @@ export default function AboutPage() {
               name="Gustavo C. Bellanda"
               role="AI Engineer"
               bio="Passionate about AI and its applications in various fields."
-              image="/public/images/bellanda.jpg"
+              image="/images/bellanda.jpg"
               github="https://github.com/bellanda"
               linkedin="https://www.linkedin.com/in/gustavo-casadei-bellanda-410a351bb/"
             />
 
-            <TeamMember
-              name="Samantha Lee"
-              role="Senior Frontend Engineer"
-              bio="Samantha specializes in UI/UX and has contributed to numerous open source projects in the React ecosystem."
-              image=""
-              github="#"
-              linkedin="#"
-            />
-
-            <TeamMember
-              name="Marcus Chen"
-              role="Developer Advocate"
-              bio="Marcus loves teaching and helping developers understand complex concepts through clear documentation and examples."
-              image=""
-              github="#"
-              linkedin="#"
-            />
+            <TeamMember name="" role="" bio="" image="" github="#" linkedin="#" />
+            <TeamMember name="" role="" bio="" image="" github="#" linkedin="#" />
           </div>
         </div>
       </section>
