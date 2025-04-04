@@ -32,9 +32,6 @@ export function NavMain({
   const location = useLocation();
   const pathname = location.pathname;
 
-  // Função para verificar se é um item do dashboard
-  const isDashboardItem = (url: string) => url.startsWith("/dashboard");
-
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Navegação</SidebarGroupLabel>
@@ -64,20 +61,13 @@ export function NavMain({
                           // Compare without query parameters
                           const subItemBaseUrl = subItem.url.split("?")[0];
                           const isSubItemActive = pathname === subItemBaseUrl;
-                          const isDashboard = isDashboardItem(subItemBaseUrl);
 
                           return (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild className={isSubItemActive ? "font-medium text-primary" : ""}>
-                                {isDashboard ? (
-                                  <a href={subItem.url} className="flex items-center">
-                                    <span>{subItem.title}</span>
-                                  </a>
-                                ) : (
-                                  <Link to={subItem.url} prefetch="intent">
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                )}
+                                <Link to={subItem.url} prefetch="intent">
+                                  <span>{subItem.title}</span>
+                                </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           );

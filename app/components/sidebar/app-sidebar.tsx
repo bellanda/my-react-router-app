@@ -64,30 +64,13 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // Usando uma abordagem que força a navegação completa para as páginas do dashboard
-  const forceRefresh = (url: string) => `${url}${url.includes("?") ? "&" : "?"}forceRefresh=${Date.now()}`;
-
-  // Modificar URLs dos itens do dashboard para forçar a navegação
-  const navItemsWithForcedRefresh = data.navMain.map((item) => {
-    if (item.title === "Dashboard" && item.items) {
-      return {
-        ...item,
-        items: item.items.map((subItem) => ({
-          ...subItem,
-          url: forceRefresh(subItem.url)
-        }))
-      };
-    }
-    return item;
-  });
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItemsWithForcedRefresh} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

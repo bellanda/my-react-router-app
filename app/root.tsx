@@ -26,6 +26,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const storageKey = "react-router-ui-theme";
+                  const theme = localStorage.getItem(storageKey);
+                  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                  
+                  document.documentElement.classList.remove("light", "dark");
+                  document.documentElement.classList.add(theme === "system" ? systemTheme : theme || "light");
+                } catch (e) {
+                  console.error("Error setting theme:", e);
+                }
+              })();
+            `
+          }}
+        />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider defaultTheme="system" storageKey="react-router-ui-theme">
