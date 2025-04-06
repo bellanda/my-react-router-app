@@ -7,11 +7,29 @@ export function useDataTable(config: TableConfig) {
   // Load previous state from sessionStorage if exists
   const loadSavedState = (): TableState | null => {
     try {
+      // Verificar se está no navegador antes de acessar sessionStorage
+      if (typeof window === "undefined") return null;
+
       const storageKey = `data-table-state-${config.endpoint}`;
       const savedState = sessionStorage.getItem(storageKey);
 
       if (savedState) {
         const parsed = JSON.parse(savedState);
+
+        // Garantir que a estrutura do estado está correta
+        if (parsed && Array.isArray(parsed.sorting)) {
+          // Manter a consistência das ordenações
+          const validSorting = parsed.sorting.filter((sort: any) => sort && typeof sort === "object" && sort.id && "desc" in sort);
+
+          return {
+            filters: Array.isArray(parsed.filters) ? parsed.filters : [],
+            sorting: validSorting,
+            pagination: {
+              pageIndex: parsed.pagination?.pageIndex || 0,
+              pageSize: parsed.pagination?.pageSize || config.defaultPageSize || 50
+            }
+          };
+        }
         return parsed;
       }
     } catch (e) {
@@ -30,7 +48,7 @@ export function useDataTable(config: TableConfig) {
     // Estado padrão
     const defaultState = {
       filters: [],
-      sorting: config.initialSort ? [config.initialSort] : [],
+      sorting: [], // Removendo ordenação padrão por ID
       pagination: {
         pageIndex: 0,
         pageSize: config.defaultPageSize || 50
@@ -56,28 +74,29 @@ export function useDataTable(config: TableConfig) {
   // Save state to sessionStorage when it changes
   useEffect(() => {
     try {
+      // Verificar se está no navegador antes de acessar sessionStorage
+      if (typeof window === "undefined") return;
+
       const storageKey = `data-table-state-${config.endpoint}`;
-      // Não salvar o estado durante o carregamento inicial
-      if (isLoading && data.length === 0) {
-        return;
-      }
 
-      // Clone para garantir que não há referências circulares
-      const stateToSave = JSON.stringify({
-        filters: tableState.filters,
-        sorting: tableState.sorting,
+      // Certificar-se de que temos um estado válido e consistente para salvar
+      const stateToSave = {
+        filters: tableState.filters || [],
+        sorting: (tableState.sorting || []).map((sort) => ({
+          id: sort.id,
+          desc: Boolean(sort.desc)
+        })),
         pagination: {
-          pageIndex: 0, // Sempre restaurar na primeira página
-          pageSize: tableState.pagination.pageSize
+          pageIndex: tableState.pagination.pageIndex || 0,
+          pageSize: tableState.pagination.pageSize || config.defaultPageSize || 50
         }
-      });
+      };
 
-      sessionStorage.setItem(storageKey, stateToSave);
-      console.log(`Estado da tabela salvo em ${storageKey}:`, JSON.parse(stateToSave));
+      sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
     } catch (e) {
       console.error("Error saving table state:", e);
     }
-  }, [tableState.filters, tableState.sorting, config.endpoint, isLoading, data.length]);
+  }, [tableState, config.endpoint]);
 
   // Referência para evitar requisições duplicadas
   const fetchingRef = useRef(false);
@@ -201,14 +220,31 @@ export function useDataTable(config: TableConfig) {
       // Primeira carga - não depende de alterações de filtro/ordenação
       initialLoadCompleteRef.current = true;
 
-      // Resetar para a primeira página
-      setTableState((prev) => ({
-        ...prev,
+      // Verificar se estamos restaurando um estado com ordenações válidas
+      if (tableState.sorting.length > 0) {
+        console.log(
+          "Restaurando estado da tabela com ordenações:",
+          tableState.sorting.map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`).join(", ")
+        );
+      }
+
+      // Garantir que o estado seja consistente antes da primeira carga
+      const consistentState = {
+        ...tableState,
+        sorting: tableState.sorting.map((sort) => ({
+          id: sort.id,
+          desc: Boolean(sort.desc)
+        })),
         pagination: {
-          ...prev.pagination,
-          pageIndex: 0
+          ...tableState.pagination,
+          pageIndex: 0 // Sempre começar da primeira página no carregamento inicial
         }
-      }));
+      };
+
+      // Atualizar o estado apenas se diferente
+      if (JSON.stringify(consistentState) !== JSON.stringify(tableState)) {
+        setTableState(consistentState);
+      }
 
       setData([]); // Limpar dados existentes
 

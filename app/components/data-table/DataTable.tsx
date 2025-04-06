@@ -13,15 +13,60 @@ interface DataTableProps {
 }
 
 const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
-  // Estado local da tabela
-  const [tableState, setTableState] = useState<TableState>({
-    filters: [],
-    sorting: config.initialSort ? [config.initialSort] : [],
-    pagination: {
-      pageIndex: 0,
-      pageSize: config.defaultPageSize || 20
+  // Load previous state from sessionStorage if exists
+  const loadSavedState = (): TableState | null => {
+    try {
+      // Verificar se está no navegador antes de acessar sessionStorage
+      if (typeof window === "undefined") return null;
+
+      const storageKey = `data-table-state-${config.endpoint.url}`;
+      const savedState = sessionStorage.getItem(storageKey);
+
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+
+        // Garantir que a estrutura do estado está correta
+        if (parsed && Array.isArray(parsed.sorting)) {
+          // Manter a consistência das ordenações
+          const validSorting = parsed.sorting.filter((sort: any) => sort && typeof sort === "object" && sort.id && "desc" in sort);
+
+          return {
+            filters: Array.isArray(parsed.filters) ? parsed.filters : [],
+            sorting: validSorting,
+            pagination: {
+              pageIndex: parsed.pagination?.pageIndex || 0,
+              pageSize: parsed.pagination?.pageSize || config.defaultPageSize || 20
+            }
+          };
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.error("Error loading saved table state:", e);
     }
-  });
+    return null;
+  };
+
+  // Get initial state from sessionStorage or use default
+  const getInitialState = (): TableState => {
+    const savedState = loadSavedState();
+    if (savedState) {
+      return savedState;
+    }
+
+    // Estado padrão
+    return {
+      filters: [],
+      sorting: [], // Sem ordenação padrão
+      pagination: {
+        pageIndex: 0,
+        pageSize: config.defaultPageSize || 20
+      }
+    };
+  };
+
+  // Estado local da tabela
+  const [tableState, setTableState] = useState<TableState>(getInitialState());
 
   // Estados para os dados e carregamento
   const [data, setData] = useState<any[]>([]);
@@ -140,12 +185,38 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   useEffect(() => {
     if (initialLoadDoneRef.current) return;
 
+    // Verificar se estamos restaurando um estado com ordenações válidas
+    if (tableState.sorting.length > 0) {
+      console.log(
+        "Restaurando estado da tabela com ordenações:",
+        tableState.sorting.map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`).join(", ")
+      );
+    }
+
+    // Garantir que o estado seja consistente antes da primeira carga
+    const consistentState = {
+      ...tableState,
+      sorting: tableState.sorting.map((sort) => ({
+        id: sort.id,
+        desc: Boolean(sort.desc)
+      })),
+      pagination: {
+        ...tableState.pagination,
+        pageIndex: 0 // Sempre começar da primeira página no carregamento inicial
+      }
+    };
+
+    // Atualizar o estado apenas se diferente
+    if (JSON.stringify(consistentState) !== JSON.stringify(tableState)) {
+      setTableState(consistentState);
+    }
+
     // Marcar como inicializado imediatamente para evitar múltiplas cargas
     initialLoadDoneRef.current = true;
 
     // Carregar primeira página
     fetchData(0, false);
-  }, [fetchData]);
+  }, [fetchData, tableState]);
 
   // Atualizar ao mudar filtros ou ordenação
   useEffect(() => {
@@ -589,6 +660,33 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       </div>
     ));
   }, [data, visibleColumns, cellWidth]);
+
+  // Save state to sessionStorage when it changes
+  useEffect(() => {
+    try {
+      // Verificar se está no navegador antes de acessar sessionStorage
+      if (typeof window === "undefined") return;
+
+      const storageKey = `data-table-state-${config.endpoint.url}`;
+
+      // Certificar-se de que temos um estado válido e consistente para salvar
+      const stateToSave = {
+        filters: tableState.filters || [],
+        sorting: (tableState.sorting || []).map((sort) => ({
+          id: sort.id,
+          desc: Boolean(sort.desc)
+        })),
+        pagination: {
+          pageIndex: tableState.pagination.pageIndex || 0,
+          pageSize: tableState.pagination.pageSize || config.defaultPageSize || 20
+        }
+      };
+
+      sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    } catch (e) {
+      console.error("Error saving table state:", e);
+    }
+  }, [tableState, config.endpoint.url]);
 
   // Renderizar componente
   return (

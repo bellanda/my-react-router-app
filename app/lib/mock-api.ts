@@ -258,6 +258,7 @@ function applySorting<T>(data: T[], sorting: SortingState[]): T[] {
   if (!sorting.length) return data;
 
   return [...data].sort((a, b) => {
+    // Percorrer todas as colunas de ordenação
     for (const sort of sorting) {
       const { id, desc } = sort;
 
@@ -287,15 +288,23 @@ function applySorting<T>(data: T[], sorting: SortingState[]): T[] {
           return desc ? -result : result;
         }
       } else {
+        // Lidar com números, booleanos, etc.
         if (aValue < bValue) {
           return desc ? 1 : -1;
         }
         if (aValue > bValue) {
           return desc ? -1 : 1;
         }
+        // Se os valores são iguais, continue para a próxima coluna de ordenação
       }
     }
-    return 0;
+
+    // Ordenação estável usando ID como critério secundário
+    const idA = (a as any).id;
+    const idB = (b as any).id;
+
+    // Garantir que sempre ordenamos pelo ID quando todos os outros critérios são iguais
+    return idA - idB;
   });
 }
 
@@ -344,8 +353,8 @@ export function mockFetchData(
   // Aplicar filtros
   const filteredData = applyFilters(data, filters);
 
-  // Aplicar ordenação
-  const sortedData = applySorting(filteredData, sorting);
+  // Aplicar ordenação apenas se houver ordenações especificadas
+  const sortedData = sorting.length > 0 ? applySorting(filteredData, sorting) : filteredData;
 
   // Calcular contagem total
   const totalCount = sortedData.length;
@@ -354,7 +363,7 @@ export function mockFetchData(
   const pageCount = Math.ceil(totalCount / pageSize);
 
   // Verificar se o pageIndex está dentro dos limites válidos
-  const validPageIndex = Math.min(pageIndex, pageCount - 1);
+  const validPageIndex = Math.max(0, Math.min(pageIndex, Math.max(0, pageCount - 1)));
 
   // Aplicar paginação
   const start = validPageIndex * pageSize;

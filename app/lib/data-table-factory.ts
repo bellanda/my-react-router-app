@@ -17,14 +17,7 @@ interface ModelTableConfig {
  * Cria uma configuração de tabela para um modelo específico
  */
 export function createTableConfig(config: ModelTableConfig): TableConfig {
-  const {
-    modelName,
-    endpoint,
-    defaultColumns,
-    excludeColumns = [],
-    initialSort = { id: "id", desc: false },
-    customColumns = {}
-  } = config;
+  const { modelName, endpoint, defaultColumns, excludeColumns = [], initialSort = undefined, customColumns = {} } = config;
 
   // Mapeamentos padrão para tipos comuns de campos
   const defaultColumnTypes: Record<string, Partial<ColumnDefinition>> = {
