@@ -437,7 +437,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           variant="ghost"
           size="sm"
           className={cn(
-            "flex items-center justify-start w-full px-1 hover:bg-muted",
+            "flex items-center justify-start w-full px-1 hover:bg-muted ",
             hasActiveFilter && "text-primary font-medium"
           )}
           onClick={handleHeaderClick}

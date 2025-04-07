@@ -4,7 +4,15 @@ import DataTableHeader from "~/components/data-table/DataTableHeader";
 import FilterPanel from "~/components/data-table/FilterPanel";
 import SortingPanel from "~/components/data-table/SortingPanel";
 import { fetchTableData } from "~/lib/services/api";
-import type { Filter, SortingState, TableConfig, TableState } from "~/lib/types/data-table";
+import type {
+  ApiResult,
+  ColumnDefinition,
+  DjangoApiResponse,
+  Filter,
+  SortingState,
+  TableConfig,
+  TableState
+} from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
 
 interface DataTableProps {
@@ -97,6 +105,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   // Referência para controlar mudanças manuais de filtro/ordenação
   const manualFilterSortChangeRef = useRef(false);
 
+  // Referência para a próxima e anterior URL (para cursor pagination)
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [previousUrl, setPreviousUrl] = useState<string | null>(null);
+
   // Atualizar a ref quando o tableState muda
   useEffect(() => {
     stableTableState.current = tableState;
@@ -131,13 +143,60 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         // Usar a versão mais recente do estado
         const currentState = stableTableState.current;
 
-        const response = await fetchTableData(
-          config.endpoint,
-          currentState.filters,
-          currentState.sorting,
-          page,
-          currentState.pagination.pageSize
-        );
+        // Se estamos usando cursor pagination e temos uma URL next ou previous
+        let fullUrl: string | null = null;
+        if (append && nextUrl) {
+          fullUrl = nextUrl;
+        } else if (!append && page < currentState.pagination.pageIndex && previousUrl) {
+          fullUrl = previousUrl;
+        }
+
+        // Se temos uma URL completa de cursor pagination, usar diretamente
+        let response: ApiResult<any>;
+        if (fullUrl) {
+          // Extrair apenas o caminho e query da URL completa
+          const url = new URL(fullUrl);
+          const pathWithQuery = url.pathname + url.search;
+
+          // Buscar dados diretamente com essa URL
+          const res = await fetch(pathWithQuery);
+          if (!res.ok) {
+            throw new Error(`Erro ao buscar dados: ${res.status}`);
+          }
+
+          // Converter a resposta do Django para o formato interno
+          const djangoResponse = (await res.json()) as DjangoApiResponse<any>;
+
+          // Formatar resposta no formato esperado pelo componente
+          response = {
+            data: djangoResponse.results || [],
+            totalCount: djangoResponse.count || 0,
+            pageCount: Math.ceil((djangoResponse.count || 0) / currentState.pagination.pageSize),
+            meta: {
+              start: page * currentState.pagination.pageSize,
+              end: page * currentState.pagination.pageSize + (djangoResponse.results?.length || 0),
+              pageSize: currentState.pagination.pageSize,
+              pageIndex: page,
+              hasNextPage: !!djangoResponse.next,
+              hasPreviousPage: !!djangoResponse.previous,
+              next: djangoResponse.next,
+              previous: djangoResponse.previous
+            }
+          };
+        } else {
+          // Se não temos URL completa, usar a função de fetch regular
+          response = await fetchTableData(
+            config.endpoint,
+            currentState.filters,
+            currentState.sorting,
+            page,
+            currentState.pagination.pageSize
+          );
+        }
+
+        // Atualizar as URLs de paginação para o cursor
+        setNextUrl(response.meta?.next || null);
+        setPreviousUrl(response.meta?.previous || null);
 
         // Verificar se temos dados para adicionar
         if (response.data.length === 0) {
@@ -157,7 +216,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         setTotalItems(response.totalCount);
 
         // Verificar se há mais páginas
-        const hasMore = page < response.pageCount - 1 && response.data.length > 0;
+        const hasMore = response.meta?.hasNextPage || (page < response.pageCount - 1 && response.data.length > 0);
         setHasNextPage(hasMore);
 
         setIsError(false);
@@ -178,7 +237,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         fetchingRef.current = false;
       }
     },
-    [config.endpoint, hasNextPage, isLoading, isFetchingMore]
+    [config.endpoint, hasNextPage, isLoading, isFetchingMore, nextUrl, previousUrl]
   );
 
   // Carregar dados iniciais
@@ -600,12 +659,34 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   // Calcular colunas visíveis e largura das células
   const visibleColumns = useMemo(() => config.columns.filter((col) => !col.hidden), [config.columns]);
   const columnCount = visibleColumns.length;
-  const cellWidth = useMemo(() => `${100 / columnCount}%`, [columnCount]);
+
+  // Definir larguras das colunas com base no tipo e configuração
+  const getColumnWidth = useCallback((column: ColumnDefinition) => {
+    // Se a coluna tem uma largura explícita, usar essa
+    if (column.width) return column.width;
+
+    // Caso contrário, calcular com base no tipo de dados
+    switch (column.type) {
+      case "boolean":
+        return "100px";
+      case "number":
+        return "120px";
+      case "date":
+        return "160px";
+      case "text":
+      default:
+        // Para colunas de texto, verificar se o accessor indica um campo que tende a ser maior
+        if (column.accessor.includes("description")) return "300px";
+        if (column.accessor.includes("name") || column.accessor.includes("email")) return "200px";
+        if (column.accessor.includes("id")) return "100px";
+        return "180px"; // largura padrão para outras colunas de texto
+    }
+  }, []);
 
   // Memoizar cabeçalho da tabela
   const headerComponent = useMemo(() => {
     return (
-      <div className="flex border-b bg-muted/50">
+      <div className="flex border-b w-full">
         {visibleColumns.map((column) => (
           <DataTableHeader
             key={column.accessor}
@@ -616,7 +697,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
             onFilter={handleFilter}
             onRemoveFilter={handleRemoveFilter}
             endpoint={config.endpoint}
-            style={{ width: cellWidth }}
+            style={{ width: getColumnWidth(column), minWidth: getColumnWidth(column) }}
           />
         ))}
       </div>
@@ -625,7 +706,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     visibleColumns,
     tableState.sorting,
     tableState.filters,
-    cellWidth,
+    getColumnWidth,
     handleSort,
     handleFilter,
     handleRemoveFilter,
@@ -635,7 +716,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   // Memoizar linhas da tabela
   const rowsComponent = useMemo(() => {
     return data.map((row, rowIndex) => (
-      <div key={`row-${rowIndex}`} className={cn("flex border-b", rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20")}>
+      <div key={`row-${rowIndex}`} className={cn("flex border-b w-full", rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20")}>
         {visibleColumns.map((column) => {
           // Suporte a accessors aninhados
           const keys = column.accessor.split(".");
@@ -650,7 +731,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
             <div
               key={`${rowIndex}-${column.accessor}`}
               className="py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm"
-              style={{ width: cellWidth }}
+              style={{
+                width: getColumnWidth(column),
+                minWidth: getColumnWidth(column)
+              }}
               title={String(displayValue)}
             >
               {displayValue}
@@ -659,7 +743,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         })}
       </div>
     ));
-  }, [data, visibleColumns, cellWidth]);
+  }, [data, visibleColumns, getColumnWidth]);
 
   // Save state to sessionStorage when it changes
   useEffect(() => {
@@ -690,7 +774,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
   // Renderizar componente
   return (
-    <div className={cn("flex flex-col border rounded-md", className)}>
+    <div className={cn("flex flex-col border rounded-md w-full", className)}>
       {/* Painéis de filtro e ordenação */}
       {tableState.filters.length > 0 && (
         <FilterPanel
@@ -711,24 +795,25 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         />
       )}
 
-      {/* Cabeçalho da tabela */}
-      {headerComponent}
+      {/* Container principal - sem altura fixa ou scroll próprio */}
+      <div ref={containerRef} className="w-full relative">
+        {/* Cabeçalho da tabela - fixo na parte superior */}
+        <div className="sticky top-0 z-10 bg-background shadow-sm">{headerComponent}</div>
 
-      {/* Corpo da tabela com scroll */}
-      <div ref={containerRef} className="flex-1 overflow-auto" style={{ height: "600px" }}>
+        {/* Corpo da tabela */}
         {isLoading && data.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex items-center">
               <Loader2 className="h-5 w-5 mr-2 animate-spin text-primary" />
               <span className="text-muted-foreground">Carregando...</span>
             </div>
           </div>
         ) : isError ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-destructive">Erro ao carregar dados: {error?.message}</div>
           </div>
         ) : data.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-muted">Nenhum dado encontrado</div>
           </div>
         ) : (

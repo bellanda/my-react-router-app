@@ -77,3 +77,31 @@ export interface VirtualItem {
   end: number;
   lane: number;
 }
+
+// Interface para o meta dos dados paginados retornados pela API
+export interface TableMeta {
+  start: number;
+  end: number;
+  pageSize: number;
+  pageIndex: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  next?: string | null;
+  previous?: string | null;
+}
+
+// Interface para o resultado da API
+export interface ApiResult<T> {
+  data: T[];
+  totalCount: number;
+  pageCount: number;
+  meta: TableMeta;
+}
+
+// Interface para a resposta do Django Rest Framework com CursorPagination
+export interface DjangoApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}

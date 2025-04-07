@@ -1,7 +1,9 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { Toaster } from "~/components/ui/sonner";
+import { useAuth } from "~/hooks/useAuth";
 import { ThemeProvider } from "~/lib/theme-provider";
 
+import { useEffect } from "react";
 import "~/app.css";
 import type { Route } from "./+types/root";
 
@@ -58,6 +60,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Inicializar autenticação ao carregar o aplicativo
+  const { authenticated, loading } = useAuth({
+    autoLogin: true,
+    retryCount: 3, // Tentar até 3 vezes
+    onAuthStateChange: (isAuth) => {
+      console.log("Estado de autenticação:", isAuth ? "Autenticado" : "Não autenticado");
+    }
+  });
+
+  // Log de debug quando o estado de autenticação mudar
+  useEffect(() => {
+    if (!loading) {
+      console.log(`[Auth] ${authenticated ? "Autenticado com sucesso" : "Não autenticado"}`);
+    }
+  }, [authenticated, loading]);
+
   return <Outlet />;
 }
 
