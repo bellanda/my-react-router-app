@@ -23,6 +23,7 @@ export interface ColumnDefinition {
   hidden?: boolean;
   formatFn?: (value: any) => any;
   width?: string;
+  displayAccessor?: string;
 }
 
 export interface ApiEndpoint {
@@ -38,6 +39,7 @@ export interface TableConfig {
   columns: ColumnDefinition[];
   initialSort?: SortingState;
   defaultPageSize?: number;
+  maxHeight?: string;
 }
 
 export interface Filter {
@@ -101,7 +103,10 @@ export interface ApiResult<T> {
 // Interface para a resposta do Django Rest Framework com CursorPagination
 export interface DjangoApiResponse<T> {
   count: number;
-  next: string | null;
-  previous: string | null;
+  links: {
+    next: string | null;
+    previous: string | null;
+  };
+  page_size: number;
   results: T[];
 }

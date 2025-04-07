@@ -54,7 +54,7 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear sticky top-0 z-20 bg-background">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -127,7 +127,7 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-2 p-6">{children || <Outlet />}</div>
+        <div className="flex flex-1 flex-col gap-2 p-6 bg-background">{children || <Outlet />}</div>
         {/* {showFooter && (
           <footer className="border-t py-4 px-6">
             <div className="container mx-auto">

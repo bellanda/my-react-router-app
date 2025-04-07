@@ -8,27 +8,31 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formata um valor para exibição com base no tipo
  */
-export function formatDisplayValue(value: any, type: "number" | "boolean" | "currency" | "date" | "datetime"): string {
+export function formatDisplayValue(value: any, type: "number" | "boolean" | "date" | "currency" | "datetime" | "decimal"): string {
   if (value === null || value === undefined) {
     return "-";
   }
 
-  switch (type) {
-    case "number":
-      return Number(value).toLocaleString("pt-BR");
-    case "boolean":
-      return value ? "Sim" : "Não";
-    case "currency":
-      return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      }).format(Number(value));
-    case "date":
-      return new Date(value).toLocaleDateString("pt-BR");
-    case "datetime":
-      return new Date(value).toLocaleString("pt-BR");
-    default:
-      return String(value);
+  try {
+    switch (type) {
+      case "number":
+        return Number(value).toLocaleString("pt-BR");
+      case "decimal":
+        return Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      case "boolean":
+        return value === true || value === "true" || value === 1 || value === "1" ? "Sim" : "Não";
+      case "date":
+        return new Date(value).toLocaleDateString("pt-BR");
+      case "datetime":
+        return new Date(value).toLocaleString("pt-BR");
+      case "currency":
+        return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      default:
+        return String(value);
+    }
+  } catch (error) {
+    console.error(`Erro ao formatar valor ${value} como ${type}:`, error);
+    return String(value);
   }
 }
 

@@ -3,16 +3,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import DataTableHeader from "~/components/data-table/DataTableHeader";
 import FilterPanel from "~/components/data-table/FilterPanel";
 import SortingPanel from "~/components/data-table/SortingPanel";
-import { fetchTableData } from "~/lib/services/api";
-import type {
-  ApiResult,
-  ColumnDefinition,
-  DjangoApiResponse,
-  Filter,
-  SortingState,
-  TableConfig,
-  TableState
-} from "~/lib/types/data-table";
+import { fetchTableData, fetchTotalRowCount } from "~/lib/services/api";
+import type { ApiResult, ColumnDefinition, Filter, SortingState, TableConfig, TableState } from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
 
 interface DataTableProps {
@@ -85,6 +77,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   const [totalItems, setTotalItems] = useState(0);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [actualTotalCount, setActualTotalCount] = useState<number | null>(null);
 
   // Referência para o container de scroll
   const containerRef = useRef<HTMLDivElement>(null);
@@ -143,48 +136,43 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         // Usar a versão mais recente do estado
         const currentState = stableTableState.current;
 
-        // Se estamos usando cursor pagination e temos uma URL next ou previous
+        // Se estamos usando PageNumberPagination e temos uma URL next ou previous
         let fullUrl: string | null = null;
         if (append && nextUrl) {
+          console.log("Usando URL next para carregar mais dados:", nextUrl);
           fullUrl = nextUrl;
         } else if (!append && page < currentState.pagination.pageIndex && previousUrl) {
+          console.log("Usando URL previous para carregar página anterior:", previousUrl);
           fullUrl = previousUrl;
         }
 
-        // Se temos uma URL completa de cursor pagination, usar diretamente
+        // Se temos uma URL completa, usar diretamente
         let response: ApiResult<any>;
         if (fullUrl) {
-          // Extrair apenas o caminho e query da URL completa
-          const url = new URL(fullUrl);
-          const pathWithQuery = url.pathname + url.search;
-
-          // Buscar dados diretamente com essa URL
-          const res = await fetch(pathWithQuery);
-          if (!res.ok) {
-            throw new Error(`Erro ao buscar dados: ${res.status}`);
+          console.log("Obtendo dados usando URL completa:", fullUrl);
+          try {
+            // Usar a URL completa para a requisição
+            response = await fetchTableData(
+              { ...config.endpoint, url: fullUrl },
+              [], // Não enviar filtros, pois já estão na URL
+              [], // Não enviar ordenação, pois já está na URL
+              page,
+              currentState.pagination.pageSize
+            );
+          } catch (error) {
+            console.error("Erro ao usar URL completa de paginação:", error);
+            // Fallback para requisição normal em caso de erro com a URL completa
+            response = await fetchTableData(
+              config.endpoint,
+              currentState.filters,
+              currentState.sorting,
+              page,
+              currentState.pagination.pageSize
+            );
           }
-
-          // Converter a resposta do Django para o formato interno
-          const djangoResponse = (await res.json()) as DjangoApiResponse<any>;
-
-          // Formatar resposta no formato esperado pelo componente
-          response = {
-            data: djangoResponse.results || [],
-            totalCount: djangoResponse.count || 0,
-            pageCount: Math.ceil((djangoResponse.count || 0) / currentState.pagination.pageSize),
-            meta: {
-              start: page * currentState.pagination.pageSize,
-              end: page * currentState.pagination.pageSize + (djangoResponse.results?.length || 0),
-              pageSize: currentState.pagination.pageSize,
-              pageIndex: page,
-              hasNextPage: !!djangoResponse.next,
-              hasPreviousPage: !!djangoResponse.previous,
-              next: djangoResponse.next,
-              previous: djangoResponse.previous
-            }
-          };
         } else {
           // Se não temos URL completa, usar a função de fetch regular
+          console.log("Obtendo dados usando parâmetros regulares");
           response = await fetchTableData(
             config.endpoint,
             currentState.filters,
@@ -194,7 +182,8 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           );
         }
 
-        // Atualizar as URLs de paginação para o cursor
+        // Atualizar as URLs de paginação
+        console.log("URLs de paginação recebidas:", { next: response.meta?.next, previous: response.meta?.previous });
         setNextUrl(response.meta?.next || null);
         setPreviousUrl(response.meta?.previous || null);
 
@@ -216,8 +205,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         setTotalItems(response.totalCount);
 
         // Verificar se há mais páginas
-        const hasMore = response.meta?.hasNextPage || (page < response.pageCount - 1 && response.data.length > 0);
-        setHasNextPage(hasMore);
+        setHasNextPage(!!response.meta?.next);
 
         setIsError(false);
         setError(null);
@@ -273,9 +261,21 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     // Marcar como inicializado imediatamente para evitar múltiplas cargas
     initialLoadDoneRef.current = true;
 
+    // Buscar contagem total de registros
+    fetchTotalRowCount(config.endpoint.url)
+      .then((totalCount) => {
+        if (totalCount !== null) {
+          console.log(`Contagem total de registros: ${totalCount}`);
+          setActualTotalCount(totalCount);
+        }
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar contagem total:", error);
+      });
+
     // Carregar primeira página
     fetchData(0, false);
-  }, [fetchData, tableState]);
+  }, [fetchData, tableState, config.endpoint.url]);
 
   // Atualizar ao mudar filtros ou ordenação
   useEffect(() => {
@@ -296,6 +296,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       if (isLoading || isFetchingMore) {
         return;
       }
+
+      // Quando mudam os filtros ou ordenação, resetar URL de paginação
+      setNextUrl(null);
+      setPreviousUrl(null);
 
       // Resetar para a primeira página
       setTableState((prev) => ({
@@ -377,7 +381,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         clearTimeout(scrollTimeout);
       }
     };
-  }, [loadMoreData, hasNextPage, isLoading, isFetchingMore, data.length, totalItems]);
+  }, [loadMoreData, data.length, totalItems]);
 
   // Verificar se precisa carregar mais dados quando a tela não está preenchida
   useEffect(() => {
@@ -410,7 +414,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         // Chamar a função que foi passada como dependência
         loadMoreData();
       }
-    }, 100); // Reduzido para 500ms para melhor responsividade
+    }, 100); // 100ms é suficiente
 
     // Limpar o timeout se o componente desmontar
     return () => clearTimeout(timeoutId);
@@ -423,7 +427,8 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
     // Elemento que queremos observar
     const loadMoreElement = loadMoreTriggerRef.current;
-    if (!loadMoreElement) return;
+    const scrollContainer = containerRef.current;
+    if (!loadMoreElement || !scrollContainer) return;
 
     // Função chamada quando o elemento entra/sai da viewport
     const onIntersect = (entries: IntersectionObserverEntry[]) => {
@@ -435,8 +440,8 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
     // Criar e configurar o observer
     const observer = new IntersectionObserver(onIntersect, {
-      root: null, // viewport
-      rootMargin: "0px",
+      root: scrollContainer, // Usar o container da tabela como viewport
+      rootMargin: "100px",
       threshold: 0.1 // 10% do elemento visível é suficiente
     });
 
@@ -665,21 +670,82 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     // Se a coluna tem uma largura explícita, usar essa
     if (column.width) return column.width;
 
-    // Caso contrário, calcular com base no tipo de dados
+    // Larguras mínimas baseadas no texto do cabeçalho e tipo de dados
+    const headerLength = column.header.length * 10; // Aumentado para 10px por caractere
+
+    // Definir uma largura mínima baseada no texto do cabeçalho
+    const minWidthFromHeader = Math.max(120, headerLength); // Pelo menos 120px ou tamanho do texto, o que for maior
+
+    // Ajustar colunas específicas com base no nome do accessor ou texto do cabeçalho
+    if (column.accessor.includes("id")) {
+      return "300px"; // ID precisa de mais espaço
+    }
+
+    if (
+      column.accessor.includes("stock_min") ||
+      column.accessor.includes("estoque_min") ||
+      column.header.toLowerCase().includes("estoque mín")
+    ) {
+      return "220px"; // Estoque Mínimo precisa de mais espaço para o cabeçalho
+    }
+
+    if (
+      column.accessor.includes("stock_max") ||
+      column.accessor.includes("estoque_max") ||
+      column.header.toLowerCase().includes("estoque máx")
+    ) {
+      return "220px"; // Estoque Máximo precisa de mais espaço para o cabeçalho
+    }
+
+    if (
+      column.accessor.includes("garantia") ||
+      column.accessor.includes("warranty") ||
+      column.header.toLowerCase().includes("garantia")
+    ) {
+      return "200px"; // Garantia (dias) precisa de mais espaço
+    }
+
+    // Verificar se é uma das últimas colunas típicas
+    if (
+      column.accessor.includes("created_at") ||
+      column.accessor.includes("updated_at") ||
+      column.accessor.includes("criado_em") ||
+      column.accessor.includes("atualizado_em") ||
+      column.header.toLowerCase().includes("data")
+    ) {
+      return "220px"; // Colunas de data geralmente precisam de mais espaço
+    }
+
+    if (
+      column.accessor.includes("action") ||
+      column.accessor.includes("acao") ||
+      column.header.toLowerCase().includes("ação") ||
+      column.header.toLowerCase().includes("ações")
+    ) {
+      return "180px"; // Colunas de ação
+    }
+
+    if (column.accessor.includes("status") || column.header.toLowerCase().includes("status")) {
+      return "200px"; // Colunas de status
+    }
+
+    // Larguras baseadas no tipo de dados
     switch (column.type) {
       case "boolean":
-        return "100px";
+        return "160px"; // Aumentado para boolean
       case "number":
-        return "120px";
+        return Math.max(180, minWidthFromHeader) + "px"; // Aumentado para números
       case "date":
-        return "160px";
+        return Math.max(220, minWidthFromHeader) + "px"; // Aumentado para datas
       case "text":
       default:
-        // Para colunas de texto, verificar se o accessor indica um campo que tende a ser maior
-        if (column.accessor.includes("description")) return "300px";
-        if (column.accessor.includes("name") || column.accessor.includes("email")) return "200px";
-        if (column.accessor.includes("id")) return "100px";
-        return "180px"; // largura padrão para outras colunas de texto
+        // Para colunas de texto, usar larguras base mais apropriadas
+        if (column.accessor.includes("description")) return Math.max(350, minWidthFromHeader) + "px";
+        if (column.accessor.includes("name") || column.accessor.includes("email")) return Math.max(220, minWidthFromHeader) + "px";
+        if (column.accessor.includes("brand")) return Math.max(200, minWidthFromHeader) + "px";
+        if (column.accessor.includes("model")) return Math.max(220, minWidthFromHeader) + "px";
+        if (column.accessor.includes("color")) return Math.max(180, minWidthFromHeader) + "px";
+        return Math.max(200, minWidthFromHeader) + "px"; // Largura padrão para outras colunas de texto
     }
   }, []);
 
@@ -697,7 +763,11 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
             onFilter={handleFilter}
             onRemoveFilter={handleRemoveFilter}
             endpoint={config.endpoint}
-            style={{ width: getColumnWidth(column), minWidth: getColumnWidth(column) }}
+            style={{
+              width: getColumnWidth(column),
+              minWidth: getColumnWidth(column),
+              maxWidth: getColumnWidth(column)
+            }}
           />
         ))}
       </div>
@@ -718,26 +788,60 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     return data.map((row, rowIndex) => (
       <div key={`row-${rowIndex}`} className={cn("flex border-b w-full", rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20")}>
         {visibleColumns.map((column) => {
-          // Suporte a accessors aninhados
-          const keys = column.accessor.split(".");
+          // Determinar qual accessor usar para exibição (displayAccessor ou accessor)
+          const accessorToUse = column.displayAccessor || column.accessor;
+
+          // Suporte a accessors aninhados usando notação de ponto ou __
+          const keys = accessorToUse.split(".");
           let value = row;
+
+          // Processar accessors com notação de ponto (ex: additional_info.field)
           for (const key of keys) {
-            value = value?.[key];
+            // Verificar se estamos lidando com um campo adicional usando notação __
+            if (key.includes("__") && (!value || value[key] === undefined)) {
+              // Tentar extrair os valores usando o campo additional_info
+              // ex: group__name -> procurar em additional_info.group
+              const [prefix, field] = key.split("__");
+
+              // Verificar se temos additional_info e se o campo existe lá
+              if (value?.additional_info && value.additional_info[field] !== undefined) {
+                value = value.additional_info[field];
+              } else if (value?.[key] !== undefined) {
+                // Se o campo com __ existir diretamente, usá-lo
+                value = value[key];
+              } else {
+                // Se não encontramos o valor, definir como indefinido
+                value = undefined;
+                break;
+              }
+            } else {
+              // Caso normal, sem __ no nome do campo
+              value = value?.[key];
+              if (value === undefined) break;
+            }
           }
 
           const displayValue = column.formatFn ? column.formatFn(value) : value;
 
+          // Determinar classe CSS com base no tipo de coluna
+          const cellClass = cn("py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm flex items-center", {
+            "text-right justify-end": column.type === "number",
+            "text-center justify-center": column.type === "boolean",
+            "justify-start": column.type !== "number" && column.type !== "boolean"
+          });
+
           return (
             <div
               key={`${rowIndex}-${column.accessor}`}
-              className="py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm"
+              className={cellClass}
               style={{
                 width: getColumnWidth(column),
-                minWidth: getColumnWidth(column)
+                minWidth: getColumnWidth(column),
+                maxWidth: getColumnWidth(column)
               }}
-              title={String(displayValue)}
+              title={String(displayValue || "")}
             >
-              {displayValue}
+              <span className="truncate w-full">{displayValue !== undefined && displayValue !== null ? displayValue : ""}</span>
             </div>
           );
         })}
@@ -774,7 +878,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
   // Renderizar componente
   return (
-    <div className={cn("flex flex-col border rounded-md w-full", className)}>
+    <div className={cn("flex flex-col border rounded-md w-full overflow-hidden bg-background", className)}>
       {/* Painéis de filtro e ordenação */}
       {tableState.filters.length > 0 && (
         <FilterPanel
@@ -795,58 +899,70 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         />
       )}
 
-      {/* Container principal - sem altura fixa ou scroll próprio */}
-      <div ref={containerRef} className="w-full relative">
-        {/* Cabeçalho da tabela - fixo na parte superior */}
-        <div className="sticky top-0 z-10 bg-background shadow-sm">{headerComponent}</div>
+      {/* Container principal com scroll interno */}
+      <div
+        ref={containerRef}
+        className="w-full relative overflow-auto"
+        style={{
+          maxHeight: config.maxHeight || "calc(100vh - 200px)",
+          height: "calc(100vh - 320px)"
+        }}
+      >
+        {/* Tabela com largura definida e scroll horizontal quando necessário */}
+        <div className="bg-background" style={{ minWidth: "100%", width: "max-content" }}>
+          {/* Cabeçalho da tabela - fixo na parte superior */}
+          <div className="sticky top-0 z-10 bg-background shadow-sm">{headerComponent}</div>
 
-        {/* Corpo da tabela */}
-        {isLoading && data.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="flex items-center">
-              <Loader2 className="h-5 w-5 mr-2 animate-spin text-primary" />
-              <span className="text-muted-foreground">Carregando...</span>
+          {/* Corpo da tabela */}
+          {isLoading && data.length === 0 ? (
+            <div className="flex items-center justify-center h-[400px] w-full">
+              <div className="flex items-center">
+                <Loader2 className="h-5 w-5 mr-2 animate-spin text-primary" />
+                <span className="text-muted-foreground">Carregando...</span>
+              </div>
             </div>
-          </div>
-        ) : isError ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-destructive">Erro ao carregar dados: {error?.message}</div>
-          </div>
-        ) : data.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-muted">Nenhum dado encontrado</div>
-          </div>
-        ) : (
-          <>
-            {rowsComponent}
-            {isFetchingMore && (
-              <div className="py-4 text-center">
-                <div className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  <span className="text-sm text-muted-foreground">Carregando mais...</span>
+          ) : isError ? (
+            <div className="flex items-center justify-center h-[400px] w-full">
+              <div className="text-destructive">Erro ao carregar dados: {error?.message}</div>
+            </div>
+          ) : data.length === 0 ? (
+            <div className="flex items-center justify-center h-[400px] w-full">
+              <div className="text-muted">Nenhum dado encontrado</div>
+            </div>
+          ) : (
+            <>
+              {rowsComponent}
+              {isFetchingMore && (
+                <div className="py-4 text-center">
+                  <div className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Carregando mais...</span>
+                  </div>
                 </div>
-              </div>
-            )}
-            {/* Indicador de final da lista com mais dados - com ref para detecção */}
-            {data.length > 0 && hasNextPage && !isFetchingMore && !isLoading && (
-              <div
-                ref={loadMoreTriggerRef}
-                className="py-4 text-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/20"
-                onClick={loadMoreData}
-              >
-                Clique para carregar mais itens ou continue rolando
-              </div>
-            )}
-          </>
-        )}
+              )}
+              {/* Indicador de final da lista com mais dados - com ref para detecção */}
+              {data.length > 0 && hasNextPage && !isFetchingMore && !isLoading ? (
+                <div
+                  ref={loadMoreTriggerRef}
+                  className="py-4 text-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/20"
+                  onClick={loadMoreData}
+                >
+                  Mostrar mais resultados (Página {tableState.pagination.pageIndex + 2})
+                </div>
+              ) : data.length > 0 ? (
+                <div className="py-4 text-center text-sm text-muted-foreground">Fim dos resultados</div>
+              ) : null}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Barra de status */}
       <div className="px-4 py-2 border-t bg-muted/20 text-sm flex justify-between">
         <div>
-          {totalItems > 0
+          {data.length > 0
             ? `${data.length} de ${totalItems} itens carregados${
-                hasNextPage ? " (Role para carregar mais)" : " (Todos carregados)"
+                hasNextPage ? " (Role para carregar mais)" : " (Fim dos resultados)"
               }`
             : "0 itens"}
         </div>
@@ -859,6 +975,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           ) : hasNextPage ? (
             <div className="text-blue-500 text-xs">Scroll para ver mais</div>
           ) : null}
+          {/* Botão para forçar recarregamento da API */}
+          <button onClick={() => fetchData(0)} className="bg-blue-600 text-white px-2 py-1 text-xs rounded hover:bg-blue-700">
+            Forçar Recarga API
+          </button>
         </div>
       </div>
     </div>

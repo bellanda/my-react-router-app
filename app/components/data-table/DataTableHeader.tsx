@@ -1,10 +1,6 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronRight, Filter, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, Filter } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
-import { Separator } from "~/components/ui/separator";
 import { fetchUniqueValues } from "~/lib/services/api";
 import type { ColumnDefinition, Filter as DataFilter, FilterOperator, SortingState } from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
@@ -123,7 +119,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
         const menuWidth = 290;
         const estimatedMenuHeight = 350; // altura estimada do menu
 
-        // Calcular uma posição inicial aproximada
+        // Calcular uma posição inicial aproximada, considerando o scroll da página
         let initialLeft = rect.left;
         let initialTop = rect.bottom + window.scrollY + 2;
 
@@ -175,31 +171,46 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           if (left < 0) left = 0; // Garantir que não fique fora da tela à esquerda
         }
 
-        // Converter para posição absoluta considerando o scroll
-        top += window.scrollY;
-        const leftAbsolute = left + window.scrollX;
+        // Obter o container da tabela que pode estar com scroll
+        const tableContainer = headerRef.current?.closest(".overflow-auto");
+        const tableContainerRect = tableContainer?.getBoundingClientRect();
+        const visibleBottom = tableContainerRect ? tableContainerRect.top + tableContainerRect.height : windowHeight;
 
-        // Verificar se o menu vai ultrapassar a parte inferior da janela
+        // Verificar se o menu vai ultrapassar a parte inferior visível do container
         const estimatedMenuHeight = 350; // altura estimada do menu
-        if (top + estimatedMenuHeight > windowHeight + window.scrollY) {
+        if (top + estimatedMenuHeight > visibleBottom) {
           // Posicionar acima do header se não couber abaixo
-          top = rect.top - estimatedMenuHeight + window.scrollY;
-          if (top < window.scrollY) top = window.scrollY + 5; // Não permitir que fique acima da janela
+          top = rect.top - estimatedMenuHeight;
+          if (top < (tableContainerRect?.top ?? 0) || top < 0) {
+            top = tableContainerRect?.top ?? 0;
+          }
         }
 
         setPopoverPosition({
           top,
-          left: leftAbsolute
+          left
         });
       };
 
       // Escutar eventos de scroll e resize
-      window.addEventListener("scroll", handleResize);
       window.addEventListener("resize", handleResize);
 
+      // Também escutar eventos de scroll no container da tabela
+      const tableContainer = headerRef.current?.closest(".overflow-auto");
+      if (tableContainer) {
+        tableContainer.addEventListener("scroll", handleResize);
+      }
+
+      // Executar imediatamente para posicionar corretamente
+      handleResize();
+
       return () => {
-        window.removeEventListener("scroll", handleResize);
         window.removeEventListener("resize", handleResize);
+
+        // Limpar event listener do container da tabela
+        if (tableContainer) {
+          tableContainer.removeEventListener("scroll", handleResize);
+        }
       };
     }
   }, [menuOpen]);
@@ -404,22 +415,21 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   // Fechar popover quando clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuOpen &&
-        headerRef.current &&
-        !headerRef.current.contains(event.target as Node) &&
-        scrollAreaRef.current &&
-        !scrollAreaRef.current.contains(event.target as Node) &&
-        filterOptionsRef.current &&
-        !filterOptionsRef.current.contains(event.target as Node)
-      ) {
+      // Não fechar o menu se o clique foi dentro do header, área de rolagem ou menu de opções
+      const clickedInsideHeader = headerRef.current?.contains(event.target as Node) || false;
+      const clickedInsideScrollArea = scrollAreaRef.current?.contains(event.target as Node) || false;
+      const clickedInsideFilterOptions = filterOptionsRef.current?.contains(event.target as Node) || false;
+
+      if (menuOpen && !clickedInsideHeader && !clickedInsideScrollArea && !clickedInsideFilterOptions) {
         setMenuOpen(false);
         setShowFilterOptions(false);
-        // setMenuReady é definido automaticamente quando menuOpen se torna false
+        setMenuReady(false);
       }
     };
 
+    // Usar mousedown para capturar o evento antes que outros handlers possam ser acionados
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -437,16 +447,17 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           variant="ghost"
           size="sm"
           className={cn(
-            "flex items-center justify-start w-full px-1 hover:bg-muted ",
+            "flex items-center justify-between w-full px-3 py-1 hover:bg-muted text-left",
             hasActiveFilter && "text-primary font-medium"
           )}
           onClick={handleHeaderClick}
+          title={column.header}
         >
-          <span className="flex items-center">
-            {column.header}
+          <span className="flex-1 truncate text-left pr-2">{column.header}</span>
+          <div className="flex-shrink-0 flex items-center">
             {renderSortIcon()}
-            {hasActiveFilter && <Filter className="ml-2 h-3 w-3 text-primary" />}
-          </span>
+            {hasActiveFilter && <Filter className="ml-1 h-3 w-3 text-primary" />}
+          </div>
         </Button>
 
         {/* O menu com transição suave para evitar o 'piscar' */}
@@ -458,7 +469,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           style={{
             top: `${popoverPosition.top}px`,
             left: `${popoverPosition.left}px`,
-            width: "260px",
+            width: "240px",
             maxHeight: "90vh",
             overflowY: "auto",
             maxWidth: "calc(100vw - 20px)"
@@ -493,200 +504,182 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   <ArrowDown className={`mr-2 h-3 w-3 ${sortingState && sortingState.desc ? "text-primary" : ""}`} />
                   <span>Ordenar de Z a A</span>
                 </Button>
-                {sortingState && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start pl-8 relative h-7 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => applySorting(null)}
-                  >
-                    <ArrowUpDown className="mr-2 h-3 w-3" />
-                    <span>Limpar ordenação</span>
-                  </Button>
-                )}
-                {column.filterable && <Separator className="my-1" />}
               </div>
             )}
 
             {/* Opções de filtro */}
             {column.filterable && (
-              <div>
-                {/* Menu dropdown para filtros de texto com hover */}
-                <div ref={filterOptionsRef} className="relative w-full">
-                  <div
-                    className="flex items-center justify-between px-2 py-0 rounded-md hover:bg-muted cursor-pointer w-full"
-                    onClick={() => setShowFilterOptions(!showFilterOptions)}
-                    onMouseEnter={() => setShowFilterOptions(true)}
-                    onMouseLeave={(e) => {
-                      // Verifica se o mouse não está indo para o submenu
-                      const submenuEl = document.querySelector('[data-filter-submenu="true"]');
-                      if (submenuEl) {
-                        const rect = submenuEl.getBoundingClientRect();
-                        // Aumentar a área de detecção para evitar "gaps"
-                        const buffer = 30;
-                        const isMovingToSubmenu =
-                          e.clientX >= rect.left - buffer &&
-                          e.clientX <= rect.right + buffer &&
-                          e.clientY >= rect.top - buffer &&
-                          e.clientY <= rect.bottom + buffer;
+              <>
+                <div className="mt-2 mb-1">
+                  <div className="border-t my-1.5" />
+                  <div className="font-medium text-xs mb-1">Filtros</div>
 
-                        if (!isMovingToSubmenu) {
+                  {/* Filtros avançados - movidos para cima */}
+                  <div
+                    className="relative mb-2"
+                    ref={filterOptionsRef}
+                    onMouseEnter={() => {
+                      if (filterOptionsRef.current) {
+                        const rect = filterOptionsRef.current.getBoundingClientRect();
+                        setSubmenuPosition({
+                          top: 0, // Posicionar no topo do botão
+                          left: rect.width + 5 // Posicionar à direita do botão com um pequeno espaço
+                        });
+                      }
+                      setShowFilterOptions(true);
+                    }}
+                    onMouseLeave={() => {
+                      // Usar timeout para permitir que o mouse se mova para o submenu
+                      setTimeout(() => {
+                        if (!document.querySelector(".filter-options-submenu:hover")) {
                           setShowFilterOptions(false);
                         }
-                      } else {
-                        setShowFilterOptions(false);
-                      }
+                      }, 100);
                     }}
                   >
-                    <span className="font-medium text-[13px]">
-                      Filtros de {column.type === "number" ? "número" : column.type === "date" ? "data" : "texto"}
-                    </span>
-                    <ChevronRight className="h-3 w-3" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-between text-xs h-7"
+                      onClick={() => setShowFilterOptions(!showFilterOptions)}
+                    >
+                      Filtros avançados
+                      <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+
+                    {/* Submenu de opções de filtro */}
+                    {showFilterOptions && (
+                      <>
+                        {/* Área "ponte" invisível para facilitar o mouse se mover entre botão e submenu */}
+                        <div
+                          className="fixed z-50 hover-bridge"
+                          style={{
+                            top: `${popoverPosition.top + 30}px`,
+                            left: `${popoverPosition.left + 220}px`,
+                            width: "30px",
+                            height: "150px"
+                            // backgroundColor: "rgba(255,0,0,0.1)", // Descomente para debug
+                          }}
+                          onMouseOver={() => setShowFilterOptions(true)}
+                          onMouseEnter={() => setShowFilterOptions(true)}
+                        />
+
+                        <div
+                          className="fixed border rounded shadow-md bg-background z-50 filter-options-submenu"
+                          style={{
+                            top: `${popoverPosition.top + 50}px`,
+                            left: `${popoverPosition.left + 245}px`,
+                            width: "180px",
+                            padding: "4px 0"
+                          }}
+                          onMouseEnter={() => setShowFilterOptions(true)}
+                          onMouseLeave={() => setShowFilterOptions(false)}
+                        >
+                          {getFilterOptions().map((option, index) => (
+                            <div
+                              key={index}
+                              className="px-2 py-1.5 text-xs hover:bg-muted cursor-pointer"
+                              onClick={() => openFilterDialog(option.value)}
+                            >
+                              {option.label}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* Menu de opções de filtro que aparece ao passar o mouse */}
-                  {showFilterOptions && (
-                    <div
-                      data-filter-submenu="true"
-                      className="fixed shadow-md rounded-md border bg-popover z-50"
-                      style={{
-                        width: "170px",
-                        zIndex: 61,
-                        top: submenuPosition.top,
-                        left: submenuPosition.left
-                      }}
-                      onMouseLeave={() => setShowFilterOptions(false)}
-                      onMouseEnter={() => setShowFilterOptions(true)}
-                    >
-                      <div className="p-1">
-                        {getFilterOptions().map((option, idx) => (
-                          <div
-                            key={idx}
-                            className="px-2 py-1.5 text-sm hover:bg-muted cursor-pointer rounded-sm"
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevenir propagação de eventos
-                              openFilterDialog(option.value);
-                            }}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                  {/* Campo de pesquisa */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full p-1.5 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Pesquisar valores..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Lista de valores únicos */}
+                  <div
+                    className="mt-2 max-h-[150px] overflow-y-auto rounded border bg-background"
+                    ref={scrollAreaRef}
+                    onScroll={handleScroll}
+                  >
+                    {isLoading && uniqueValues.length === 0 ? (
+                      <div className="flex justify-center items-center p-4 text-xs text-muted-foreground">
+                        Carregando valores...
                       </div>
-                    </div>
-                  )}
-                </div>
-
-                <Separator className="my-1.5" />
-
-                {/* Barra de pesquisa de valores */}
-                <div className="relative mt-1.5">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Pesquisar valores..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-7 pl-8 text-sm"
-                  />
-                </div>
-
-                {/* Lista de valores únicos para seleção */}
-                <div
-                  ref={scrollAreaRef}
-                  className="h-[120px] overflow-auto border rounded-md mt-1.5"
-                  style={{ scrollbarWidth: "thin" }}
-                  onScroll={handleScroll}
-                >
-                  {isLoading && uniqueValues.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <span className="text-sm text-muted-foreground">Carregando...</span>
-                    </div>
-                  ) : uniqueValues.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <span className="text-sm text-muted-foreground">Nenhum valor encontrado</span>
-                    </div>
-                  ) : (
-                    <div className="px-1">
-                      {uniqueValues.map((item, index) => (
+                    ) : uniqueValues.length === 0 ? (
+                      <div className="p-2 text-xs text-muted-foreground text-center">Nenhum valor encontrado</div>
+                    ) : (
+                      uniqueValues.map((item, index) => (
                         <div
                           key={index}
-                          className={cn(
-                            "flex items-center px-2 py-1 text-sm hover:bg-muted cursor-pointer",
-                            isValueSelected(item.value) && "bg-primary/20"
-                          )}
+                          className={`px-2 py-1.5 text-xs flex items-center hover:bg-muted cursor-pointer ${
+                            isValueSelected(item.value) ? "bg-primary/10" : ""
+                          }`}
                           onClick={(e) => toggleValueFilter(item.value, e)}
                         >
-                          <Checkbox
-                            checked={isValueSelected(item.value)}
-                            onChange={(e) => toggleValueFilter(item.value, e)}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            className="mr-2 text-white border-1 border-stone-900"
-                          ></Checkbox>
-                          <span className="flex-1 truncate text-[12px]">{item.label === null ? "(Vazio)" : item.label}</span>
-                          <span className="text-muted-foreground text-xs">{item.count}</span>
+                          <div
+                            className={cn(
+                              "w-4 h-4 rounded border mr-2 flex items-center justify-center",
+                              isValueSelected(item.value) ? "bg-primary border-primary" : "border-gray-300"
+                            )}
+                          >
+                            {isValueSelected(item.value) && <Check className="h-3 w-3 text-primary-foreground" />}
+                          </div>
+                          <span className="flex-1 truncate">
+                            {item.label || String(item.value)}
+                            {item.count > 1 && <span className="ml-1 text-muted-foreground">({item.count})</span>}
+                          </span>
                         </div>
-                      ))}
-                      {isLoading && uniqueValues.length > 0 && (
-                        <div className="text-center py-1 text-xs text-muted-foreground">Carregando mais...</div>
-                      )}
-                    </div>
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
 
-                {/* Botões de ação */}
-                <div className="my-2">
-                  {hasActiveFilter && (
-                    <Button variant="outline" size="sm" className="w-full h-6 text-sm my-1" onClick={removeFilter}>
-                      Limpar Filtro
+                {/* Remover filtros ativos */}
+                {hasActiveFilter && (
+                  <div className="mt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-destructive justify-start"
+                      onClick={removeFilter}
+                    >
+                      Remover filtros para {column.header}
                     </Button>
-                  )}
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="w-full h-6 text-sm"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setMenuReady(false);
-                    }}
-                  >
-                    Fechar
-                  </Button>
-                </div>
-              </div>
+                  </div>
+                )}
+
+                {/* Diálogo para filtros personalizados */}
+                {dialogOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+                    <div className="border rounded-md shadow-lg bg-background p-4 w-[300px] max-w-[90vw]">
+                      <h3 className="text-sm font-medium mb-3">Filtro personalizado</h3>
+                      <input
+                        type="text"
+                        className="w-full p-2 text-sm border rounded bg-background mb-3"
+                        placeholder="Digite o valor..."
+                        value={dialogFilterValue}
+                        onChange={(e) => setDialogFilterValue(e.target.value)}
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button size="sm" onClick={applyDialogFilter}>
+                          Aplicar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
-
-        {/* Diálogo para adicionar filtro */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>
-                Filtrar {column.header} - {getFilterOptions().find((opt) => opt.value === selectedFilterOperator)?.label}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <Input
-                type="text"
-                placeholder={`Digite o valor para filtrar...`}
-                value={dialogFilterValue}
-                onChange={(e) => setDialogFilterValue(e.target.value)}
-                className="w-full"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    applyDialogFilter();
-                  }
-                }}
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={applyDialogFilter}>Aplicar Filtro</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

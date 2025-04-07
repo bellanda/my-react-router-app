@@ -20,10 +20,11 @@ export default function ProductsPage() {
         type: "text",
         sortable: true,
         filterable: true,
-        width: "80px"
+        width: "110px"
       },
       {
         accessor: "group__name",
+        displayAccessor: "additional_info.group",
         header: "Grupo",
         type: "text",
         sortable: true,
@@ -31,6 +32,7 @@ export default function ProductsPage() {
       },
       {
         accessor: "category__name",
+        displayAccessor: "additional_info.category",
         header: "Categoria",
         type: "text",
         sortable: true,
@@ -38,6 +40,7 @@ export default function ProductsPage() {
       },
       {
         accessor: "brand__name",
+        displayAccessor: "additional_info.brand",
         header: "Marca",
         type: "text",
         sortable: true,
@@ -45,6 +48,7 @@ export default function ProductsPage() {
       },
       {
         accessor: "compatible_brand__name",
+        displayAccessor: "additional_info.compatible_brand",
         header: "Marca Compatível",
         type: "text",
         sortable: true,
@@ -52,6 +56,7 @@ export default function ProductsPage() {
       },
       {
         accessor: "model__name",
+        displayAccessor: "additional_info.model",
         header: "Modelo",
         type: "text",
         sortable: true,
@@ -59,6 +64,7 @@ export default function ProductsPage() {
       },
       {
         accessor: "compatible_model__name",
+        displayAccessor: "additional_info.compatible_model",
         header: "Modelo Compatível",
         type: "text",
         sortable: true,
@@ -66,6 +72,7 @@ export default function ProductsPage() {
       },
       {
         accessor: "color__name",
+        displayAccessor: "additional_info.color",
         header: "Cor",
         type: "text",
         sortable: true,
@@ -77,7 +84,7 @@ export default function ProductsPage() {
         type: "text",
         sortable: true,
         filterable: true,
-        width: "300px"
+        width: "350px"
       },
       {
         accessor: "short_description",
@@ -85,7 +92,7 @@ export default function ProductsPage() {
         type: "text",
         sortable: true,
         filterable: true,
-        width: "250px"
+        width: "350px"
       },
       {
         accessor: "min_stock",
@@ -142,10 +149,41 @@ export default function ProductsPage() {
       },
       {
         accessor: "created_by__email",
+        displayAccessor: "additional_info.created_by",
         header: "Criado por",
         type: "text",
         sortable: true,
         filterable: true
+      },
+      {
+        accessor: "additional_info.total_stock_quantity",
+        header: "Estoque Total",
+        type: "number",
+        sortable: false,
+        filterable: false
+      },
+      {
+        accessor: "additional_info.total_sold_quantity",
+        header: "Total Vendido",
+        type: "number",
+        sortable: false,
+        filterable: false
+      },
+      {
+        accessor: "additional_info.total_sold_value",
+        header: "Valor Total Vendido",
+        type: "number",
+        sortable: false,
+        filterable: false,
+        formatFn: (value) => formatDisplayValue(value, "currency")
+      },
+      {
+        accessor: "additional_info.daily_sales_average_last_30_days",
+        header: "Média Diária (30d)",
+        type: "number",
+        sortable: false,
+        filterable: false,
+        formatFn: (value) => formatDisplayValue(value, "decimal")
       }
     ],
     endpoint: {
@@ -171,12 +209,11 @@ export default function ProductsPage() {
     <div className="space-y-4 w-full">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo de produtos da empresa</p>
+          <h1 className="text-xl font-bold tracking-tight">Produtos</h1>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex items-end gap-1">
           <AuthStatus />
-          <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md">Novo Produto</button>
+          <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-2 rounded-md">Novo Produto</button>
         </div>
       </div>
 
