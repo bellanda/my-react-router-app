@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { AuthLayout } from "~/components/layout";
+import { AuthLayout } from "~/layouts";
 
 export function meta() {
   return [

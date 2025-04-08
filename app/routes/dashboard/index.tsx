@@ -7,7 +7,6 @@ import {
   Users,
 } from "lucide-react";
 import { Outlet, useLocation } from "react-router";
-import { DashboardLayout } from "~/components/layout";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -24,6 +23,7 @@ import { Label } from "~/components/ui/label";
 import { Progress } from "~/components/ui/progress";
 import { Separator } from "~/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { DashboardLayout } from "~/layouts";
 
 export function meta() {
   return [

@@ -8,7 +8,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "react-router";
-import { LandingLayout } from "~/components/layout";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -27,6 +26,7 @@ import {
   CarouselPrevious,
 } from "~/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { LandingLayout } from "~/layouts";
 
 export function meta() {
   return [

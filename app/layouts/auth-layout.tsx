@@ -9,7 +9,7 @@ type AuthLayoutProps = {
   logoText?: string;
 };
 
-export default function AuthLayout({
+export function AuthLayout({
   children,
   showBackLink = true,
   backLinkText = "Back to home",

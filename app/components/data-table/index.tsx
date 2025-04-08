@@ -187,13 +187,16 @@ export default function DataTable({ config, className }: DataTableProps) {
 
         setError(null);
       } catch (err) {
-        console.error("Erro ao buscar dados:", err);
+        console.error("Erro ao buscar dados do backend:", err);
         setError(
           err instanceof Error ? err : new Error("Erro ao buscar dados")
         );
         if (!append) {
           setData([]);
         }
+
+        // Atualizar estado ao falhar
+        setHasNextPage(false);
       } finally {
         // Limpar estados de carregamento
         setLoading(false);

@@ -1,8 +1,8 @@
 import { ArrowRight, Search } from "lucide-react";
 import { Link } from "react-router";
-import { LandingLayout } from "~/components/layout";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { LandingLayout } from "~/layouts";
 
 export function meta() {
   return [

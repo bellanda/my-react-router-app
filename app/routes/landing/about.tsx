@@ -7,8 +7,8 @@ import {
   Users,
 } from "lucide-react";
 import { Link } from "react-router";
-import { LandingLayout } from "~/components/layout";
 import { Button } from "~/components/ui/button";
+import { LandingLayout } from "~/layouts";
 
 export function meta() {
   return [

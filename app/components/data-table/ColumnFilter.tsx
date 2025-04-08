@@ -62,12 +62,14 @@ interface ColumnFilterProps {
   column: ColumnDefinition;
   onFilterChange?: (filter: any) => void;
   onClose: () => void;
+  endpoint?: any;
 }
 
 const ColumnFilter: React.FC<ColumnFilterProps> = ({
   column,
   onFilterChange,
   onClose,
+  endpoint,
 }) => {
   // Estado para operador selecionado
   const [operator, setOperator] = React.useState<FilterOperator>(
@@ -104,7 +106,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
       if (column.type === "text") {
         try {
           const values = await fetchUniqueValues(
-            { url: "/api/products" },
+            endpoint || { url: "/api/products" },
             column.accessor,
             searchTerm
           );
@@ -116,7 +118,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
     };
 
     loadUniqueValues();
-  }, [column.accessor, column.type, searchTerm]);
+  }, [column.accessor, column.type, searchTerm, endpoint]);
 
   // Lista de operadores disponíveis
   const operatorOptions = FILTER_OPERATORS[column.type];

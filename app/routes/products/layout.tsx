@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { DashboardLayout } from "~/components/layout";
+import { DashboardLayout } from "~/layouts";
 
 export function meta() {
   return [

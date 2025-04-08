@@ -1,11 +1,11 @@
 import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router";
-import { LandingLayout } from "~/components/layout";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Textarea } from "~/components/ui/textarea";
+import { LandingLayout } from "~/layouts";
 
 export function meta() {
   return [

@@ -1,9 +1,3 @@
-import type { Product } from "~/lib/mock-api";
-import {
-  getUniqueFieldValues,
-  mockFetchData,
-  mockProducts,
-} from "~/lib/mock-api";
 import type {
   ApiEndpoint,
   ApiResult,
@@ -14,11 +8,6 @@ import type {
 
 // URL base da API - pode ser configurada via env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
-// Controle para forçar o uso do mock mesmo se a API estiver configurada
-// Pode ser controlado via env ou localmente para desenvolvimento
-const FORCE_MOCK_API_RAW = import.meta.env.VITE_FORCE_MOCK_API;
-const FORCE_MOCK_API = FORCE_MOCK_API_RAW === "true" || false;
 
 // Flag para mostrar logs de debug
 const DEBUG_API_RAW = import.meta.env.VITE_DEBUG_API;
@@ -31,7 +20,6 @@ const API_PASSWORD = import.meta.env.VITE_API_PASSWORD || "";
 // Verificação de inicialização para depuração
 console.log("=== API Config Debug ===");
 console.log("API_BASE_URL:", API_BASE_URL);
-console.log("FORCE_MOCK_API (raw):", FORCE_MOCK_API_RAW, "=>", FORCE_MOCK_API);
 console.log("DEBUG_API (raw):", DEBUG_API_RAW, "=>", DEBUG_API);
 console.log("API_EMAIL configured:", !!API_EMAIL);
 console.log("API_PASSWORD configured:", !!API_PASSWORD);
@@ -262,12 +250,6 @@ export const authenticatedFetch = async (
   url: string,
   options: RequestInit = {}
 ): Promise<Response> => {
-  // Se estamos forçando o uso do mock, não precisamos autenticar
-  if (FORCE_MOCK_API) {
-    console.log("FORCE_MOCK_API ativado, ignorando autenticação");
-    return fetch(url, options);
-  }
-
   try {
     console.log("Iniciando authenticatedFetch para URL:", url);
 
@@ -376,11 +358,6 @@ export const authenticatedFetch = async (
  * @returns Promise que resolve para true se autenticado, false caso contrário
  */
 export const isAuthenticated = async (): Promise<boolean> => {
-  if (FORCE_MOCK_API) {
-    // No modo mock, consideramos sempre autenticado
-    return true;
-  }
-
   try {
     // Tentar obter informações do usuário atual
     const token = await getJwtToken();
@@ -407,7 +384,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
   }
 };
 
-// Função para buscar dados da tabela, tentando usar a API real ou fallback para mock
+// Função para buscar dados da tabela
 export const fetchTableData = async (
   endpoint: ApiEndpoint,
   filters: Filter[],
@@ -419,61 +396,31 @@ export const fetchTableData = async (
     // Logs detalhados para depuração
     console.log("==== FETCH TABLE DATA ====");
     console.log("URL endpoint:", endpoint.url);
-    console.log("FORCE_MOCK_API:", FORCE_MOCK_API);
     console.log("API_BASE_URL:", API_BASE_URL);
 
-    // ATENÇÃO: Remover este comportamento após depuração
-    // Forçar o uso da API real
-    const forceMockOverride = false;
-
-    // Se estamos forçando o uso do mock, pular a chamada real
-    if (FORCE_MOCK_API && forceMockOverride) {
-      console.log("Usando mock API (forçado por configuração)");
-      return await mockFetchData(
-        endpoint.url,
-        filters,
-        sorting,
-        pageIndex,
-        pageSize
+    // Verificar se a URL base da API está configurada
+    if (!API_BASE_URL) {
+      throw new Error(
+        "URL base da API não está configurada. Configure VITE_API_BASE_URL no arquivo .env"
       );
     }
 
-    // Primeiro garantir que temos o token de autenticação
+    // Tentar obter o token de autenticação
     let token;
     try {
       token = await getJwtToken();
       console.log("Token obtido:", token ? "Sim" : "Não");
     } catch (authError) {
       console.error("Erro ao obter token:", authError);
+      throw new Error(
+        "Falha na autenticação: Não foi possível obter token JWT"
+      );
     }
 
+    // Se não conseguimos obter o token e não é endpoint de login, lançar erro
     if (!token && !endpoint.url.includes("login")) {
-      console.error(
-        "Não foi possível obter token JWT. Tentando realizar login novamente..."
-      );
-
-      // Tentar obter o token novamente após redefinir os tokens existentes
-      JWT_TOKEN = null;
-      JWT_REFRESH_TOKEN = null;
-
-      try {
-        token = await getJwtToken();
-        console.log(
-          "Novo token obtido após redefinição:",
-          token ? "Sim" : "Não"
-        );
-
-        if (!token) {
-          throw new Error(
-            "Falha na autenticação: Token JWT não disponível mesmo após nova tentativa"
-          );
-        }
-      } catch (retryError) {
-        console.error("Falha na segunda tentativa de obter token:", retryError);
-        throw new Error(
-          "Falha na autenticação: Não foi possível obter token JWT"
-        );
-      }
+      console.error("Não foi possível obter token JWT.");
+      throw new Error("Falha na autenticação: Token JWT não disponível");
     }
 
     // Construir URL base - usando a URL base definida ou a relativa
@@ -527,186 +474,168 @@ export const fetchTableData = async (
     const url = `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${queryParams.toString()}`;
     console.log("URL final para requisição:", url);
 
-    try {
-      // Tentar fazer a requisição autenticada
-      console.log("Iniciando requisição autenticada...");
-      const response = await authenticatedFetch(url);
-      console.log(
-        "Resposta da requisição:",
-        response.status,
-        response.statusText
+    // Tentar fazer a requisição autenticada
+    console.log("Iniciando requisição autenticada...");
+    const response = await authenticatedFetch(url);
+    console.log(
+      "Resposta da requisição:",
+      response.status,
+      response.statusText
+    );
+
+    if (!response.ok) {
+      console.error(
+        `Erro HTTP na requisição: ${response.status} - ${response.statusText}`
       );
 
-      if (!response.ok) {
-        console.error(
-          `Erro HTTP na requisição: ${response.status} - ${response.statusText}`
-        );
-
-        // Verificar o tipo de conteúdo da resposta
-        const contentType = response.headers.get("content-type");
-        console.log("Tipo de conteúdo da resposta de erro:", contentType);
-
-        if (contentType && contentType.includes("application/json")) {
-          // Resposta JSON de erro
-          const errorJson = await response.json();
-          console.error("Detalhes do erro (JSON):", errorJson);
-          throw new Error(
-            `HTTP error! status: ${response.status} - ${JSON.stringify(errorJson)}`
-          );
-        } else {
-          // Resposta HTML ou texto de erro
-          const errorText = await response.text();
-          console.error(
-            "Detalhes do erro (texto):",
-            errorText.substring(0, 500) + "..."
-          );
-          throw new Error(
-            `HTTP error! status: ${response.status} - Resposta não-JSON recebida`
-          );
-        }
-      }
-
-      // Verificar o tipo de conteúdo
+      // Verificar o tipo de conteúdo da resposta
       const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const textResponse = await response.text();
-        console.error(
-          "Resposta não é JSON:",
-          textResponse.substring(0, 500) + "..."
+      console.log("Tipo de conteúdo da resposta de erro:", contentType);
+
+      if (contentType && contentType.includes("application/json")) {
+        // Resposta JSON de erro
+        const errorJson = await response.json();
+        console.error("Detalhes do erro (JSON):", errorJson);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${JSON.stringify(errorJson)}`
         );
-        throw new Error("Resposta da API não está no formato JSON esperado");
-      }
-
-      console.log("Requisição bem-sucedida, processando resposta JSON...");
-
-      let djangoResponse;
-      try {
-        djangoResponse = (await response.json()) as DjangoApiResponse<any>;
-      } catch (jsonError) {
-        console.error("Erro ao processar JSON da resposta:", jsonError);
-        // Tentar ler o texto da resposta para diagnóstico
-        const textResponse = await response.clone().text();
+      } else {
+        // Resposta HTML ou texto de erro
+        const errorText = await response.text();
         console.error(
-          "Conteúdo da resposta:",
-          textResponse.substring(0, 500) + "..."
+          "Detalhes do erro (texto):",
+          errorText.substring(0, 500) + "..."
         );
         throw new Error(
-          "Falha ao processar resposta JSON: " + String(jsonError)
+          `HTTP error! status: ${response.status} - Resposta não-JSON recebida`
         );
       }
-
-      console.log("Dados recebidos:", djangoResponse.count, "resultados");
-
-      if (!djangoResponse.results) {
-        console.error(
-          "Resposta não possui o formato esperado (results):",
-          djangoResponse
-        );
-        throw new Error("Formato de resposta inválido");
-      }
-
-      // Processa os resultados para acomodar os campos aninhados
-      // Se um campo acessor contiver __ e o valor não estiver presente diretamente,
-      // mas existir em additional_info, usamos o valor do additional_info
-      const processedResults =
-        djangoResponse.results?.map((item) => {
-          const result = { ...item };
-
-          // Para cada item no resultado, vamos verificar se há acessores com __ que precisam
-          // ser populados a partir de additional_info
-          if (item.additional_info) {
-            // Obtém as chaves do additional_info
-            const additionalInfoKeys = Object.keys(item.additional_info);
-
-            // Primeiramente, copiar todos os campos de additional_info para o result
-            // para garantir que possam ser acessados pela notação de ponto
-            // Isso garante que campos como additional_info.group funcionem
-            result.additional_info = { ...item.additional_info };
-
-            // Agora, criar acessores com __ para facilitar o acesso nas colunas
-            // Exemplo: criar um campo group__name com o valor de additional_info.group
-            additionalInfoKeys.forEach((infoKey) => {
-              // Formar o acessor com underscores duplos (group__name, etc.)
-              const accessorName = `${infoKey}__name`;
-
-              // Definir o valor para cada campo do additional_info
-              if (!result[accessorName]) {
-                result[accessorName] = item.additional_info[infoKey];
-              }
-
-              // Também adicionar como acessor direto se não existir
-              // Exemplo: group = additional_info.group
-              if (!result[infoKey] && infoKey !== "stock_details") {
-                result[infoKey] = item.additional_info[infoKey];
-              }
-            });
-
-            // Também verificar se há campos no objeto original com formato __name
-            // que devem ser preenchidos a partir do additional_info
-            Object.keys(result).forEach((key) => {
-              if (key.includes("__")) {
-                // Extrai o nome do campo após o __
-                const [prefix, field] = key.split("__");
-
-                // Se esse campo corresponde a uma chave em additional_info
-                if (additionalInfoKeys.includes(prefix)) {
-                  // Define o valor usando o acessor
-                  result[key] = item.additional_info[prefix];
-                }
-              }
-            });
-          }
-
-          return result;
-        }) || [];
-
-      console.log(
-        `Processamento concluído: ${processedResults.length} resultados`
-      );
-
-      // Formatar a resposta para o formato esperado pelo componente
-      return {
-        data: processedResults,
-        totalCount:
-          djangoResponse.count ||
-          (Array.isArray(djangoResponse) ? djangoResponse.length : 0),
-        pageCount: Math.ceil(
-          (djangoResponse.count ||
-            (Array.isArray(djangoResponse) ? djangoResponse.length : 0)) /
-            pageSize
-        ),
-        meta: {
-          start: pageIndex * pageSize,
-          end:
-            pageIndex * pageSize +
-            (djangoResponse.results?.length ||
-              (Array.isArray(djangoResponse) ? djangoResponse.length : 0)),
-          pageSize: djangoResponse.page_size || pageSize,
-          pageIndex,
-          hasNextPage: !!djangoResponse.links.next,
-          hasPreviousPage: !!djangoResponse.links.previous,
-          // URLs completas para paginação
-          next: djangoResponse.links.next,
-          previous: djangoResponse.links.previous,
-        },
-      };
-    } catch (error) {
-      console.error("Erro ao buscar dados da API real:", error);
-
-      console.warn("TENTANDO NOVAMENTE COM MOCK DATA");
-      console.warn(
-        "Este comportamento será removido quando a API estiver funcionando corretamente"
-      );
-      return await mockFetchData(
-        endpoint.url,
-        filters,
-        sorting,
-        pageIndex,
-        pageSize
-      );
     }
+
+    // Verificar o tipo de conteúdo
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await response.text();
+      console.error(
+        "Resposta não é JSON:",
+        textResponse.substring(0, 500) + "..."
+      );
+      throw new Error("Resposta da API não está no formato JSON esperado");
+    }
+
+    console.log("Requisição bem-sucedida, processando resposta JSON...");
+
+    let djangoResponse;
+    try {
+      djangoResponse = (await response.json()) as DjangoApiResponse<any>;
+    } catch (jsonError) {
+      console.error("Erro ao processar JSON da resposta:", jsonError);
+      // Tentar ler o texto da resposta para diagnóstico
+      const textResponse = await response.clone().text();
+      console.error(
+        "Conteúdo da resposta:",
+        textResponse.substring(0, 500) + "..."
+      );
+      throw new Error("Falha ao processar resposta JSON: " + String(jsonError));
+    }
+
+    console.log("Dados recebidos:", djangoResponse.count, "resultados");
+
+    if (!djangoResponse.results) {
+      console.error(
+        "Resposta não possui o formato esperado (results):",
+        djangoResponse
+      );
+      throw new Error("Formato de resposta inválido");
+    }
+
+    // Processa os resultados para acomodar os campos aninhados
+    // Se um campo acessor contiver __ e o valor não estiver presente diretamente,
+    // mas existir em additional_info, usamos o valor do additional_info
+    const processedResults =
+      djangoResponse.results?.map((item) => {
+        const result = { ...item };
+
+        // Para cada item no resultado, vamos verificar se há acessores com __ que precisam
+        // ser populados a partir de additional_info
+        if (item.additional_info) {
+          // Obtém as chaves do additional_info
+          const additionalInfoKeys = Object.keys(item.additional_info);
+
+          // Primeiramente, copiar todos os campos de additional_info para o result
+          // para garantir que possam ser acessados pela notação de ponto
+          // Isso garante que campos como additional_info.group funcionem
+          result.additional_info = { ...item.additional_info };
+
+          // Agora, criar acessores com __ para facilitar o acesso nas colunas
+          // Exemplo: criar um campo group__name com o valor de additional_info.group
+          additionalInfoKeys.forEach((infoKey) => {
+            // Formar o acessor com underscores duplos (group__name, etc.)
+            const accessorName = `${infoKey}__name`;
+
+            // Definir o valor para cada campo do additional_info
+            if (!result[accessorName]) {
+              result[accessorName] = item.additional_info[infoKey];
+            }
+
+            // Também adicionar como acessor direto se não existir
+            // Exemplo: group = additional_info.group
+            if (!result[infoKey] && infoKey !== "stock_details") {
+              result[infoKey] = item.additional_info[infoKey];
+            }
+          });
+
+          // Também verificar se há campos no objeto original com formato __name
+          // que devem ser preenchidos a partir do additional_info
+          Object.keys(result).forEach((key) => {
+            if (key.includes("__")) {
+              // Extrai o nome do campo após o __
+              const [prefix, field] = key.split("__");
+
+              // Se esse campo corresponde a uma chave em additional_info
+              if (additionalInfoKeys.includes(prefix)) {
+                // Define o valor usando o acessor
+                result[key] = item.additional_info[prefix];
+              }
+            }
+          });
+        }
+
+        return result;
+      }) || [];
+
+    console.log(
+      `Processamento concluído: ${processedResults.length} resultados`
+    );
+
+    // Formatar a resposta para o formato esperado pelo componente
+    return {
+      data: processedResults,
+      totalCount:
+        djangoResponse.count ||
+        (Array.isArray(djangoResponse) ? djangoResponse.length : 0),
+      pageCount: Math.ceil(
+        (djangoResponse.count ||
+          (Array.isArray(djangoResponse) ? djangoResponse.length : 0)) /
+          pageSize
+      ),
+      meta: {
+        start: pageIndex * pageSize,
+        end:
+          pageIndex * pageSize +
+          (djangoResponse.results?.length ||
+            (Array.isArray(djangoResponse) ? djangoResponse.length : 0)),
+        pageSize: djangoResponse.page_size || pageSize,
+        pageIndex,
+        hasNextPage: !!djangoResponse.links.next,
+        hasPreviousPage: !!djangoResponse.links.previous,
+        // URLs completas para paginação
+        next: djangoResponse.links.next,
+        previous: djangoResponse.links.previous,
+      },
+    };
   } catch (error) {
-    console.error("Error fetching table data:", error);
+    console.error("Erro ao buscar dados:", error);
     throw error;
   }
 };
@@ -718,89 +647,54 @@ export const fetchUniqueValues = async (
   searchTerm?: string
 ) => {
   try {
-    // Se estamos forçando o uso do mock, pular a chamada real
-    if (FORCE_MOCK_API) {
-      if (DEBUG_API)
-        console.log(
-          "Usando mock API para valores únicos (forçado por configuração)"
-        );
-
-      // Usar o mock
-      let data: Product[] = [];
-      if (endpoint.url.includes("products")) {
-        data = mockProducts;
-      }
-
-      // Buscar valores únicos
-      const uniqueValues = getUniqueFieldValues(data, columnId, searchTerm);
-
-      // Formatar resposta
-      return uniqueValues.map((item) => ({
-        value: item.value,
-        label:
-          item.value !== null && item.value !== undefined
-            ? String(item.value)
-            : "(Vazio)",
-        count: item.count,
-      }));
+    // Se a URL base da API não está configurada ou está vazia, lançar erro
+    if (!API_BASE_URL) {
+      throw new Error(
+        "URL base da API não está configurada. Configure VITE_API_BASE_URL no arquivo .env"
+      );
     }
 
-    // Tentar usar a API real primeiro
+    // Verificar se temos token válido
+    const token = await getJwtToken();
+    if (!token) {
+      throw new Error("Falha na autenticação: Token JWT não disponível");
+    }
+
+    // Tentar usar a API real
     const baseUrl = endpoint.url.startsWith("http")
       ? endpoint.url
       : `${API_BASE_URL}${endpoint.url}`;
 
-    const url = `${baseUrl}unique/?column=${columnId}&range=0-100`;
+    // Construir URL com parâmetros
+    let url = `${baseUrl}unique/?column=${columnId}&range=0-100`;
+
+    // Adicionar parâmetro de pesquisa se fornecido
+    if (searchTerm) {
+      url += `&search=${encodeURIComponent(searchTerm)}`;
+    }
 
     if (DEBUG_API) console.log(`Tentando buscar valores únicos de: ${url}`);
 
-    try {
-      // Usar requisição autenticada para valores únicos
-      const response = await authenticatedFetch(url);
+    // Usar requisição autenticada para valores únicos
+    const response = await authenticatedFetch(url);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (DEBUG_API) console.log("Valores únicos da API:", data);
-
-      // Formatar a resposta
-      return data.map((value: any) => ({
-        value,
-        label:
-          value !== null && value !== undefined ? String(value) : "(Vazio)",
-        count: 1, // A API não retorna contagem, então usamos 1 como padrão
-      }));
-    } catch (error) {
-      console.warn(
-        "Error fetching unique values from real API, falling back to mock data:",
-        error
-      );
-
-      // Se a requisição real falhar, usar o mock
-      let data: Product[] = [];
-      if (endpoint.url.includes("products")) {
-        data = mockProducts;
-      }
-
-      // Buscar valores únicos
-      const uniqueValues = getUniqueFieldValues(data, columnId, searchTerm);
-
-      // Formatar resposta
-      return uniqueValues.map((item) => ({
-        value: item.value,
-        label:
-          item.value !== null && item.value !== undefined
-            ? String(item.value)
-            : "(Vazio)",
-        count: item.count,
-      }));
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    if (DEBUG_API) console.log("Valores únicos da API:", data);
+
+    // Formatar a resposta
+    return data.map((value: any) => ({
+      value,
+      label: value !== null && value !== undefined ? String(value) : "(Vazio)",
+      count: 1, // A API não retorna contagem, então usamos 1 como padrão
+    }));
   } catch (error) {
-    console.error("Error fetching unique values:", error);
-    return [];
+    console.error("Erro ao buscar valores únicos:", error);
+    throw error; // Propagar o erro para ser tratado pelo componente
   }
 };
 
@@ -813,9 +707,17 @@ export const fetchTotalRowCount = async (
   baseEndpoint: string
 ): Promise<number | null> => {
   try {
-    if (FORCE_MOCK_API) {
-      console.log("Usando mock para contagem total (forçado por configuração)");
-      return 2000; // Valor mock default
+    // Se a URL base da API não está configurada ou está vazia, lançar erro
+    if (!API_BASE_URL) {
+      throw new Error(
+        "URL base da API não está configurada. Configure VITE_API_BASE_URL no arquivo .env"
+      );
+    }
+
+    // Verificar se temos token válido
+    const token = await getJwtToken();
+    if (!token) {
+      throw new Error("Falha na autenticação: Token JWT não disponível");
     }
 
     // Remover barra final se existir, para adicionar o path correto
