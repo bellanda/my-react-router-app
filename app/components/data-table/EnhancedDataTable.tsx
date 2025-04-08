@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import DataTableHeader from "~/components/data-table/DataTableHeader";
 import FilterPanel from "~/components/data-table/FilterPanel";
 import SortingPanel from "~/components/data-table/SortingPanel";
-import { useDataTable } from "~/hooks/useDataTable";
+import { useDataTable } from "~/hooks/use-data-table";
 import type { TableConfig } from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
 
@@ -13,7 +13,11 @@ interface EnhancedDataTableProps {
   onRowClick?: (row: any) => void;
 }
 
-const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className, onRowClick }) => {
+const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
+  config,
+  className,
+  onRowClick,
+}) => {
   // Estados locais de UI
   const [autoLoadEnabled, setAutoLoadEnabled] = useState(true);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
@@ -37,7 +41,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
     handleResetFilters,
     reorderSorting,
     setTableState,
-    isManualFilterSortChange
+    isManualFilterSortChange,
   } = useDataTable(config);
 
   // Referência para o container de scroll
@@ -48,7 +52,8 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
 
   // Verificar scroll e carregar mais dados
   const checkScrollAndLoadMore = useCallback(() => {
-    if (!containerRef.current || isFetching || !hasNextPage || !autoLoadEnabled) return;
+    if (!containerRef.current || isFetching || !hasNextPage || !autoLoadEnabled)
+      return;
     if (isLoadingMoreRef.current) return; // Prevenir múltiplas chamadas durante o scroll
 
     const container = containerRef.current;
@@ -65,7 +70,15 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
         isLoadingMoreRef.current = false;
       }, 100); // Tempo suficiente para completar a requisição e evitar múltiplos carregamentos
     }
-  }, [fetchNextPage, hasNextPage, isFetching, data.length, totalCount, autoLoadEnabled, showDebugInfo]);
+  }, [
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    data.length,
+    totalCount,
+    autoLoadEnabled,
+    showDebugInfo,
+  ]);
 
   // Função para carregar todos os dados de uma vez
   const loadAllPages = useCallback(() => {
@@ -165,7 +178,11 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
     return data.map((row, rowIndex) => (
       <div
         key={`row-${rowIndex}-${row.id || rowIndex}`}
-        className={cn("flex border-b", rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20", "cursor-pointer hover:bg-accent/10")}
+        className={cn(
+          "flex border-b",
+          rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20",
+          "cursor-pointer hover:bg-accent/10"
+        )}
         onClick={() => handleRowClick(row)}
       >
         {visibleColumns.map((column) => {
@@ -234,7 +251,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
             setTableState((prev) => ({
               ...prev,
               sorting: [],
-              pagination: { ...prev.pagination, pageIndex: 0 }
+              pagination: { ...prev.pagination, pageIndex: 0 },
             }));
           }}
           columns={columns}
@@ -242,7 +259,10 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
       )}
 
       {/* Container principal da tabela (com scroll) */}
-      <div ref={containerRef} className="flex-1 overflow-auto relative min-h-[300px] max-h-[calc(100vh-200px)]">
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-auto relative min-h-[300px] max-h-[calc(100vh-200px)]"
+      >
         {/* Cabeçalhos */}
         <div className="sticky top-0 z-10 bg-muted flex border-b">
           {visibleColumns.map((column) => (
@@ -297,7 +317,8 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="font-medium">
-              {data.length} de {totalCount} itens {hasNextPage ? "(Mais disponíveis)" : "(Todos carregados)"}
+              {data.length} de {totalCount} itens{" "}
+              {hasNextPage ? "(Mais disponíveis)" : "(Todos carregados)"}
             </span>
 
             {/* Botão para alternar debug */}
@@ -314,16 +335,26 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
             <button
               onClick={() => setAutoLoadEnabled(!autoLoadEnabled)}
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
-                autoLoadEnabled ? "bg-primary/20 text-primary" : "border text-muted-foreground"
+                autoLoadEnabled
+                  ? "bg-primary/20 text-primary"
+                  : "border text-muted-foreground"
               }`}
               title="Ativar/desativar carregamento automático ao rolar"
             >
-              <input type="checkbox" checked={autoLoadEnabled} readOnly className="h-3 w-3" />
+              <input
+                type="checkbox"
+                checked={autoLoadEnabled}
+                readOnly
+                className="h-3 w-3"
+              />
               <span>Auto-carregar</span>
             </button>
 
             {/* Botão de reload */}
-            <button className="flex items-center gap-1 px-2 py-1 rounded border hover:bg-accent text-xs" onClick={scrollToBottom}>
+            <button
+              className="flex items-center gap-1 px-2 py-1 rounded border hover:bg-accent text-xs"
+              onClick={scrollToBottom}
+            >
               <ChevronDown className="h-3 w-3" />
               <span>Ir para fim</span>
             </button>
@@ -334,15 +365,18 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
         {showDebugInfo && (
           <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
             <div>
-              Dados carregados: {data.length} | Total: {totalCount} | HasNextPage: {hasNextPage ? "Sim" : "Não"}
+              Dados carregados: {data.length} | Total: {totalCount} |
+              HasNextPage: {hasNextPage ? "Sim" : "Não"}
             </div>
             <div>
-              Página atual: {Math.floor(data.length / tableState.pagination.pageSize) + 1} | Tamanho da página:{" "}
-              {tableState.pagination.pageSize}
+              Página atual:{" "}
+              {Math.floor(data.length / tableState.pagination.pageSize) + 1} |
+              Tamanho da página: {tableState.pagination.pageSize}
             </div>
             {containerRef.current && (
               <div>
-                Container: {containerRef.current.scrollHeight}px altura | {containerRef.current.clientHeight}px visível | Scroll:{" "}
+                Container: {containerRef.current.scrollHeight}px altura |{" "}
+                {containerRef.current.clientHeight}px visível | Scroll:{" "}
                 {containerRef.current.scrollTop}px do topo
               </div>
             )}
@@ -387,14 +421,24 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
         {totalCount > tableState.pagination.pageSize && (
           <div className="flex justify-center">
             <div className="flex items-center gap-1 text-xs overflow-x-auto p-1">
-              <span className="text-muted-foreground mr-1">Ir para página:</span>
-              {Array.from({ length: Math.min(10, Math.ceil(totalCount / tableState.pagination.pageSize)) }).map((_, i) => {
-                const isCurrentPage = Math.floor(data.length / tableState.pagination.pageSize) >= i;
+              <span className="text-muted-foreground mr-1">
+                Ir para página:
+              </span>
+              {Array.from({
+                length: Math.min(
+                  10,
+                  Math.ceil(totalCount / tableState.pagination.pageSize)
+                ),
+              }).map((_, i) => {
+                const isCurrentPage =
+                  Math.floor(data.length / tableState.pagination.pageSize) >= i;
                 return (
                   <button
                     key={i}
                     className={`min-w-6 h-6 px-2 flex items-center justify-center rounded-md ${
-                      isCurrentPage ? "bg-primary text-primary-foreground" : "border border-input hover:bg-accent"
+                      isCurrentPage
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-input hover:bg-accent"
                     }`}
                     onClick={() => goToPage(i)}
                   >
@@ -402,10 +446,12 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({ config, className
                   </button>
                 );
               })}
-              {Math.ceil(totalCount / tableState.pagination.pageSize) > 10 && <span className="mx-1">...</span>}
+              {Math.ceil(totalCount / tableState.pagination.pageSize) > 10 && (
+                <span className="mx-1">...</span>
+              )}
               <span className="text-muted-foreground ml-2">
-                {Math.floor(data.length / tableState.pagination.pageSize) + 1} de{" "}
-                {Math.ceil(totalCount / tableState.pagination.pageSize)}
+                {Math.floor(data.length / tableState.pagination.pageSize) + 1}{" "}
+                de {Math.ceil(totalCount / tableState.pagination.pageSize)}
               </span>
             </div>
           </div>

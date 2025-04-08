@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchTableData } from "~/lib/services/api";
-import type { Filter, SortingState, TableConfig, TableState } from "~/lib/types/data-table";
+import type {
+  Filter,
+  SortingState,
+  TableConfig,
+  TableState,
+} from "~/lib/types/data-table";
 import { inferColumnType } from "~/lib/utils";
 
 export function useDataTable(config: TableConfig) {
@@ -19,15 +24,19 @@ export function useDataTable(config: TableConfig) {
         // Garantir que a estrutura do estado está correta
         if (parsed && Array.isArray(parsed.sorting)) {
           // Manter a consistência das ordenações
-          const validSorting = parsed.sorting.filter((sort: any) => sort && typeof sort === "object" && sort.id && "desc" in sort);
+          const validSorting = parsed.sorting.filter(
+            (sort: any) =>
+              sort && typeof sort === "object" && sort.id && "desc" in sort
+          );
 
           return {
             filters: Array.isArray(parsed.filters) ? parsed.filters : [],
             sorting: validSorting,
             pagination: {
               pageIndex: parsed.pagination?.pageIndex || 0,
-              pageSize: parsed.pagination?.pageSize || config.defaultPageSize || 50
-            }
+              pageSize:
+                parsed.pagination?.pageSize || config.defaultPageSize || 50,
+            },
           };
         }
         return parsed;
@@ -51,8 +60,8 @@ export function useDataTable(config: TableConfig) {
       sorting: [], // Removendo ordenação padrão por ID
       pagination: {
         pageIndex: 0,
-        pageSize: config.defaultPageSize || 50
-      }
+        pageSize: config.defaultPageSize || 50,
+      },
     };
 
     return defaultState;
@@ -84,12 +93,13 @@ export function useDataTable(config: TableConfig) {
         filters: tableState.filters || [],
         sorting: (tableState.sorting || []).map((sort) => ({
           id: sort.id,
-          desc: Boolean(sort.desc)
+          desc: Boolean(sort.desc),
         })),
         pagination: {
           pageIndex: tableState.pagination.pageIndex || 0,
-          pageSize: tableState.pagination.pageSize || config.defaultPageSize || 50
-        }
+          pageSize:
+            tableState.pagination.pageSize || config.defaultPageSize || 50,
+        },
       };
 
       sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -122,7 +132,7 @@ export function useDataTable(config: TableConfig) {
 
         return {
           ...column,
-          type: inferredType as any
+          type: inferredType as any,
         };
       });
     },
@@ -131,7 +141,12 @@ export function useDataTable(config: TableConfig) {
 
   // Função para buscar dados
   const fetchData = useCallback(
-    async (page: number, append = false, itemLimit?: number, finalPage = false) => {
+    async (
+      page: number,
+      append = false,
+      itemLimit?: number,
+      finalPage = false
+    ) => {
       // Evitar requisições duplicadas
       if (fetchingRef.current) {
         return;
@@ -162,7 +177,9 @@ export function useDataTable(config: TableConfig) {
         }
 
         // Determinar o número total de itens carregados após este carregamento
-        const totalLoadedItems = append ? data.length + response.data.length : response.data.length;
+        const totalLoadedItems = append
+          ? data.length + response.data.length
+          : response.data.length;
 
         if (append) {
           // Garantir que não duplicamos dados
@@ -196,9 +213,14 @@ export function useDataTable(config: TableConfig) {
         setIsError(false);
         setError(null);
       } catch (err) {
-        console.error(`[useDataTable] Erro ao buscar dados para página ${page}:`, err);
+        console.error(
+          `[useDataTable] Erro ao buscar dados para página ${page}:`,
+          err
+        );
         setIsError(true);
-        setError(err instanceof Error ? err : new Error("Erro ao buscar dados"));
+        setError(
+          err instanceof Error ? err : new Error("Erro ao buscar dados")
+        );
         if (!append) {
           setData([]);
         }
@@ -211,7 +233,13 @@ export function useDataTable(config: TableConfig) {
         fetchingRef.current = false;
       }
     },
-    [config.endpoint, tableState.filters, tableState.sorting, tableState.pagination.pageSize, data.length]
+    [
+      config.endpoint,
+      tableState.filters,
+      tableState.sorting,
+      tableState.pagination.pageSize,
+      data.length,
+    ]
   );
 
   // Recarregar dados quando filtros ou ordenação mudam
@@ -224,7 +252,9 @@ export function useDataTable(config: TableConfig) {
       if (tableState.sorting.length > 0) {
         console.log(
           "Restaurando estado da tabela com ordenações:",
-          tableState.sorting.map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`).join(", ")
+          tableState.sorting
+            .map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`)
+            .join(", ")
         );
       }
 
@@ -233,12 +263,12 @@ export function useDataTable(config: TableConfig) {
         ...tableState,
         sorting: tableState.sorting.map((sort) => ({
           id: sort.id,
-          desc: Boolean(sort.desc)
+          desc: Boolean(sort.desc),
         })),
         pagination: {
           ...tableState.pagination,
-          pageIndex: 0 // Sempre começar da primeira página no carregamento inicial
-        }
+          pageIndex: 0, // Sempre começar da primeira página no carregamento inicial
+        },
       };
 
       // Atualizar o estado apenas se diferente
@@ -271,8 +301,8 @@ export function useDataTable(config: TableConfig) {
       ...prev,
       pagination: {
         ...prev.pagination,
-        pageIndex: prev.pagination.pageIndex + 1
-      }
+        pageIndex: prev.pagination.pageIndex + 1,
+      },
     }));
 
     fetchData(tableState.pagination.pageIndex + 1, true);
@@ -290,8 +320,8 @@ export function useDataTable(config: TableConfig) {
         ...prev,
         pagination: {
           ...prev.pagination,
-          pageIndex: prev.pagination.pageIndex + 1
-        }
+          pageIndex: prev.pagination.pageIndex + 1,
+        },
       }));
 
       fetchData(nextPage, true, itemCount);
@@ -315,8 +345,8 @@ export function useDataTable(config: TableConfig) {
         ...prev,
         pagination: {
           ...prev.pagination,
-          pageIndex
-        }
+          pageIndex,
+        },
       }));
 
       // Limpar dados existentes para exibir apenas a página solicitada
@@ -351,7 +381,7 @@ export function useDataTable(config: TableConfig) {
         setTableState((prev) => ({
           ...prev,
           sorting: prev.sorting.filter((sort) => sort.id !== id),
-          pagination: { ...prev.pagination, pageIndex: 0 }
+          pagination: { ...prev.pagination, pageIndex: 0 },
         }));
 
         // Resetar flags para garantir uma carga limpa
@@ -383,7 +413,9 @@ export function useDataTable(config: TableConfig) {
           // Alternar entre asc -> desc -> remover
           if (!existingSort.desc) {
             // Alterar de asc para desc
-            newSorting = prev.sorting.map((sort) => (sort.id === column ? { ...sort, desc: true } : sort));
+            newSorting = prev.sorting.map((sort) =>
+              sort.id === column ? { ...sort, desc: true } : sort
+            );
           } else {
             // Remover ordenação
             newSorting = prev.sorting.filter((sort) => sort.id !== column);
@@ -393,7 +425,7 @@ export function useDataTable(config: TableConfig) {
         return {
           ...prev,
           sorting: newSorting,
-          pagination: { ...prev.pagination, pageIndex: 0 }
+          pagination: { ...prev.pagination, pageIndex: 0 },
         };
       });
 
@@ -424,7 +456,10 @@ export function useDataTable(config: TableConfig) {
 
         for (const filter of filters) {
           // Caso especial para atualização em massa de filtros
-          if (filter.value === "__UPDATE_FILTERS__" && (filter as any)._updatedFilters) {
+          if (
+            filter.value === "__UPDATE_FILTERS__" &&
+            (filter as any)._updatedFilters
+          ) {
             // Substituir completamente os filtros pelo conjunto fornecido
             updatedFilters = (filter as any)._updatedFilters;
             continue;
@@ -432,14 +467,20 @@ export function useDataTable(config: TableConfig) {
 
           // Handle remove operation
           if (filter.operator === "remove") {
-            updatedFilters = updatedFilters.filter((f) => !(f.id === filter.id && f.value === filter.value));
+            updatedFilters = updatedFilters.filter(
+              (f) => !(f.id === filter.id && f.value === filter.value)
+            );
           } else {
             // Check if this filter already exists
-            const existingFilterIndex = updatedFilters.findIndex((f) => f.id === filter.id && f.value === filter.value);
+            const existingFilterIndex = updatedFilters.findIndex(
+              (f) => f.id === filter.id && f.value === filter.value
+            );
 
             // If filter exists, replace it (or remove for toggle behavior)
             if (existingFilterIndex > -1) {
-              updatedFilters = updatedFilters.filter((_, idx) => idx !== existingFilterIndex);
+              updatedFilters = updatedFilters.filter(
+                (_, idx) => idx !== existingFilterIndex
+              );
             } else {
               // Add new filter
               updatedFilters.push(filter);
@@ -450,7 +491,7 @@ export function useDataTable(config: TableConfig) {
         return {
           ...prev,
           filters: updatedFilters,
-          pagination: { ...prev.pagination, pageIndex: 0 } // Reset to first page
+          pagination: { ...prev.pagination, pageIndex: 0 }, // Reset to first page
         };
       });
 
@@ -477,7 +518,7 @@ export function useDataTable(config: TableConfig) {
     setTableState((prev) => ({
       ...prev,
       filters: [],
-      pagination: { ...prev.pagination, pageIndex: 0 }
+      pagination: { ...prev.pagination, pageIndex: 0 },
     }));
 
     // Resetar flags para garantir uma carga limpa
@@ -512,7 +553,7 @@ export function useDataTable(config: TableConfig) {
       setTableState((prev) => ({
         ...prev,
         sorting: newOrder,
-        pagination: { ...prev.pagination, pageIndex: 0 }
+        pagination: { ...prev.pagination, pageIndex: 0 },
       }));
 
       // Resetar flags para garantir uma carga limpa
@@ -553,6 +594,6 @@ export function useDataTable(config: TableConfig) {
 
       // Chamar o setTableState original
       setTableState(updater);
-    }
+    },
   };
 }

@@ -1,10 +1,18 @@
 import { Loader2 } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DataTableHeader from "~/components/data-table/DataTableHeader";
 import FilterPanel from "~/components/data-table/FilterPanel";
 import SortingPanel from "~/components/data-table/SortingPanel";
+import usePreviousState from "~/hooks/data-table/use-previous-state";
 import { fetchTableData, fetchTotalRowCount } from "~/lib/services/api";
-import type { ApiResult, ColumnDefinition, Filter, SortingState, TableConfig, TableState } from "~/lib/types/data-table";
+import type {
+  ApiResult,
+  ColumnDefinition,
+  Filter,
+  SortingState,
+  TableConfig,
+  TableState,
+} from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
 
 interface DataTableProps {
@@ -12,75 +20,34 @@ interface DataTableProps {
   className?: string;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
-  // Load previous state from sessionStorage if exists
-  const loadSavedState = (): TableState | null => {
-    try {
-      // Verificar se está no navegador antes de acessar sessionStorage
-      if (typeof window === "undefined") return null;
+export default function DataTable({ config, className }: DataTableProps) {
+  // Table State
+  const [tableState, setTableState] = useState<TableState>((): TableState => {
+    const savedState = usePreviousState({ config });
 
-      const storageKey = `data-table-state-${config.endpoint.url}`;
-      const savedState = sessionStorage.getItem(storageKey);
+    // Verify if there's a saved state in sessionStorage
+    if (savedState) return savedState;
 
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
-
-        // Garantir que a estrutura do estado está correta
-        if (parsed && Array.isArray(parsed.sorting)) {
-          // Manter a consistência das ordenações
-          const validSorting = parsed.sorting.filter((sort: any) => sort && typeof sort === "object" && sort.id && "desc" in sort);
-
-          return {
-            filters: Array.isArray(parsed.filters) ? parsed.filters : [],
-            sorting: validSorting,
-            pagination: {
-              pageIndex: parsed.pagination?.pageIndex || 0,
-              pageSize: parsed.pagination?.pageSize || config.defaultPageSize || 20
-            }
-          };
-        }
-        return parsed;
-      }
-    } catch (e) {
-      console.error("Error loading saved table state:", e);
-    }
-    return null;
-  };
-
-  // Get initial state from sessionStorage or use default
-  const getInitialState = (): TableState => {
-    const savedState = loadSavedState();
-    if (savedState) {
-      return savedState;
-    }
-
-    // Estado padrão
+    // If not, return the default state
     return {
       filters: [],
-      sorting: [], // Sem ordenação padrão
+      sorting: [],
       pagination: {
         pageIndex: 0,
-        pageSize: config.defaultPageSize || 20
-      }
+        pageSize: config.defaultPageSize || 20,
+      },
     };
-  };
+  });
 
-  // Estado local da tabela
-  const [tableState, setTableState] = useState<TableState>(getInitialState());
-
-  // Estados para os dados e carregamento
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
-  const [actualTotalCount, setActualTotalCount] = useState<number | null>(null);
 
-  // Referência para o container de scroll
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Ref to the scrollable container
+  const containerScrollRef = useRef<HTMLDivElement>(null);
 
   // Referência para o elemento "Scroll para ver mais"
   const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
@@ -111,8 +78,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
   const fetchData = useCallback(
     async (page: number, append = false) => {
       // Se já estamos carregando dados, não iniciar nova requisição
-      if (isLoading || isFetchingMore) {
-        console.log(`Já existe um carregamento em andamento, ignorando nova requisição`);
+      if (loading || isFetchingMore) {
+        console.log(
+          `Já existe um carregamento em andamento, ignorando nova requisição`
+        );
         return;
       }
 
@@ -130,7 +99,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         if (append) {
           setIsFetchingMore(true);
         } else {
-          setIsLoading(true);
+          setLoading(true);
         }
 
         // Usar a versão mais recente do estado
@@ -141,8 +110,15 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         if (append && nextUrl) {
           console.log("Usando URL next para carregar mais dados:", nextUrl);
           fullUrl = nextUrl;
-        } else if (!append && page < currentState.pagination.pageIndex && previousUrl) {
-          console.log("Usando URL previous para carregar página anterior:", previousUrl);
+        } else if (
+          !append &&
+          page < currentState.pagination.pageIndex &&
+          previousUrl
+        ) {
+          console.log(
+            "Usando URL previous para carregar página anterior:",
+            previousUrl
+          );
           fullUrl = previousUrl;
         }
 
@@ -183,7 +159,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         }
 
         // Atualizar as URLs de paginação
-        console.log("URLs de paginação recebidas:", { next: response.meta?.next, previous: response.meta?.previous });
+        console.log("URLs de paginação recebidas:", {
+          next: response.meta?.next,
+          previous: response.meta?.previous,
+        });
         setNextUrl(response.meta?.next || null);
         setPreviousUrl(response.meta?.previous || null);
 
@@ -201,31 +180,37 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         }
 
         // Atualizar metadados
-        setTotalPages(response.pageCount);
         setTotalItems(response.totalCount);
 
         // Verificar se há mais páginas
         setHasNextPage(!!response.meta?.next);
 
-        setIsError(false);
         setError(null);
       } catch (err) {
         console.error("Erro ao buscar dados:", err);
-        setIsError(true);
-        setError(err instanceof Error ? err : new Error("Erro ao buscar dados"));
+        setError(
+          err instanceof Error ? err : new Error("Erro ao buscar dados")
+        );
         if (!append) {
           setData([]);
         }
       } finally {
         // Limpar estados de carregamento
-        setIsLoading(false);
+        setLoading(false);
         setIsFetchingMore(false);
 
         // Resetar flag de requisição em andamento
         fetchingRef.current = false;
       }
     },
-    [config.endpoint, hasNextPage, isLoading, isFetchingMore, nextUrl, previousUrl]
+    [
+      config.endpoint,
+      hasNextPage,
+      loading,
+      isFetchingMore,
+      nextUrl,
+      previousUrl,
+    ]
   );
 
   // Carregar dados iniciais
@@ -236,7 +221,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     if (tableState.sorting.length > 0) {
       console.log(
         "Restaurando estado da tabela com ordenações:",
-        tableState.sorting.map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`).join(", ")
+        tableState.sorting
+          .map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`)
+          .join(", ")
       );
     }
 
@@ -245,12 +232,12 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       ...tableState,
       sorting: tableState.sorting.map((sort) => ({
         id: sort.id,
-        desc: Boolean(sort.desc)
+        desc: Boolean(sort.desc),
       })),
       pagination: {
         ...tableState.pagination,
-        pageIndex: 0 // Sempre começar da primeira página no carregamento inicial
-      }
+        pageIndex: 0, // Sempre começar da primeira página no carregamento inicial
+      },
     };
 
     // Atualizar o estado apenas se diferente
@@ -266,7 +253,6 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       .then((totalCount) => {
         if (totalCount !== null) {
           console.log(`Contagem total de registros: ${totalCount}`);
-          setActualTotalCount(totalCount);
         }
       })
       .catch((error) => {
@@ -293,7 +279,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     // Debounce para evitar múltiplas requisições rápidas
     const timeoutId = setTimeout(() => {
       // Não iniciar nova requisição se já houver uma em andamento
-      if (isLoading || isFetchingMore) {
+      if (loading || isFetchingMore) {
         return;
       }
 
@@ -306,8 +292,8 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         ...prev,
         pagination: {
           ...prev.pagination,
-          pageIndex: 0
-        }
+          pageIndex: 0,
+        },
       }));
 
       // Limpar dados atuais
@@ -318,12 +304,18 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [tableState.filters, tableState.sorting, fetchData, isLoading, isFetchingMore]);
+  }, [
+    tableState.filters,
+    tableState.sorting,
+    fetchData,
+    loading,
+    isFetchingMore,
+  ]);
 
   // Função para detectar necessidade de carregar mais dados
   const loadMoreData = useCallback(() => {
     // Não carregar se já estiver carregando, não houver próxima página, ou requisição em andamento
-    if (isLoading || isFetchingMore || !hasNextPage || fetchingRef.current) {
+    if (loading || isFetchingMore || !hasNextPage || fetchingRef.current) {
       return;
     }
 
@@ -335,17 +327,17 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       ...prev,
       pagination: {
         ...prev.pagination,
-        pageIndex: nextPage
-      }
+        pageIndex: nextPage,
+      },
     }));
 
     // Carregar próxima página, anexando ao conteúdo existente
     fetchData(nextPage, true);
-  }, [fetchData, hasNextPage, isLoading, isFetchingMore]);
+  }, [fetchData, hasNextPage, loading, isFetchingMore]);
 
   // Configurar o detector de scroll
   useEffect(() => {
-    const scrollContainer = containerRef.current;
+    const scrollContainer = containerScrollRef.current;
     if (!scrollContainer) return;
 
     // Evitar múltiplos eventos de scroll em curto espaço de tempo
@@ -353,7 +345,14 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
     // Handler que detecta quando o usuário está próximo do final
     const handleScroll = () => {
-      if (isLoading || isFetchingMore || !hasNextPage || fetchingRef.current || data.length >= totalItems) return;
+      if (
+        loading ||
+        isFetchingMore ||
+        !hasNextPage ||
+        fetchingRef.current ||
+        data.length >= totalItems
+      )
+        return;
 
       // Limpar timeout anterior para evitar múltiplas chamadas
       if (scrollTimeout) {
@@ -390,7 +389,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       initialScreenCheckRef.current ||
       !initialLoadDoneRef.current ||
       !hasNextPage ||
-      isLoading ||
+      loading ||
       isFetchingMore ||
       fetchingRef.current ||
       data.length === 0 ||
@@ -399,7 +398,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       return;
     }
 
-    const scrollContainer = containerRef.current;
+    const scrollContainer = containerScrollRef.current;
     if (!scrollContainer) return;
 
     // Marcar que já fizemos a verificação
@@ -418,22 +417,36 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
     // Limpar o timeout se o componente desmontar
     return () => clearTimeout(timeoutId);
-  }, [data.length, hasNextPage, isLoading, isFetchingMore, loadMoreData, totalItems]);
+  }, [
+    data.length,
+    hasNextPage,
+    loading,
+    isFetchingMore,
+    loadMoreData,
+    totalItems,
+  ]);
 
   // Usar Intersection Observer para detectar quando o elemento "Scroll para ver mais" aparece na tela
   useEffect(() => {
     // Se não tiver mais páginas ou já estiver carregando, não configurar o observer
-    if (!hasNextPage || isLoading || isFetchingMore || fetchingRef.current) return;
+    if (!hasNextPage || loading || isFetchingMore || fetchingRef.current)
+      return;
 
     // Elemento que queremos observar
     const loadMoreElement = loadMoreTriggerRef.current;
-    const scrollContainer = containerRef.current;
+    const scrollContainer = containerScrollRef.current;
     if (!loadMoreElement || !scrollContainer) return;
 
     // Função chamada quando o elemento entra/sai da viewport
     const onIntersect = (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
-      if (entry.isIntersecting && hasNextPage && !isLoading && !isFetchingMore && !fetchingRef.current) {
+      if (
+        entry.isIntersecting &&
+        hasNextPage &&
+        !loading &&
+        !isFetchingMore &&
+        !fetchingRef.current
+      ) {
         loadMoreData();
       }
     };
@@ -442,7 +455,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     const observer = new IntersectionObserver(onIntersect, {
       root: scrollContainer, // Usar o container da tabela como viewport
       rootMargin: "100px",
-      threshold: 0.1 // 10% do elemento visível é suficiente
+      threshold: 0.1, // 10% do elemento visível é suficiente
     });
 
     // Iniciar observação
@@ -452,7 +465,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     return () => {
       observer.disconnect();
     };
-  }, [hasNextPage, isLoading, isFetchingMore, loadMoreData]);
+  }, [hasNextPage, loading, isFetchingMore, loadMoreData]);
 
   // Manipuladores para ordenação
   const handleSort = useCallback((columnId: string) => {
@@ -469,14 +482,16 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           return {
             ...prev,
             sorting: prev.sorting.filter((s) => s.id !== realColumnId),
-            pagination: { ...prev.pagination, pageIndex: 0 }
+            pagination: { ...prev.pagination, pageIndex: 0 },
           };
         }
 
         // Comando para ordenação ascendente (A a Z)
         if (command === "asc") {
           // Encontrar se já existe ordenação para esta coluna
-          const existingSortIndex = prev.sorting.findIndex((s) => s.id === realColumnId);
+          const existingSortIndex = prev.sorting.findIndex(
+            (s) => s.id === realColumnId
+          );
 
           if (existingSortIndex !== -1) {
             // Atualizar ordenação existente
@@ -485,14 +500,14 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
             return {
               ...prev,
               sorting: newSorting,
-              pagination: { ...prev.pagination, pageIndex: 0 }
+              pagination: { ...prev.pagination, pageIndex: 0 },
             };
           } else {
             // Adicionar nova ordenação mantendo as existentes
             return {
               ...prev,
               sorting: [...prev.sorting, { id: realColumnId, desc: false }],
-              pagination: { ...prev.pagination, pageIndex: 0 }
+              pagination: { ...prev.pagination, pageIndex: 0 },
             };
           }
         }
@@ -500,7 +515,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         // Comando para ordenação descendente (Z a A)
         if (command === "desc") {
           // Encontrar se já existe ordenação para esta coluna
-          const existingSortIndex = prev.sorting.findIndex((s) => s.id === realColumnId);
+          const existingSortIndex = prev.sorting.findIndex(
+            (s) => s.id === realColumnId
+          );
 
           if (existingSortIndex !== -1) {
             // Atualizar ordenação existente
@@ -509,14 +526,14 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
             return {
               ...prev,
               sorting: newSorting,
-              pagination: { ...prev.pagination, pageIndex: 0 }
+              pagination: { ...prev.pagination, pageIndex: 0 },
             };
           } else {
             // Adicionar nova ordenação mantendo as existentes
             return {
               ...prev,
               sorting: [...prev.sorting, { id: realColumnId, desc: true }],
-              pagination: { ...prev.pagination, pageIndex: 0 }
+              pagination: { ...prev.pagination, pageIndex: 0 },
             };
           }
         }
@@ -529,7 +546,9 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
     // Comportamento padrão para cliques no cabeçalho
     setTableState((prev) => {
-      const existingSortIndex = prev.sorting.findIndex((sort) => sort.id === columnId);
+      const existingSortIndex = prev.sorting.findIndex(
+        (sort) => sort.id === columnId
+      );
 
       // Se já existe, alternar entre asc, desc e remover
       if (existingSortIndex > -1) {
@@ -540,7 +559,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           return {
             ...prev,
             sorting: prev.sorting.filter((sort) => sort.id !== columnId),
-            pagination: { ...prev.pagination, pageIndex: 0 }
+            pagination: { ...prev.pagination, pageIndex: 0 },
           };
         } else {
           // Se está em asc, mudar para desc
@@ -549,7 +568,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           return {
             ...prev,
             sorting: newSorting,
-            pagination: { ...prev.pagination, pageIndex: 0 }
+            pagination: { ...prev.pagination, pageIndex: 0 },
           };
         }
       }
@@ -558,48 +577,56 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       return {
         ...prev,
         sorting: [...prev.sorting, { id: columnId, desc: false }],
-        pagination: { ...prev.pagination, pageIndex: 0 }
+        pagination: { ...prev.pagination, pageIndex: 0 },
       };
     });
   }, []);
 
   // Manipulador para filtros
-  const handleFilter = useCallback((filter: Filter & { _updatedFilters?: Filter[] }) => {
-    // Marcar que é uma alteração manual
-    manualFilterSortChangeRef.current = true;
+  const handleFilter = useCallback(
+    (filter: Filter & { _updatedFilters?: Filter[] }) => {
+      // Marcar que é uma alteração manual
+      manualFilterSortChangeRef.current = true;
 
-    setTableState((prev) => {
-      // Caso especial para atualização de múltiplos filtros
-      if (filter.value === "__UPDATE_FILTERS__" && filter._updatedFilters) {
+      setTableState((prev) => {
+        // Caso especial para atualização de múltiplos filtros
+        if (filter.value === "__UPDATE_FILTERS__" && filter._updatedFilters) {
+          return {
+            ...prev,
+            filters: filter._updatedFilters,
+            pagination: { ...prev.pagination, pageIndex: 0 },
+          };
+        }
+
+        // Verificar se já existe filtro para esta coluna
+        const existingFilterIndex = prev.filters.findIndex(
+          (f) =>
+            f.id === filter.id &&
+            f.operator === filter.operator &&
+            f.value === filter.value
+        );
+
+        // Se o filtro já existe e tem o mesmo valor, remover (toggle)
+        if (existingFilterIndex > -1) {
+          return {
+            ...prev,
+            filters: prev.filters.filter(
+              (_, idx) => idx !== existingFilterIndex
+            ),
+            pagination: { ...prev.pagination, pageIndex: 0 },
+          };
+        }
+
+        // Adicionar novo filtro
         return {
           ...prev,
-          filters: filter._updatedFilters,
-          pagination: { ...prev.pagination, pageIndex: 0 }
+          filters: [...prev.filters, filter],
+          pagination: { ...prev.pagination, pageIndex: 0 },
         };
-      }
-
-      // Verificar se já existe filtro para esta coluna
-      const existingFilterIndex = prev.filters.findIndex(
-        (f) => f.id === filter.id && f.operator === filter.operator && f.value === filter.value
-      );
-
-      // Se o filtro já existe e tem o mesmo valor, remover (toggle)
-      if (existingFilterIndex > -1) {
-        return {
-          ...prev,
-          filters: prev.filters.filter((_, idx) => idx !== existingFilterIndex),
-          pagination: { ...prev.pagination, pageIndex: 0 }
-        };
-      }
-
-      // Adicionar novo filtro
-      return {
-        ...prev,
-        filters: [...prev.filters, filter],
-        pagination: { ...prev.pagination, pageIndex: 0 }
-      };
-    });
-  }, []);
+      });
+    },
+    []
+  );
 
   // Remover filtro
   const handleRemoveFilter = useCallback((columnId: string, value: any) => {
@@ -608,8 +635,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
     setTableState((prev) => ({
       ...prev,
-      filters: prev.filters.filter((f) => !(f.id === columnId && f.value === value)),
-      pagination: { ...prev.pagination, pageIndex: 0 }
+      filters: prev.filters.filter(
+        (f) => !(f.id === columnId && f.value === value)
+      ),
+      pagination: { ...prev.pagination, pageIndex: 0 },
     }));
   }, []);
 
@@ -621,7 +650,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     setTableState((prev) => ({
       ...prev,
       filters: [],
-      pagination: { ...prev.pagination, pageIndex: 0 }
+      pagination: { ...prev.pagination, pageIndex: 0 },
     }));
   }, []);
 
@@ -633,7 +662,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     setTableState((prev) => ({
       ...prev,
       sorting: [],
-      pagination: { ...prev.pagination, pageIndex: 0 }
+      pagination: { ...prev.pagination, pageIndex: 0 },
     }));
   }, []);
 
@@ -645,7 +674,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     setTableState((prev) => ({
       ...prev,
       sorting: prev.sorting.filter((s) => s.id !== columnId),
-      pagination: { ...prev.pagination, pageIndex: 0 }
+      pagination: { ...prev.pagination, pageIndex: 0 },
     }));
   }, []);
 
@@ -657,12 +686,15 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     setTableState((prev) => ({
       ...prev,
       sorting: newOrder,
-      pagination: { ...prev.pagination, pageIndex: 0 }
+      pagination: { ...prev.pagination, pageIndex: 0 },
     }));
   }, []);
 
   // Calcular colunas visíveis e largura das células
-  const visibleColumns = useMemo(() => config.columns.filter((col) => !col.hidden), [config.columns]);
+  const visibleColumns = useMemo(
+    () => config.columns.filter((col) => !col.hidden),
+    [config.columns]
+  );
   const columnCount = visibleColumns.length;
 
   // Definir larguras das colunas com base no tipo e configuração
@@ -725,7 +757,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       return "180px"; // Colunas de ação
     }
 
-    if (column.accessor.includes("status") || column.header.toLowerCase().includes("status")) {
+    if (
+      column.accessor.includes("status") ||
+      column.header.toLowerCase().includes("status")
+    ) {
       return "200px"; // Colunas de status
     }
 
@@ -740,11 +775,19 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
       case "text":
       default:
         // Para colunas de texto, usar larguras base mais apropriadas
-        if (column.accessor.includes("description")) return Math.max(350, minWidthFromHeader) + "px";
-        if (column.accessor.includes("name") || column.accessor.includes("email")) return Math.max(220, minWidthFromHeader) + "px";
-        if (column.accessor.includes("brand")) return Math.max(200, minWidthFromHeader) + "px";
-        if (column.accessor.includes("model")) return Math.max(220, minWidthFromHeader) + "px";
-        if (column.accessor.includes("color")) return Math.max(180, minWidthFromHeader) + "px";
+        if (column.accessor.includes("description"))
+          return Math.max(350, minWidthFromHeader) + "px";
+        if (
+          column.accessor.includes("name") ||
+          column.accessor.includes("email")
+        )
+          return Math.max(220, minWidthFromHeader) + "px";
+        if (column.accessor.includes("brand"))
+          return Math.max(200, minWidthFromHeader) + "px";
+        if (column.accessor.includes("model"))
+          return Math.max(220, minWidthFromHeader) + "px";
+        if (column.accessor.includes("color"))
+          return Math.max(180, minWidthFromHeader) + "px";
         return Math.max(200, minWidthFromHeader) + "px"; // Largura padrão para outras colunas de texto
     }
   }, []);
@@ -766,7 +809,7 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
             style={{
               width: getColumnWidth(column),
               minWidth: getColumnWidth(column),
-              maxWidth: getColumnWidth(column)
+              maxWidth: getColumnWidth(column),
             }}
           />
         ))}
@@ -780,13 +823,19 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     handleSort,
     handleFilter,
     handleRemoveFilter,
-    config.endpoint
+    config.endpoint,
   ]);
 
   // Memoizar linhas da tabela
   const rowsComponent = useMemo(() => {
     return data.map((row, rowIndex) => (
-      <div key={`row-${rowIndex}`} className={cn("flex border-b w-full", rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20")}>
+      <div
+        key={`row-${rowIndex}`}
+        className={cn(
+          "flex border-b w-full",
+          rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20"
+        )}
+      >
         {visibleColumns.map((column) => {
           // Determinar qual accessor usar para exibição (displayAccessor ou accessor)
           const accessorToUse = column.displayAccessor || column.accessor;
@@ -804,7 +853,10 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
               const [prefix, field] = key.split("__");
 
               // Verificar se temos additional_info e se o campo existe lá
-              if (value?.additional_info && value.additional_info[field] !== undefined) {
+              if (
+                value?.additional_info &&
+                value.additional_info[field] !== undefined
+              ) {
                 value = value.additional_info[field];
               } else if (value?.[key] !== undefined) {
                 // Se o campo com __ existir diretamente, usá-lo
@@ -824,11 +876,15 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
           const displayValue = column.formatFn ? column.formatFn(value) : value;
 
           // Determinar classe CSS com base no tipo de coluna
-          const cellClass = cn("py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm flex items-center", {
-            "text-right justify-end": column.type === "number",
-            "text-center justify-center": column.type === "boolean",
-            "justify-start": column.type !== "number" && column.type !== "boolean"
-          });
+          const cellClass = cn(
+            "py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm flex items-center",
+            {
+              "text-right justify-end": column.type === "number",
+              "text-center justify-center": column.type === "boolean",
+              "justify-start":
+                column.type !== "number" && column.type !== "boolean",
+            }
+          );
 
           return (
             <div
@@ -837,11 +893,15 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
               style={{
                 width: getColumnWidth(column),
                 minWidth: getColumnWidth(column),
-                maxWidth: getColumnWidth(column)
+                maxWidth: getColumnWidth(column),
               }}
               title={String(displayValue || "")}
             >
-              <span className="truncate w-full">{displayValue !== undefined && displayValue !== null ? displayValue : ""}</span>
+              <span className="truncate w-full">
+                {displayValue !== undefined && displayValue !== null
+                  ? displayValue
+                  : ""}
+              </span>
             </div>
           );
         })}
@@ -862,12 +922,13 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         filters: tableState.filters || [],
         sorting: (tableState.sorting || []).map((sort) => ({
           id: sort.id,
-          desc: Boolean(sort.desc)
+          desc: Boolean(sort.desc),
         })),
         pagination: {
           pageIndex: tableState.pagination.pageIndex || 0,
-          pageSize: tableState.pagination.pageSize || config.defaultPageSize || 20
-        }
+          pageSize:
+            tableState.pagination.pageSize || config.defaultPageSize || 20,
+        },
       };
 
       sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
@@ -876,9 +937,13 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
     }
   }, [tableState, config.endpoint.url]);
 
-  // Renderizar componente
   return (
-    <div className={cn("flex flex-col border rounded-md w-full overflow-hidden bg-background", className)}>
+    <div
+      className={cn(
+        "flex flex-col border rounded-md w-full overflow-hidden bg-background",
+        className
+      )}
+    >
       {/* Painéis de filtro e ordenação */}
       {tableState.filters.length > 0 && (
         <FilterPanel
@@ -901,29 +966,36 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
 
       {/* Container principal com scroll interno */}
       <div
-        ref={containerRef}
+        ref={containerScrollRef}
         className="w-full relative overflow-auto"
         style={{
           maxHeight: config.maxHeight || "calc(100vh - 200px)",
-          height: "calc(100vh - 320px)"
+          height: "calc(100vh - 320px)",
         }}
       >
         {/* Tabela com largura definida e scroll horizontal quando necessário */}
-        <div className="bg-background" style={{ minWidth: "100%", width: "max-content" }}>
+        <div
+          className="bg-background"
+          style={{ minWidth: "100%", width: "max-content" }}
+        >
           {/* Cabeçalho da tabela - fixo na parte superior */}
-          <div className="sticky top-0 z-10 bg-background shadow-sm">{headerComponent}</div>
+          <div className="sticky top-0 z-10 bg-background shadow-sm">
+            {headerComponent}
+          </div>
 
           {/* Corpo da tabela */}
-          {isLoading && data.length === 0 ? (
+          {loading && data.length === 0 ? (
             <div className="flex items-center justify-center h-[400px] w-full">
               <div className="flex items-center">
                 <Loader2 className="h-5 w-5 mr-2 animate-spin text-primary" />
                 <span className="text-muted-foreground">Carregando...</span>
               </div>
             </div>
-          ) : isError ? (
+          ) : error ? (
             <div className="flex items-center justify-center h-[400px] w-full">
-              <div className="text-destructive">Erro ao carregar dados: {error?.message}</div>
+              <div className="text-destructive">
+                Erro ao carregar dados: {error?.message}
+              </div>
             </div>
           ) : data.length === 0 ? (
             <div className="flex items-center justify-center h-[400px] w-full">
@@ -936,21 +1008,26 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
                 <div className="py-4 text-center">
                   <div className="inline-flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Carregando mais...</span>
+                    <span className="text-sm text-muted-foreground">
+                      Carregando mais...
+                    </span>
                   </div>
                 </div>
               )}
               {/* Indicador de final da lista com mais dados - com ref para detecção */}
-              {data.length > 0 && hasNextPage && !isFetchingMore && !isLoading ? (
+              {data.length > 0 && hasNextPage && !isFetchingMore && !loading ? (
                 <div
                   ref={loadMoreTriggerRef}
                   className="py-4 text-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/20"
                   onClick={loadMoreData}
                 >
-                  Mostrar mais resultados (Página {tableState.pagination.pageIndex + 2})
+                  Mostrar mais resultados (Página{" "}
+                  {tableState.pagination.pageIndex + 2})
                 </div>
               ) : data.length > 0 ? (
-                <div className="py-4 text-center text-sm text-muted-foreground">Fim dos resultados</div>
+                <div className="py-4 text-center text-sm text-muted-foreground">
+                  Fim dos resultados
+                </div>
               ) : null}
             </>
           )}
@@ -962,27 +1039,32 @@ const DataTable: React.FC<DataTableProps> = ({ config, className }) => {
         <div>
           {data.length > 0
             ? `${data.length} de ${totalItems} itens carregados${
-                hasNextPage ? " (Role para carregar mais)" : " (Fim dos resultados)"
+                hasNextPage
+                  ? " (Role para carregar mais)"
+                  : " (Fim dos resultados)"
               }`
             : "0 itens"}
         </div>
         <div className="flex items-center gap-2">
-          {isLoading || isFetchingMore ? (
+          {loading || isFetchingMore ? (
             <div className="flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin text-primary" />
-              <span className="text-muted-foreground">{isLoading ? "Carregando..." : "Carregando mais itens..."}</span>
+              <span className="text-muted-foreground">
+                {loading ? "Carregando..." : "Carregando mais itens..."}
+              </span>
             </div>
           ) : hasNextPage ? (
             <div className="text-blue-500 text-xs">Scroll para ver mais</div>
           ) : null}
           {/* Botão para forçar recarregamento da API */}
-          <button onClick={() => fetchData(0)} className="bg-blue-600 text-white px-2 py-1 text-xs rounded hover:bg-blue-700">
+          <button
+            onClick={() => fetchData(0)}
+            className="bg-blue-600 text-white px-2 py-1 text-xs rounded hover:bg-blue-700"
+          >
             Forçar Recarga API
           </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default DataTable;
+}

@@ -1,4 +1,4 @@
-import DataTable from "~/components/data-table/DataTable";
+import DataTable from "~/components/data-table";
 import { AuthStatus } from "~/components/layout/AuthStatus";
 import type { TableConfig } from "~/lib/types/data-table";
 import { formatDisplayValue } from "~/lib/utils";
@@ -6,7 +6,10 @@ import { formatDisplayValue } from "~/lib/utils";
 export function meta() {
   return [
     { title: "Produtos - React Router v7 Demo" },
-    { name: "description", content: "Listagem de produtos com React Router v7" }
+    {
+      name: "description",
+      content: "Listagem de produtos com React Router v7",
+    },
   ];
 }
 
@@ -20,7 +23,7 @@ export default function ProductsPage() {
         type: "text",
         sortable: true,
         filterable: true,
-        width: "110px"
+        width: "110px",
       },
       {
         accessor: "group__name",
@@ -28,7 +31,7 @@ export default function ProductsPage() {
         header: "Grupo",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "category__name",
@@ -36,7 +39,7 @@ export default function ProductsPage() {
         header: "Categoria",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "brand__name",
@@ -44,7 +47,7 @@ export default function ProductsPage() {
         header: "Marca",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "compatible_brand__name",
@@ -52,7 +55,7 @@ export default function ProductsPage() {
         header: "Marca Compatível",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "model__name",
@@ -60,7 +63,7 @@ export default function ProductsPage() {
         header: "Modelo",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "compatible_model__name",
@@ -68,7 +71,7 @@ export default function ProductsPage() {
         header: "Modelo Compatível",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "color__name",
@@ -76,7 +79,7 @@ export default function ProductsPage() {
         header: "Cor",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "description",
@@ -84,7 +87,7 @@ export default function ProductsPage() {
         type: "text",
         sortable: true,
         filterable: true,
-        width: "350px"
+        width: "350px",
       },
       {
         accessor: "short_description",
@@ -92,21 +95,21 @@ export default function ProductsPage() {
         type: "text",
         sortable: true,
         filterable: true,
-        width: "350px"
+        width: "350px",
       },
       {
         accessor: "min_stock",
         header: "Estoque Mínimo",
         type: "number",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "max_stock",
         header: "Estoque Máximo",
         type: "number",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "price",
@@ -114,14 +117,14 @@ export default function ProductsPage() {
         type: "number",
         sortable: true,
         filterable: true,
-        formatFn: (value) => formatDisplayValue(value, "currency")
+        formatFn: (value) => formatDisplayValue(value, "currency"),
       },
       {
         accessor: "warranty_period",
         header: "Garantia (dias)",
         type: "number",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "is_active",
@@ -129,7 +132,7 @@ export default function ProductsPage() {
         type: "boolean",
         sortable: true,
         filterable: true,
-        formatFn: (value) => formatDisplayValue(value, "boolean")
+        formatFn: (value) => formatDisplayValue(value, "boolean"),
       },
       {
         accessor: "created_at",
@@ -137,7 +140,7 @@ export default function ProductsPage() {
         type: "date",
         sortable: true,
         filterable: true,
-        formatFn: (value) => formatDisplayValue(value, "datetime")
+        formatFn: (value) => formatDisplayValue(value, "datetime"),
       },
       {
         accessor: "updated_at",
@@ -145,7 +148,7 @@ export default function ProductsPage() {
         type: "date",
         sortable: true,
         filterable: true,
-        formatFn: (value) => formatDisplayValue(value, "datetime")
+        formatFn: (value) => formatDisplayValue(value, "datetime"),
       },
       {
         accessor: "created_by__email",
@@ -153,21 +156,21 @@ export default function ProductsPage() {
         header: "Criado por",
         type: "text",
         sortable: true,
-        filterable: true
+        filterable: true,
       },
       {
         accessor: "additional_info.total_stock_quantity",
         header: "Estoque Total",
         type: "number",
         sortable: false,
-        filterable: false
+        filterable: false,
       },
       {
         accessor: "additional_info.total_sold_quantity",
         header: "Total Vendido",
         type: "number",
         sortable: false,
-        filterable: false
+        filterable: false,
       },
       {
         accessor: "additional_info.total_sold_value",
@@ -175,7 +178,7 @@ export default function ProductsPage() {
         type: "number",
         sortable: false,
         filterable: false,
-        formatFn: (value) => formatDisplayValue(value, "currency")
+        formatFn: (value) => formatDisplayValue(value, "currency"),
       },
       {
         accessor: "additional_info.daily_sales_average_last_30_days",
@@ -183,8 +186,8 @@ export default function ProductsPage() {
         type: "number",
         sortable: false,
         filterable: false,
-        formatFn: (value) => formatDisplayValue(value, "decimal")
-      }
+        formatFn: (value) => formatDisplayValue(value, "decimal"),
+      },
     ],
     endpoint: {
       url: "/api/products/",
@@ -192,18 +195,15 @@ export default function ProductsPage() {
       pageParam: "cursor",
       limitParam: "limit",
       params: {
-        format: "json"
-      }
+        format: "json",
+      },
     },
     initialSort: {
       id: "id",
-      desc: false
+      desc: false,
     },
-    defaultPageSize: 20
+    defaultPageSize: 20,
   };
-
-  // Exibe a URL base da API no console para depuração
-  console.log("API Base URL:", import.meta.env.VITE_API_BASE_URL || "Não configurada");
 
   return (
     <div className="space-y-4 w-full">
@@ -213,7 +213,9 @@ export default function ProductsPage() {
         </div>
         <div className="flex items-end gap-1">
           <AuthStatus />
-          <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-2 rounded-md">Novo Produto</button>
+          <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-2 rounded-md">
+            Novo Produto
+          </button>
         </div>
       </div>
 
