@@ -1,9 +1,11 @@
 import {
-  type RouteConfig,
   index,
   prefix,
   route,
+  layout
 } from "@react-router/dev/routes";
+
+import type { RouteConfig } from "@react-router/dev/routes";
 
 export default [
   // Landing page usando LandingLayout
@@ -37,12 +39,13 @@ export default [
     route(":userId/edit", "routes/users/edit.tsx"),
   ]),
 
-  // Auth routes with layout (AuthLayout)
-  route("auth", "routes/auth/layout.tsx", [
-    route("login", "routes/auth/login.tsx"),
-    route("register", "routes/auth/register.tsx"),
-    route("forgot-password", "routes/auth/forgot-password.tsx"),
-    route("reset-password/:token", "routes/auth/reset-password.tsx"),
+  ...prefix("auth", [
+    layout("layouts/auth-layout.tsx", [
+      route("login", "routes/auth/login.tsx"),
+      route("register", "routes/auth/register.tsx"),
+      route("forgot-password", "routes/auth/forgot-password.tsx"),
+      route("reset-password/:token", "routes/auth/reset-password.tsx"),
+    ])
   ]),
 
   // 404 page for unmatched routes
