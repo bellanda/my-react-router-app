@@ -1,4 +1,11 @@
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "react-router";
 import { Toaster } from "~/components/ui/sonner";
 import { useAuth } from "~/hooks/useAuth";
 import { ThemeProvider } from "~/lib/theme-provider";
@@ -12,12 +19,12 @@ export const links: Route.LinksFunction = () => [
   {
     rel: "preconnect",
     href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous"
+    crossOrigin: "anonymous",
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-  }
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -43,11 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   console.error("Error setting theme:", e);
                 }
               })();
-            `
+            `,
           }}
         />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="bg-background min-h-screen font-sans antialiased">
         <ThemeProvider defaultTheme="system" storageKey="react-router-ui-theme">
           {children}
           <Toaster />
@@ -65,14 +72,19 @@ export default function App() {
     autoLogin: true,
     retryCount: 3, // Tentar até 3 vezes
     onAuthStateChange: (isAuth) => {
-      console.log("Estado de autenticação:", isAuth ? "Autenticado" : "Não autenticado");
-    }
+      console.log(
+        "Estado de autenticação:",
+        isAuth ? "Autenticado" : "Não autenticado"
+      );
+    },
   });
 
   // Log de debug quando o estado de autenticação mudar
   useEffect(() => {
     if (!loading) {
-      console.log(`[Auth] ${authenticated ? "Autenticado com sucesso" : "Não autenticado"}`);
+      console.log(
+        `[Auth] ${authenticated ? "Autenticado com sucesso" : "Não autenticado"}`
+      );
     }
   }, [authenticated, loading]);
 
@@ -86,18 +98,21 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   if (isRouteErrorResponse(error)) {
     message = error.status === 404 ? "404" : "Error";
-    details = error.status === 404 ? "The requested page could not be found." : error.statusText || details;
+    details =
+      error.status === 404
+        ? "The requested page could not be found."
+        : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
+    <main className="container mx-auto p-4 pt-16">
       <h1>{message}</h1>
       <p>{details}</p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="w-full overflow-x-auto p-4">
           <code>{stack}</code>
         </pre>
       )}

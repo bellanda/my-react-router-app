@@ -2,14 +2,23 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
 
 export function meta() {
-  return [{ title: "Register - React Router v7 Demo" }, { name: "description", content: "Registration page example" }];
+  return [
+    { title: "Register - React Router v7 Demo" },
+    { name: "description", content: "Registration page example" },
+  ];
 }
 
 export default function Register() {
@@ -42,19 +51,33 @@ export default function Register() {
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-        <CardDescription className="text-center">Enter your information to create an account</CardDescription>
+        <CardTitle className="text-center text-2xl font-bold">
+          Create Account
+        </CardTitle>
+        <CardDescription className="text-center">
+          Enter your information to create an account
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
             </div>
           </div>
 
@@ -95,7 +118,11 @@ export default function Register() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(checked === true)} />
+            <Checkbox
+              id="terms"
+              checked={agreedToTerms}
+              onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+            />
             <Label htmlFor="terms" className="text-sm font-normal">
               I agree to the{" "}
               <Link to="/terms" className="text-primary hover:underline">
@@ -117,7 +144,10 @@ export default function Register() {
           <Separator className="my-4" />
           <div className="text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/auth/login" className="text-primary hover:underline font-medium">
+            <Link
+              to="/auth/login"
+              className="text-primary font-medium hover:underline"
+            >
               Sign in
             </Link>
           </div>

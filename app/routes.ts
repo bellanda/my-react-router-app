@@ -1,4 +1,9 @@
-import { type RouteConfig, index, prefix, route } from "@react-router/dev/routes";
+import {
+  type RouteConfig,
+  index,
+  prefix,
+  route,
+} from "@react-router/dev/routes";
 
 export default [
   // Landing page usando LandingLayout
@@ -16,20 +21,20 @@ export default [
   // Dashboard section (MainLayout)
   route("dashboard", "routes/dashboard/index.tsx", [
     route("analytics", "routes/dashboard/analytics.tsx"),
-    route("settings", "routes/dashboard/settings.tsx")
+    route("settings", "routes/dashboard/settings.tsx"),
   ]),
 
   // Products section (MainLayout)
   route("products", "routes/products/layout.tsx", [
     index("routes/products/index.tsx"),
-    route(":produtoId", "routes/products/produto.tsx")
+    route(":produtoId", "routes/products/produto.tsx"),
   ]),
 
   // User section with prefixed routes (MainLayout)
   ...prefix("users", [
     index("routes/users/index.tsx"),
     route(":userId", "routes/users/profile.tsx"),
-    route(":userId/edit", "routes/users/edit.tsx")
+    route(":userId/edit", "routes/users/edit.tsx"),
   ]),
 
   // Auth routes with layout (AuthLayout)
@@ -37,9 +42,9 @@ export default [
     route("login", "routes/auth/login.tsx"),
     route("register", "routes/auth/register.tsx"),
     route("forgot-password", "routes/auth/forgot-password.tsx"),
-    route("reset-password/:token", "routes/auth/reset-password.tsx")
+    route("reset-password/:token", "routes/auth/reset-password.tsx"),
   ]),
 
   // 404 page for unmatched routes
-  route("*", "routes/not-found.tsx")
+  route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

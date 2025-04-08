@@ -4,28 +4,34 @@ import * as React from "react";
 import { NavMain } from "~/components/sidebar/nav-main";
 import { NavUser } from "~/components/sidebar/nav-user";
 import { TeamSwitcher } from "~/components/sidebar/team-switcher";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "~/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from "~/components/ui/sidebar";
 
 // Dados da aplicação adaptados para as rotas existentes
 const data = {
   user: {
     name: "Usuário Demo",
     email: "usuario@exemplo.com",
-    avatar: "/avatars/avatar.jpg"
+    avatar: "/avatars/avatar.jpg",
   },
   teams: [
     {
       name: "Sua Empresa",
       logo: LayoutDashboard,
-      plan: "Pro"
-    }
+      plan: "Pro",
+    },
   ],
   navMain: [
     {
       title: "Home",
       url: "/",
       icon: Home,
-      items: []
+      items: [],
     },
     {
       title: "Dashboard",
@@ -34,31 +40,31 @@ const data = {
       items: [
         {
           title: "Visão Geral",
-          url: "/dashboard"
+          url: "/dashboard",
         },
         {
           title: "Analytics",
-          url: "/dashboard/analytics"
+          url: "/dashboard/analytics",
         },
         {
           title: "Configurações",
-          url: "/dashboard/settings"
-        }
-      ]
+          url: "/dashboard/settings",
+        },
+      ],
     },
     {
       title: "Produtos",
       url: "/products",
       icon: Package,
-      items: []
+      items: [],
     },
     {
       title: "Usuários",
       url: "/users",
       icon: User,
-      items: []
-    }
-  ]
+      items: [],
+    },
+  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

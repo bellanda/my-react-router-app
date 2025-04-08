@@ -1,10 +1,24 @@
-import { ArrowDownRight, ArrowUpRight, BarChart3, CreditCard, FileText, Users } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  BarChart3,
+  CreditCard,
+  FileText,
+  Users,
+} from "lucide-react";
 import { Outlet, useLocation } from "react-router";
 import { DashboardLayout } from "~/components/layout";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Progress } from "~/components/ui/progress";
@@ -14,7 +28,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 export function meta() {
   return [
     { title: "Dashboard - React Router v7 Demo" },
-    { name: "description", content: "Dashboard overview demonstrating nested routes" }
+    {
+      name: "description",
+      content: "Dashboard overview demonstrating nested routes",
+    },
   ];
 }
 
@@ -24,14 +41,16 @@ function DashboardContent() {
     <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground mt-2">Welcome back! Here's an overview of your account</p>
+        <p className="text-muted-foreground mt-2">
+          Welcome back! Here's an overview of your account
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CreditCard className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">$8,427</div>
@@ -46,7 +65,7 @@ function DashboardContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,284</div>
@@ -60,8 +79,10 @@ function DashboardContent() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Conversion Rate
+            </CardTitle>
+            <BarChart3 className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2.4%</div>
@@ -75,8 +96,10 @@ function DashboardContent() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Active Projects
+            </CardTitle>
+            <FileText className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">18</div>
@@ -90,7 +113,7 @@ function DashboardContent() {
       </div>
 
       <div>
-        <h3 className="text-lg font-medium mb-4">Account Settings</h3>
+        <h3 className="mb-4 text-lg font-medium">Account Settings</h3>
         <Tabs defaultValue="account" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="account">Account</TabsTrigger>
@@ -101,12 +124,17 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Account Information</CardTitle>
-                <CardDescription>Update your account details and preferences.</CardDescription>
+                <CardDescription>
+                  Update your account details and preferences.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+                    <AvatarImage
+                      src="https://github.com/shadcn.png"
+                      alt="User"
+                    />
                     <AvatarFallback>US</AvatarFallback>
                   </Avatar>
                   <div>
@@ -127,7 +155,11 @@ function DashboardContent() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" defaultValue="pedro@example.com" type="email" />
+                    <Input
+                      id="email"
+                      defaultValue="pedro@example.com"
+                      type="email"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="role">Role</Label>
@@ -145,7 +177,9 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Password</CardTitle>
-                <CardDescription>Change your password here. After saving, you'll be logged out.</CardDescription>
+                <CardDescription>
+                  Change your password here. After saving, you'll be logged out.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -170,10 +204,14 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Notifications</CardTitle>
-                <CardDescription>Configure how you receive notifications.</CardDescription>
+                <CardDescription>
+                  Configure how you receive notifications.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Notification settings will be added here in the future.</p>
+                <p className="text-muted-foreground">
+                  Notification settings will be added here in the future.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -181,7 +219,7 @@ function DashboardContent() {
       </div>
 
       <div>
-        <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
+        <h3 className="mb-4 text-lg font-medium">Recent Activity</h3>
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-6">
@@ -197,8 +235,12 @@ function DashboardContent() {
                         {activity.type}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {activity.action}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {activity.time}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -211,14 +253,18 @@ function DashboardContent() {
         <Card className="bg-muted/40">
           <CardHeader>
             <CardTitle>React Router v7 Features</CardTitle>
-            <CardDescription>This dashboard showcases React Router v7's powerful nested routing capabilities.</CardDescription>
+            <CardDescription>
+              This dashboard showcases React Router v7's powerful nested routing
+              capabilities.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm mb-2">
-              You're currently viewing the index route (<code className="bg-muted px-1 rounded text-xs">/dashboard</code>). You can
-              navigate to nested routes to see more content.
+            <p className="mb-2 text-sm">
+              You're currently viewing the index route (
+              <code className="bg-muted rounded px-1 text-xs">/dashboard</code>
+              ). You can navigate to nested routes to see more content.
             </p>
-            <pre className="bg-slate-950 text-slate-200 p-3 rounded-md text-sm overflow-x-auto mt-2">
+            <pre className="mt-2 overflow-x-auto rounded-md bg-slate-950 p-3 text-sm text-slate-200">
               {`// In routes.ts
         route("dashboard", "routes/dashboard/index.tsx", [
           route("analytics", "routes/dashboard/analytics.tsx"),
@@ -239,17 +285,36 @@ export default function Dashboard() {
   const pathname = location.pathname;
   const isIndexRoute = pathname === "/dashboard" || pathname === "/dashboard/";
 
-  return <DashboardLayout>{isIndexRoute ? <DashboardContent /> : <Outlet />}</DashboardLayout>;
+  return (
+    <DashboardLayout>
+      {isIndexRoute ? <DashboardContent /> : <Outlet />}
+    </DashboardLayout>
+  );
 }
 
 const activities = [
-  { user: "John Smith", action: "Created a new project 'E-commerce redesign'", time: "2 hours ago", type: "Project" },
+  {
+    user: "John Smith",
+    action: "Created a new project 'E-commerce redesign'",
+    time: "2 hours ago",
+    type: "Project",
+  },
   {
     user: "Emily Davis",
     action: "Updated the API documentation for the payment gateway",
     time: "5 hours ago",
-    type: "Documentation"
+    type: "Documentation",
   },
-  { user: "Michael Johnson", action: "Resolved 5 customer support tickets", time: "Yesterday", type: "Support" },
-  { user: "Sarah Wilson", action: "Deployed new version v2.3.0 to production", time: "2 days ago", type: "Deployment" }
+  {
+    user: "Michael Johnson",
+    action: "Resolved 5 customer support tickets",
+    time: "Yesterday",
+    type: "Support",
+  },
+  {
+    user: "Sarah Wilson",
+    action: "Deployed new version v2.3.0 to production",
+    time: "2 days ago",
+    type: "Deployment",
+  },
 ];

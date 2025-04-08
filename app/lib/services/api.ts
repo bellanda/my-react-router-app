@@ -1,6 +1,16 @@
 import type { Product } from "~/lib/mock-api";
-import { getUniqueFieldValues, mockFetchData, mockProducts } from "~/lib/mock-api";
-import type { ApiEndpoint, ApiResult, DjangoApiResponse, Filter, SortingState } from "~/lib/types/data-table";
+import {
+  getUniqueFieldValues,
+  mockFetchData,
+  mockProducts,
+} from "~/lib/mock-api";
+import type {
+  ApiEndpoint,
+  ApiResult,
+  DjangoApiResponse,
+  Filter,
+  SortingState,
+} from "~/lib/types/data-table";
 
 // URL base da API - pode ser configurada via env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
@@ -58,7 +68,9 @@ export const getJwtToken = async (): Promise<string | null> => {
 
   // Se não tivermos credenciais, não podemos obter um token
   if (!API_EMAIL || !API_PASSWORD) {
-    console.warn("Credenciais de API não configuradas. Configure VITE_API_EMAIL e VITE_API_PASSWORD no arquivo .env");
+    console.warn(
+      "Credenciais de API não configuradas. Configure VITE_API_EMAIL e VITE_API_PASSWORD no arquivo .env"
+    );
     return null;
   }
 
@@ -68,7 +80,9 @@ export const getJwtToken = async (): Promise<string | null> => {
 
     // Verificar se a URL base da API está configurada
     if (!API_BASE_URL) {
-      console.error("URL base da API não configurada. Configure VITE_API_BASE_URL no arquivo .env");
+      console.error(
+        "URL base da API não configurada. Configure VITE_API_BASE_URL no arquivo .env"
+      );
       return null;
     }
 
@@ -81,12 +95,12 @@ export const getJwtToken = async (): Promise<string | null> => {
       method: "POST",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         email: API_EMAIL,
-        password: API_PASSWORD
-      })
+        password: API_PASSWORD,
+      }),
     });
 
     console.log("Resposta do login:", response.status, response.statusText);
@@ -94,7 +108,9 @@ export const getJwtToken = async (): Promise<string | null> => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Falha na autenticação: ${response.status} - ${errorText}`);
-      throw new Error(`Falha na autenticação: ${response.status} - ${errorText}`);
+      throw new Error(
+        `Falha na autenticação: ${response.status} - ${errorText}`
+      );
     }
 
     const data = (await response.json()) as AuthResponse;
@@ -126,27 +142,34 @@ export const getJwtToken = async (): Promise<string | null> => {
  */
 export const refreshJwtToken = async (): Promise<string | null> => {
   if (!JWT_REFRESH_TOKEN) {
-    console.warn("Refresh token não disponível. É necessário autenticar novamente.");
+    console.warn(
+      "Refresh token não disponível. É necessário autenticar novamente."
+    );
     return await getJwtToken();
   }
 
   try {
     if (DEBUG_API) console.log("Atualizando token JWT...");
 
-    const response = await fetch(`${API_BASE_URL}/api/accounts/token/refresh/`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        refresh: JWT_REFRESH_TOKEN
-      })
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/accounts/token/refresh/`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refresh: JWT_REFRESH_TOKEN,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Falha na atualização do token: ${response.status} - ${errorText}`);
+      throw new Error(
+        `Falha na atualização do token: ${response.status} - ${errorText}`
+      );
     }
 
     const data = await response.json();
@@ -164,7 +187,9 @@ export const refreshJwtToken = async (): Promise<string | null> => {
 };
 
 // Função para converter filtros para o formato esperado pelo DRF
-export const convertFiltersToDjangoQuery = (filters: Filter[]): Record<string, string> => {
+export const convertFiltersToDjangoQuery = (
+  filters: Filter[]
+): Record<string, string> => {
   const queryParams: Record<string, string> = {};
 
   // Agrupar filtros pelo ID para processar valores múltiplos como __in
@@ -172,7 +197,11 @@ export const convertFiltersToDjangoQuery = (filters: Filter[]): Record<string, s
 
   // Agrupar filtros por ID
   filters.forEach((filter) => {
-    if (filter.operator !== "remove" && filter.value !== undefined && filter.value !== null) {
+    if (
+      filter.operator !== "remove" &&
+      filter.value !== undefined &&
+      filter.value !== null
+    ) {
       if (!filterGroups[filter.id]) {
         filterGroups[filter.id] = [];
       }
@@ -183,11 +212,16 @@ export const convertFiltersToDjangoQuery = (filters: Filter[]): Record<string, s
   // Processar cada grupo de filtros
   Object.entries(filterGroups).forEach(([id, filtersForId]) => {
     // Se temos múltiplos valores e não são filtros range, usar __in
-    if (filtersForId.length > 1 && !filtersForId.some((f) => f.operator === "range")) {
+    if (
+      filtersForId.length > 1 &&
+      !filtersForId.some((f) => f.operator === "range")
+    ) {
       // Construir o parâmetro com __in
       const paramName = `${id}__in`;
       // Juntar todos os valores como uma string separada por vírgulas
-      queryParams[paramName] = filtersForId.map((f) => String(f.value)).join(",");
+      queryParams[paramName] = filtersForId
+        .map((f) => String(f.value))
+        .join(",");
     } else {
       // Caso contrário, processar cada filtro individualmente
       filtersForId.forEach((filter) => {
@@ -224,7 +258,10 @@ export const buildOrderingString = (sorting: SortingState[]): string => {
  * @param options Opções da requisição fetch
  * @returns Resposta da requisição
  */
-export const authenticatedFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+export const authenticatedFetch = async (
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> => {
   // Se estamos forçando o uso do mock, não precisamos autenticar
   if (FORCE_MOCK_API) {
     console.log("FORCE_MOCK_API ativado, ignorando autenticação");
@@ -250,7 +287,9 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
 
       // Adicionar a URL base da API para URLs relativas
       if (API_BASE_URL) {
-        const baseUrl = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        const baseUrl = API_BASE_URL.endsWith("/")
+          ? API_BASE_URL.slice(0, -1)
+          : API_BASE_URL;
         requestUrl = `${baseUrl}${requestUrl}`;
         console.log("URL com base adicionada:", requestUrl);
       }
@@ -262,11 +301,11 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
     const defaultOptions: RequestInit = {
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       mode: "cors", // Explicitamente definir o modo CORS
       credentials: "include", // Incluir cookies se necessário
-      ...options
+      ...options,
     };
 
     // Garantir o token JWT
@@ -276,7 +315,7 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       // Adicionar o token de autenticação
       defaultOptions.headers = {
         ...defaultOptions.headers,
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       };
       console.log("Token adicionado aos headers");
     } else {
@@ -297,7 +336,10 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
       // Em caso de erro, clonar a resposta para poder ler o corpo duas vezes
       const clonedResponse = response.clone();
       const responseText = await clonedResponse.text();
-      console.error("Resposta não-JSON recebida:", responseText.substring(0, 500) + "...");
+      console.error(
+        "Resposta não-JSON recebida:",
+        responseText.substring(0, 500) + "..."
+      );
     }
 
     // Se receber 401 Unauthorized, tentar atualizar o token e repetir a requisição
@@ -311,12 +353,14 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
           ...defaultOptions,
           headers: {
             ...defaultOptions.headers,
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         };
         return fetch(requestUrl, updatedOptions);
       } else {
-        console.log("Não foi possível atualizar o token, a requisição provavelmente falhará");
+        console.log(
+          "Não foi possível atualizar o token, a requisição provavelmente falhará"
+        );
       }
     }
 
@@ -345,13 +389,15 @@ export const isAuthenticated = async (): Promise<boolean> => {
     const response = await fetch(`${API_BASE_URL}/api/accounts/me/`, {
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (DEBUG_API && !response.ok) {
       const errorText = await response.text();
-      console.error(`Verificação de autenticação falhou: ${response.status} - ${errorText}`);
+      console.error(
+        `Verificação de autenticação falhou: ${response.status} - ${errorText}`
+      );
     }
 
     return response.ok;
@@ -383,7 +429,13 @@ export const fetchTableData = async (
     // Se estamos forçando o uso do mock, pular a chamada real
     if (FORCE_MOCK_API && forceMockOverride) {
       console.log("Usando mock API (forçado por configuração)");
-      return await mockFetchData(endpoint.url, filters, sorting, pageIndex, pageSize);
+      return await mockFetchData(
+        endpoint.url,
+        filters,
+        sorting,
+        pageIndex,
+        pageSize
+      );
     }
 
     // Primeiro garantir que temos o token de autenticação
@@ -396,7 +448,9 @@ export const fetchTableData = async (
     }
 
     if (!token && !endpoint.url.includes("login")) {
-      console.error("Não foi possível obter token JWT. Tentando realizar login novamente...");
+      console.error(
+        "Não foi possível obter token JWT. Tentando realizar login novamente..."
+      );
 
       // Tentar obter o token novamente após redefinir os tokens existentes
       JWT_TOKEN = null;
@@ -404,19 +458,28 @@ export const fetchTableData = async (
 
       try {
         token = await getJwtToken();
-        console.log("Novo token obtido após redefinição:", token ? "Sim" : "Não");
+        console.log(
+          "Novo token obtido após redefinição:",
+          token ? "Sim" : "Não"
+        );
 
         if (!token) {
-          throw new Error("Falha na autenticação: Token JWT não disponível mesmo após nova tentativa");
+          throw new Error(
+            "Falha na autenticação: Token JWT não disponível mesmo após nova tentativa"
+          );
         }
       } catch (retryError) {
         console.error("Falha na segunda tentativa de obter token:", retryError);
-        throw new Error("Falha na autenticação: Não foi possível obter token JWT");
+        throw new Error(
+          "Falha na autenticação: Não foi possível obter token JWT"
+        );
       }
     }
 
     // Construir URL base - usando a URL base definida ou a relativa
-    let baseUrl = endpoint.url.startsWith("http") ? endpoint.url : `${API_BASE_URL}${endpoint.url}`;
+    let baseUrl = endpoint.url.startsWith("http")
+      ? endpoint.url
+      : `${API_BASE_URL}${endpoint.url}`;
 
     // Garantir que a URL não tem barras duplicadas
     if (!baseUrl.startsWith("http")) {
@@ -468,10 +531,16 @@ export const fetchTableData = async (
       // Tentar fazer a requisição autenticada
       console.log("Iniciando requisição autenticada...");
       const response = await authenticatedFetch(url);
-      console.log("Resposta da requisição:", response.status, response.statusText);
+      console.log(
+        "Resposta da requisição:",
+        response.status,
+        response.statusText
+      );
 
       if (!response.ok) {
-        console.error(`Erro HTTP na requisição: ${response.status} - ${response.statusText}`);
+        console.error(
+          `Erro HTTP na requisição: ${response.status} - ${response.statusText}`
+        );
 
         // Verificar o tipo de conteúdo da resposta
         const contentType = response.headers.get("content-type");
@@ -481,12 +550,19 @@ export const fetchTableData = async (
           // Resposta JSON de erro
           const errorJson = await response.json();
           console.error("Detalhes do erro (JSON):", errorJson);
-          throw new Error(`HTTP error! status: ${response.status} - ${JSON.stringify(errorJson)}`);
+          throw new Error(
+            `HTTP error! status: ${response.status} - ${JSON.stringify(errorJson)}`
+          );
         } else {
           // Resposta HTML ou texto de erro
           const errorText = await response.text();
-          console.error("Detalhes do erro (texto):", errorText.substring(0, 500) + "...");
-          throw new Error(`HTTP error! status: ${response.status} - Resposta não-JSON recebida`);
+          console.error(
+            "Detalhes do erro (texto):",
+            errorText.substring(0, 500) + "..."
+          );
+          throw new Error(
+            `HTTP error! status: ${response.status} - Resposta não-JSON recebida`
+          );
         }
       }
 
@@ -494,7 +570,10 @@ export const fetchTableData = async (
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const textResponse = await response.text();
-        console.error("Resposta não é JSON:", textResponse.substring(0, 500) + "...");
+        console.error(
+          "Resposta não é JSON:",
+          textResponse.substring(0, 500) + "..."
+        );
         throw new Error("Resposta da API não está no formato JSON esperado");
       }
 
@@ -507,14 +586,22 @@ export const fetchTableData = async (
         console.error("Erro ao processar JSON da resposta:", jsonError);
         // Tentar ler o texto da resposta para diagnóstico
         const textResponse = await response.clone().text();
-        console.error("Conteúdo da resposta:", textResponse.substring(0, 500) + "...");
-        throw new Error("Falha ao processar resposta JSON: " + String(jsonError));
+        console.error(
+          "Conteúdo da resposta:",
+          textResponse.substring(0, 500) + "..."
+        );
+        throw new Error(
+          "Falha ao processar resposta JSON: " + String(jsonError)
+        );
       }
 
       console.log("Dados recebidos:", djangoResponse.count, "resultados");
 
       if (!djangoResponse.results) {
-        console.error("Resposta não possui o formato esperado (results):", djangoResponse);
+        console.error(
+          "Resposta não possui o formato esperado (results):",
+          djangoResponse
+        );
         throw new Error("Formato de resposta inválido");
       }
 
@@ -573,32 +660,50 @@ export const fetchTableData = async (
           return result;
         }) || [];
 
-      console.log(`Processamento concluído: ${processedResults.length} resultados`);
+      console.log(
+        `Processamento concluído: ${processedResults.length} resultados`
+      );
 
       // Formatar a resposta para o formato esperado pelo componente
       return {
         data: processedResults,
-        totalCount: djangoResponse.count || (Array.isArray(djangoResponse) ? djangoResponse.length : 0),
-        pageCount: Math.ceil((djangoResponse.count || (Array.isArray(djangoResponse) ? djangoResponse.length : 0)) / pageSize),
+        totalCount:
+          djangoResponse.count ||
+          (Array.isArray(djangoResponse) ? djangoResponse.length : 0),
+        pageCount: Math.ceil(
+          (djangoResponse.count ||
+            (Array.isArray(djangoResponse) ? djangoResponse.length : 0)) /
+            pageSize
+        ),
         meta: {
           start: pageIndex * pageSize,
           end:
-            pageIndex * pageSize + (djangoResponse.results?.length || (Array.isArray(djangoResponse) ? djangoResponse.length : 0)),
+            pageIndex * pageSize +
+            (djangoResponse.results?.length ||
+              (Array.isArray(djangoResponse) ? djangoResponse.length : 0)),
           pageSize: djangoResponse.page_size || pageSize,
           pageIndex,
           hasNextPage: !!djangoResponse.links.next,
           hasPreviousPage: !!djangoResponse.links.previous,
           // URLs completas para paginação
           next: djangoResponse.links.next,
-          previous: djangoResponse.links.previous
-        }
+          previous: djangoResponse.links.previous,
+        },
       };
     } catch (error) {
       console.error("Erro ao buscar dados da API real:", error);
 
       console.warn("TENTANDO NOVAMENTE COM MOCK DATA");
-      console.warn("Este comportamento será removido quando a API estiver funcionando corretamente");
-      return await mockFetchData(endpoint.url, filters, sorting, pageIndex, pageSize);
+      console.warn(
+        "Este comportamento será removido quando a API estiver funcionando corretamente"
+      );
+      return await mockFetchData(
+        endpoint.url,
+        filters,
+        sorting,
+        pageIndex,
+        pageSize
+      );
     }
   } catch (error) {
     console.error("Error fetching table data:", error);
@@ -607,11 +712,18 @@ export const fetchTableData = async (
 };
 
 // Função para buscar valores únicos de uma coluna para exibir no filtro
-export const fetchUniqueValues = async (endpoint: ApiEndpoint, columnId: string, searchTerm?: string) => {
+export const fetchUniqueValues = async (
+  endpoint: ApiEndpoint,
+  columnId: string,
+  searchTerm?: string
+) => {
   try {
     // Se estamos forçando o uso do mock, pular a chamada real
     if (FORCE_MOCK_API) {
-      if (DEBUG_API) console.log("Usando mock API para valores únicos (forçado por configuração)");
+      if (DEBUG_API)
+        console.log(
+          "Usando mock API para valores únicos (forçado por configuração)"
+        );
 
       // Usar o mock
       let data: Product[] = [];
@@ -625,13 +737,18 @@ export const fetchUniqueValues = async (endpoint: ApiEndpoint, columnId: string,
       // Formatar resposta
       return uniqueValues.map((item) => ({
         value: item.value,
-        label: item.value !== null && item.value !== undefined ? String(item.value) : "(Vazio)",
-        count: item.count
+        label:
+          item.value !== null && item.value !== undefined
+            ? String(item.value)
+            : "(Vazio)",
+        count: item.count,
       }));
     }
 
     // Tentar usar a API real primeiro
-    const baseUrl = endpoint.url.startsWith("http") ? endpoint.url : `${API_BASE_URL}${endpoint.url}`;
+    const baseUrl = endpoint.url.startsWith("http")
+      ? endpoint.url
+      : `${API_BASE_URL}${endpoint.url}`;
 
     const url = `${baseUrl}unique/?column=${columnId}&range=0-100`;
 
@@ -652,11 +769,15 @@ export const fetchUniqueValues = async (endpoint: ApiEndpoint, columnId: string,
       // Formatar a resposta
       return data.map((value: any) => ({
         value,
-        label: value !== null && value !== undefined ? String(value) : "(Vazio)",
-        count: 1 // A API não retorna contagem, então usamos 1 como padrão
+        label:
+          value !== null && value !== undefined ? String(value) : "(Vazio)",
+        count: 1, // A API não retorna contagem, então usamos 1 como padrão
       }));
     } catch (error) {
-      console.warn("Error fetching unique values from real API, falling back to mock data:", error);
+      console.warn(
+        "Error fetching unique values from real API, falling back to mock data:",
+        error
+      );
 
       // Se a requisição real falhar, usar o mock
       let data: Product[] = [];
@@ -670,8 +791,11 @@ export const fetchUniqueValues = async (endpoint: ApiEndpoint, columnId: string,
       // Formatar resposta
       return uniqueValues.map((item) => ({
         value: item.value,
-        label: item.value !== null && item.value !== undefined ? String(item.value) : "(Vazio)",
-        count: item.count
+        label:
+          item.value !== null && item.value !== undefined
+            ? String(item.value)
+            : "(Vazio)",
+        count: item.count,
       }));
     }
   } catch (error) {
@@ -685,7 +809,9 @@ export const fetchUniqueValues = async (endpoint: ApiEndpoint, columnId: string,
  * @param baseEndpoint URL base do endpoint (ex: /api/products/)
  * @returns Número total de registros ou null em caso de erro
  */
-export const fetchTotalRowCount = async (baseEndpoint: string): Promise<number | null> => {
+export const fetchTotalRowCount = async (
+  baseEndpoint: string
+): Promise<number | null> => {
   try {
     if (FORCE_MOCK_API) {
       console.log("Usando mock para contagem total (forçado por configuração)");
@@ -693,7 +819,9 @@ export const fetchTotalRowCount = async (baseEndpoint: string): Promise<number |
     }
 
     // Remover barra final se existir, para adicionar o path correto
-    const cleanEndpoint = baseEndpoint.endsWith("/") ? baseEndpoint.slice(0, -1) : baseEndpoint;
+    const cleanEndpoint = baseEndpoint.endsWith("/")
+      ? baseEndpoint.slice(0, -1)
+      : baseEndpoint;
 
     // Construir a URL para a contagem total
     const countUrl = `${API_BASE_URL}${cleanEndpoint}/count_total_rows/?format=json`;
@@ -703,7 +831,9 @@ export const fetchTotalRowCount = async (baseEndpoint: string): Promise<number |
     const response = await authenticatedFetch(countUrl);
 
     if (!response.ok) {
-      console.error(`Erro ao buscar contagem total: ${response.status} ${response.statusText}`);
+      console.error(
+        `Erro ao buscar contagem total: ${response.status} ${response.statusText}`
+      );
       return null;
     }
 

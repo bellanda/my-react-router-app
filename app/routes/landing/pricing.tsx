@@ -6,7 +6,10 @@ import { Button } from "~/components/ui/button";
 export function meta() {
   return [
     { title: "Pricing - React Router v7 Demo" },
-    { name: "description", content: "Flexible pricing plans for React Router v7" }
+    {
+      name: "description",
+      content: "Flexible pricing plans for React Router v7",
+    },
   ];
 }
 
@@ -14,11 +17,14 @@ export default function PricingPage() {
   return (
     <LandingLayout>
       {/* Hero Section */}
-      <section className="px-4 py-20 bg-gradient-to-b from-muted/50 to-background">
+      <section className="from-muted/50 to-background bg-gradient-to-b px-4 py-20">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Simple, Transparent Pricing</h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Choose the plan that's right for you and start building amazing web applications.
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-3xl text-xl">
+            Choose the plan that's right for you and start building amazing web
+            applications.
           </p>
         </div>
       </section>
@@ -26,18 +32,23 @@ export default function PricingPage() {
       {/* Pricing Tables */}
       <section className="px-4 py-16">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid gap-8 md:grid-cols-3">
             {/* Free Plan */}
-            <div className="border rounded-lg p-8 bg-card flex flex-col">
+            <div className="bg-card flex flex-col rounded-lg border p-8">
               <div>
-                <h3 className="text-lg font-medium mb-2">Free</h3>
-                <p className="text-3xl font-bold mb-2">
-                  $0<span className="text-muted-foreground text-base font-normal">/month</span>
+                <h3 className="mb-2 text-lg font-medium">Free</h3>
+                <p className="mb-2 text-3xl font-bold">
+                  $0
+                  <span className="text-muted-foreground text-base font-normal">
+                    /month
+                  </span>
                 </p>
-                <p className="text-muted-foreground mb-6">Perfect for getting started and learning the basics.</p>
+                <p className="text-muted-foreground mb-6">
+                  Perfect for getting started and learning the basics.
+                </p>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="mb-8 flex-1 space-y-3">
                 <PricingListItem>All core routing features</PricingListItem>
                 <PricingListItem>Basic documentation</PricingListItem>
                 <PricingListItem>Community support</PricingListItem>
@@ -52,19 +63,24 @@ export default function PricingPage() {
             </div>
 
             {/* Pro Plan */}
-            <div className="border rounded-lg p-8 bg-card flex flex-col relative">
-              <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-bl-lg rounded-tr-lg">
+            <div className="bg-card relative flex flex-col rounded-lg border p-8">
+              <div className="bg-primary text-primary-foreground absolute top-0 right-0 rounded-tr-lg rounded-bl-lg px-3 py-1 text-xs font-medium">
                 Popular
               </div>
               <div>
-                <h3 className="text-lg font-medium mb-2">Pro</h3>
-                <p className="text-3xl font-bold mb-2">
-                  $29<span className="text-muted-foreground text-base font-normal">/month</span>
+                <h3 className="mb-2 text-lg font-medium">Pro</h3>
+                <p className="mb-2 text-3xl font-bold">
+                  $29
+                  <span className="text-muted-foreground text-base font-normal">
+                    /month
+                  </span>
                 </p>
-                <p className="text-muted-foreground mb-6">Ideal for professionals and growing teams.</p>
+                <p className="text-muted-foreground mb-6">
+                  Ideal for professionals and growing teams.
+                </p>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="mb-8 flex-1 space-y-3">
                 <PricingListItem>Everything in Free</PricingListItem>
                 <PricingListItem>Advanced routing features</PricingListItem>
                 <PricingListItem>Premium components library</PricingListItem>
@@ -79,16 +95,21 @@ export default function PricingPage() {
             </div>
 
             {/* Enterprise Plan */}
-            <div className="border rounded-lg p-8 bg-card flex flex-col">
+            <div className="bg-card flex flex-col rounded-lg border p-8">
               <div>
-                <h3 className="text-lg font-medium mb-2">Enterprise</h3>
-                <p className="text-3xl font-bold mb-2">
-                  $99<span className="text-muted-foreground text-base font-normal">/month</span>
+                <h3 className="mb-2 text-lg font-medium">Enterprise</h3>
+                <p className="mb-2 text-3xl font-bold">
+                  $99
+                  <span className="text-muted-foreground text-base font-normal">
+                    /month
+                  </span>
                 </p>
-                <p className="text-muted-foreground mb-6">Advanced features for larger organizations.</p>
+                <p className="text-muted-foreground mb-6">
+                  Advanced features for larger organizations.
+                </p>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="mb-8 flex-1 space-y-3">
                 <PricingListItem>Everything in Pro</PricingListItem>
                 <PricingListItem>Custom routing solutions</PricingListItem>
                 <PricingListItem>Dedicated support team</PricingListItem>
@@ -109,9 +130,11 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="px-4 py-16 bg-muted/30">
+      <section className="bg-muted/30 px-4 py-16">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">Frequently Asked Questions</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">
+            Frequently Asked Questions
+          </h2>
 
           <div className="space-y-8">
             <FaqItem
@@ -145,11 +168,12 @@ export default function PricingPage() {
       {/* CTA */}
       <section className="px-4 py-24">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Try our demo dashboard or check out the documentation to see how React Router v7 can help you build better applications.
+          <h2 className="mb-6 text-3xl font-bold">Ready to Get Started?</h2>
+          <p className="mx-auto mb-8 max-w-2xl text-xl">
+            Try our demo dashboard or check out the documentation to see how
+            React Router v7 can help you build better applications.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link to="/dashboard">
               <Button size="lg" className="gap-2">
                 Try Dashboard <ArrowRight className="h-4 w-4" />
@@ -159,7 +183,7 @@ export default function PricingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10"
+                className="border-primary-foreground/20 hover:bg-primary-foreground/10 bg-transparent"
               >
                 Read the Docs
               </Button>
@@ -174,7 +198,7 @@ export default function PricingPage() {
 function PricingListItem({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+      <Check className="text-primary mt-0.5 h-5 w-5 shrink-0" />
       <span>{children}</span>
     </li>
   );
@@ -183,7 +207,7 @@ function PricingListItem({ children }: { children: React.ReactNode }) {
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
     <div className="border-b pb-6">
-      <h3 className="text-lg font-semibold mb-2">{question}</h3>
+      <h3 className="mb-2 text-lg font-semibold">{question}</h3>
       <p className="text-muted-foreground">{answer}</p>
     </div>
   );

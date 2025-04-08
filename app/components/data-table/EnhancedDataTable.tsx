@@ -169,7 +169,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
   const renderRows = () => {
     if (data.length === 0) {
       return (
-        <div className="flex justify-center items-center py-10 text-muted-foreground">
+        <div className="text-muted-foreground flex items-center justify-center py-10">
           {isLoading ? "Carregando dados..." : "Nenhum dado encontrado"}
         </div>
       );
@@ -181,7 +181,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
         className={cn(
           "flex border-b",
           rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20",
-          "cursor-pointer hover:bg-accent/10"
+          "hover:bg-accent/10 cursor-pointer"
         )}
         onClick={() => handleRowClick(row)}
       >
@@ -198,7 +198,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
           return (
             <div
               key={`${rowIndex}-${column.accessor}`}
-              className="py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap"
+              className="overflow-hidden px-4 py-2 text-ellipsis whitespace-nowrap"
               style={{ width: column.width || cellWidth }}
               title={String(displayValue ?? "")}
             >
@@ -211,7 +211,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
   };
 
   return (
-    <div className={cn("flex flex-col border rounded-md", className)}>
+    <div className={cn("flex flex-col rounded-md border", className)}>
       {/* Barra de filtros */}
       {tableState.filters.length > 0 && (
         <FilterPanel
@@ -261,10 +261,10 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
       {/* Container principal da tabela (com scroll) */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto relative min-h-[300px] max-h-[calc(100vh-200px)]"
+        className="relative max-h-[calc(100vh-200px)] min-h-[300px] flex-1 overflow-auto"
       >
         {/* Cabeçalhos */}
-        <div className="sticky top-0 z-10 bg-muted flex border-b">
+        <div className="bg-muted sticky top-0 z-10 flex border-b">
           {visibleColumns.map((column) => (
             <DataTableHeader
               key={column.accessor}
@@ -295,8 +295,8 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
         {/* Linhas */}
         <div className="relative">
           {isLoading && data.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="bg-background/80 absolute inset-0 z-10 flex items-center justify-center">
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
             </div>
           ) : null}
 
@@ -304,17 +304,17 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
 
           {/* Indicador de carregamento de mais dados */}
           {isFetching && data.length > 0 && (
-            <div className="p-4 flex justify-center border-t">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="flex justify-center border-t p-4">
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
             </div>
           )}
         </div>
       </div>
 
       {/* Barra de controles avançados */}
-      <div className="px-4 py-3 border-t bg-muted/20 text-sm flex flex-col gap-3">
+      <div className="bg-muted/20 flex flex-col gap-3 border-t px-4 py-3 text-sm">
         {/* Status e controles principais */}
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-medium">
               {data.length} de {totalCount} itens{" "}
@@ -324,7 +324,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
             {/* Botão para alternar debug */}
             <button
               onClick={() => setShowDebugInfo(!showDebugInfo)}
-              className="text-xs px-2 py-1 rounded border text-muted-foreground"
+              className="text-muted-foreground rounded border px-2 py-1 text-xs"
             >
               {showDebugInfo ? "Ocultar Debug" : "Debug"}
             </button>
@@ -334,10 +334,10 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
             {/* Carregamento automático toggle */}
             <button
               onClick={() => setAutoLoadEnabled(!autoLoadEnabled)}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+              className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
                 autoLoadEnabled
                   ? "bg-primary/20 text-primary"
-                  : "border text-muted-foreground"
+                  : "text-muted-foreground border"
               }`}
               title="Ativar/desativar carregamento automático ao rolar"
             >
@@ -352,7 +352,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
 
             {/* Botão de reload */}
             <button
-              className="flex items-center gap-1 px-2 py-1 rounded border hover:bg-accent text-xs"
+              className="hover:bg-accent flex items-center gap-1 rounded border px-2 py-1 text-xs"
               onClick={scrollToBottom}
             >
               <ChevronDown className="h-3 w-3" />
@@ -363,7 +363,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
 
         {/* Debug info */}
         {showDebugInfo && (
-          <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+          <div className="text-muted-foreground bg-muted/30 rounded p-2 text-xs">
             <div>
               Dados carregados: {data.length} | Total: {totalCount} |
               HasNextPage: {hasNextPage ? "Sim" : "Não"}
@@ -387,21 +387,21 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
         {hasNextPage && !isFetching && (
           <div className="flex flex-wrap gap-2">
             <button
-              className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-xs flex-grow"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 flex-grow rounded-md px-3 py-1.5 text-xs"
               onClick={() => fetchNextPage()}
             >
               Carregar próximos {tableState.pagination.pageSize} itens
             </button>
 
             <button
-              className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 text-xs"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-3 py-1.5 text-xs"
               onClick={handleLoadLargeChunk}
             >
               Carregar +100
             </button>
 
             <button
-              className="px-3 py-1.5 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 text-xs flex-grow"
+              className="bg-accent text-accent-foreground hover:bg-accent/90 flex-grow rounded-md px-3 py-1.5 text-xs"
               onClick={loadAllPages}
             >
               Carregar tudo ({totalCount - data.length} restantes)
@@ -411,7 +411,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
 
         {/* Indicador de carregamento na barra de status */}
         {isFetching && (
-          <div className="flex items-center justify-center gap-2 text-primary">
+          <div className="text-primary flex items-center justify-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Carregando mais dados...</span>
           </div>
@@ -420,7 +420,7 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
         {/* Paginação visual */}
         {totalCount > tableState.pagination.pageSize && (
           <div className="flex justify-center">
-            <div className="flex items-center gap-1 text-xs overflow-x-auto p-1">
+            <div className="flex items-center gap-1 overflow-x-auto p-1 text-xs">
               <span className="text-muted-foreground mr-1">
                 Ir para página:
               </span>
@@ -435,10 +435,10 @@ const EnhancedDataTable: React.FC<EnhancedDataTableProps> = ({
                 return (
                   <button
                     key={i}
-                    className={`min-w-6 h-6 px-2 flex items-center justify-center rounded-md ${
+                    className={`flex h-6 min-w-6 items-center justify-center rounded-md px-2 ${
                       isCurrentPage
                         ? "bg-primary text-primary-foreground"
-                        : "border border-input hover:bg-accent"
+                        : "border-input hover:bg-accent border"
                     }`}
                     onClick={() => goToPage(i)}
                   >

@@ -1,14 +1,23 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
 
 export function meta() {
-  return [{ title: "Login - React Router v7 Demo" }, { name: "description", content: "Login page example" }];
+  return [
+    { title: "Login - React Router v7 Demo" },
+    { name: "description", content: "Login page example" },
+  ];
 }
 
 export default function Login() {
@@ -16,10 +25,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="mx-auto w-full max-w-md">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-        <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
+        <CardTitle className="text-center text-2xl font-bold">Login</CardTitle>
+        <CardDescription className="text-center">
+          Enter your credentials to access your account
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4">
@@ -38,7 +49,10 @@ export default function Login() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <Link to="/auth/forgot-password" className="text-sm text-primary hover:underline">
+              <Link
+                to="/auth/forgot-password"
+                className="text-primary text-sm hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>
@@ -68,7 +82,10 @@ export default function Login() {
           <Separator className="my-4" />
           <div className="text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/auth/register" className="text-primary hover:underline font-medium">
+            <Link
+              to="/auth/register"
+              className="text-primary font-medium hover:underline"
+            >
               Create account
             </Link>
           </div>

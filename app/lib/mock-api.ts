@@ -3,7 +3,13 @@ import type { Filter, SortingState } from "~/lib/types/data-table";
 // Dados de exemplo para produtos
 export const mockProducts = Array.from({ length: 500 }).map((_, index) => ({
   id: index + 1,
-  group__name: ["Hardware", "Software", "Periféricos", "Componentes", "Acessórios"][Math.floor(Math.random() * 5)],
+  group__name: [
+    "Hardware",
+    "Software",
+    "Periféricos",
+    "Componentes",
+    "Acessórios",
+  ][Math.floor(Math.random() * 5)],
   category__name: [
     "Placa-mãe",
     "Processador",
@@ -13,17 +19,43 @@ export const mockProducts = Array.from({ length: 500 }).map((_, index) => ({
     "Refrigeração",
     "Monitor",
     "Teclado",
-    "Mouse"
+    "Mouse",
   ][Math.floor(Math.random() * 9)],
-  brand__name: ["ASUS", "Dell", "HP", "Lenovo", "Apple", "Samsung", "Gigabyte", "Intel", "AMD", "Nvidia"][
-    Math.floor(Math.random() * 10)
-  ],
+  brand__name: [
+    "ASUS",
+    "Dell",
+    "HP",
+    "Lenovo",
+    "Apple",
+    "Samsung",
+    "Gigabyte",
+    "Intel",
+    "AMD",
+    "Nvidia",
+  ][Math.floor(Math.random() * 10)],
   model__name: `Modelo ${100 + index}`,
-  compatible_brand__name: ["ASUS", "Dell", "HP", "Lenovo", "Apple", "Samsung", "Gigabyte", "Intel", "AMD", "Nvidia"][
-    Math.floor(Math.random() * 10)
-  ],
+  compatible_brand__name: [
+    "ASUS",
+    "Dell",
+    "HP",
+    "Lenovo",
+    "Apple",
+    "Samsung",
+    "Gigabyte",
+    "Intel",
+    "AMD",
+    "Nvidia",
+  ][Math.floor(Math.random() * 10)],
   compatible_model__name: `Compatível ${200 + index}`,
-  color__name: ["Preto", "Branco", "Azul", "Vermelho", "Verde", "Amarelo", "Cinza"][Math.floor(Math.random() * 7)],
+  color__name: [
+    "Preto",
+    "Branco",
+    "Azul",
+    "Vermelho",
+    "Verde",
+    "Amarelo",
+    "Cinza",
+  ][Math.floor(Math.random() * 7)],
   min_stock: Math.floor(Math.random() * 10) + 1,
   max_stock: Math.floor(Math.random() * 50) + 20,
   price: parseFloat((Math.random() * 1000 + 50).toFixed(2)),
@@ -31,15 +63,25 @@ export const mockProducts = Array.from({ length: 500 }).map((_, index) => ({
   is_active: Math.random() > 0.2,
   description: `Descrição completa do produto ${index + 1} com todas as especificações técnicas e informações relevantes.`,
   short_description: `Produto ${index + 1} - versão resumida`,
-  created_at: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString(),
-  updated_at: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toISOString(),
-  created_by__email: ["admin@example.com", "user1@example.com", "user2@example.com"][Math.floor(Math.random() * 3)],
+  created_at: new Date(
+    Date.now() - Math.floor(Math.random() * 10000000000)
+  ).toISOString(),
+  updated_at: new Date(
+    Date.now() - Math.floor(Math.random() * 1000000000)
+  ).toISOString(),
+  created_by__email: [
+    "admin@example.com",
+    "user1@example.com",
+    "user2@example.com",
+  ][Math.floor(Math.random() * 3)],
   additional_info: {
     total_stock_quantity: Math.floor(Math.random() * 100) + 1,
     total_sold_quantity: Math.floor(Math.random() * 500),
     total_sold_value: parseFloat((Math.random() * 50000).toFixed(2)),
-    daily_sales_average_last_30_days: parseFloat((Math.random() * 10).toFixed(2))
-  }
+    daily_sales_average_last_30_days: parseFloat(
+      (Math.random() * 10).toFixed(2)
+    ),
+  },
 }));
 
 // Interface para o tipo de produto
@@ -55,7 +97,11 @@ export interface UniqueValue {
 }
 
 // Função para obter valores únicos de uma coluna, com contagem
-export function getUniqueFieldValues(data: any[], fieldId: string, searchTerm?: string): UniqueValue[] {
+export function getUniqueFieldValues(
+  data: any[],
+  fieldId: string,
+  searchTerm?: string
+): UniqueValue[] {
   try {
     // Mapear valores do campo
     const values = data.map((item) => {
@@ -71,23 +117,31 @@ export function getUniqueFieldValues(data: any[], fieldId: string, searchTerm?: 
     });
 
     // Agrupar e contar valores
-    const valueCounts = values.reduce((acc: Record<string, number>, value: any) => {
-      // Converter para string para usar como chave
-      const key = value !== null && value !== undefined ? String(value) : "__null__";
+    const valueCounts = values.reduce(
+      (acc: Record<string, number>, value: any) => {
+        // Converter para string para usar como chave
+        const key =
+          value !== null && value !== undefined ? String(value) : "__null__";
 
-      // Filtrar pelo termo de pesquisa, se fornecido
-      if (searchTerm && value && !String(value).toLowerCase().includes(searchTerm.toLowerCase())) {
+        // Filtrar pelo termo de pesquisa, se fornecido
+        if (
+          searchTerm &&
+          value &&
+          !String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        ) {
+          return acc;
+        }
+
+        acc[key] = (acc[key] || 0) + 1;
         return acc;
-      }
-
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
+      },
+      {}
+    );
 
     // Converter para array de objetos e ordenar
     const result = Object.entries(valueCounts).map(([key, count]) => ({
       value: key === "__null__" ? null : determineValueType(key),
-      count
+      count,
     }));
 
     // Ordenar por contagem (decrescente)
@@ -134,10 +188,24 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
 
       // Separar filtros por tipo de operador
       const exactFilters = columnFilters.filter((f) => f.operator === "exact");
-      const textFilters = columnFilters.filter((f) => ["contains", "startswith", "endswith"].includes(f.operator));
-      const numericFilters = columnFilters.filter((f) => ["gt", "gte", "lt", "lte"].includes(f.operator));
+      const textFilters = columnFilters.filter((f) =>
+        ["contains", "startswith", "endswith"].includes(f.operator)
+      );
+      const numericFilters = columnFilters.filter((f) =>
+        ["gt", "gte", "lt", "lte"].includes(f.operator)
+      );
       const otherFilters = columnFilters.filter(
-        (f) => !["exact", "contains", "startswith", "endswith", "gt", "gte", "lt", "lte"].includes(f.operator)
+        (f) =>
+          ![
+            "exact",
+            "contains",
+            "startswith",
+            "endswith",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+          ].includes(f.operator)
       );
 
       // Verificações combinadas:
@@ -178,11 +246,17 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
 
           switch (operator) {
             case "contains":
-              return String(itemValue).toLowerCase().includes(String(value).toLowerCase());
+              return String(itemValue)
+                .toLowerCase()
+                .includes(String(value).toLowerCase());
             case "startswith":
-              return String(itemValue).toLowerCase().startsWith(String(value).toLowerCase());
+              return String(itemValue)
+                .toLowerCase()
+                .startsWith(String(value).toLowerCase());
             case "endswith":
-              return String(itemValue).toLowerCase().endsWith(String(value).toLowerCase());
+              return String(itemValue)
+                .toLowerCase()
+                .endsWith(String(value).toLowerCase());
             default:
               return true;
           }
@@ -248,7 +322,12 @@ function applyFilters<T>(data: T[], filters: Filter[]): T[] {
         });
 
       // O resultado final é a combinação de todas as verificações
-      return exactFiltersPass && textFiltersPass && numericFiltersPass && otherFiltersPass;
+      return (
+        exactFiltersPass &&
+        textFiltersPass &&
+        numericFiltersPass &&
+        otherFiltersPass
+      );
     });
   });
 }
@@ -309,7 +388,11 @@ function applySorting<T>(data: T[], sorting: SortingState[]): T[] {
 }
 
 // Função para paginar um array
-function applyPagination<T>(data: T[], pageIndex: number, pageSize: number): T[] {
+function applyPagination<T>(
+  data: T[],
+  pageIndex: number,
+  pageSize: number
+): T[] {
   const start = pageIndex * pageSize;
 
   // Certificar que não ultrapasse o limite do array
@@ -354,7 +437,8 @@ export function mockFetchData(
   const filteredData = applyFilters(data, filters);
 
   // Aplicar ordenação apenas se houver ordenações especificadas
-  const sortedData = sorting.length > 0 ? applySorting(filteredData, sorting) : filteredData;
+  const sortedData =
+    sorting.length > 0 ? applySorting(filteredData, sorting) : filteredData;
 
   // Calcular contagem total
   const totalCount = sortedData.length;
@@ -363,7 +447,10 @@ export function mockFetchData(
   const pageCount = Math.ceil(totalCount / pageSize);
 
   // Verificar se o pageIndex está dentro dos limites válidos
-  const validPageIndex = Math.max(0, Math.min(pageIndex, Math.max(0, pageCount - 1)));
+  const validPageIndex = Math.max(
+    0,
+    Math.min(pageIndex, Math.max(0, pageCount - 1))
+  );
 
   // Aplicar paginação
   const start = validPageIndex * pageSize;
@@ -386,8 +473,8 @@ export function mockFetchData(
           pageSize,
           pageIndex: validPageIndex,
           hasNextPage: hasMore,
-          hasPreviousPage: validPageIndex > 0
-        }
+          hasPreviousPage: validPageIndex > 0,
+        },
       });
     }, 100);
   });

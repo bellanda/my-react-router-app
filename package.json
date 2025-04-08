@@ -71,6 +71,8 @@
     "@types/react": "18",
     "@types/react-dom": "18",
     "bun-types": "latest",
+    "prettier": "3.5.3",
+    "prettier-plugin-tailwindcss": "0.6.11",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.0.15",
     "typescript": "^5.7.2",

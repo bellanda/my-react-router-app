@@ -7,14 +7,28 @@ import type { DateRange } from "react-day-picker";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import { Checkbox } from "~/components/ui/checkbox";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "~/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
 import { Switch } from "~/components/ui/switch";
 import { fetchUniqueValues } from "~/lib/services/api";
-import type { ColumnDefinition, FilterOperator, UniqueValueOption } from "~/lib/types/data-table";
+import type {
+  ColumnDefinition,
+  FilterOperator,
+  UniqueValueOption,
+} from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
 
 // Operadores de filtro por tipo de coluna
@@ -22,7 +36,7 @@ const FILTER_OPERATORS: Record<string, FilterOperator[]> = {
   text: ["contains", "exact", "startswith", "endswith", "isnull"],
   number: ["exact", "lt", "lte", "gt", "gte", "range", "isnull"],
   date: ["exact", "lt", "lte", "gt", "gte", "range", "isnull"],
-  boolean: ["exact", "isnull"]
+  boolean: ["exact", "isnull"],
 };
 
 // Rótulos amigáveis para operadores
@@ -41,7 +55,7 @@ const OPERATOR_LABELS: Record<string, string> = {
   month: "Mês",
   day: "Dia",
   week: "Semana",
-  isnull: "É nulo"
+  isnull: "É nulo",
 };
 
 interface ColumnFilterProps {
@@ -50,31 +64,50 @@ interface ColumnFilterProps {
   onClose: () => void;
 }
 
-const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onClose }) => {
+const ColumnFilter: React.FC<ColumnFilterProps> = ({
+  column,
+  onFilterChange,
+  onClose,
+}) => {
   // Estado para operador selecionado
-  const [operator, setOperator] = React.useState<FilterOperator>(FILTER_OPERATORS[column.type][0]);
+  const [operator, setOperator] = React.useState<FilterOperator>(
+    FILTER_OPERATORS[column.type][0]
+  );
 
   // Estado para valores de filtro (diferente por tipo)
   const [filterValue, setFilterValue] = React.useState<any>(null);
 
   // Estado para valores de intervalo de data
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    undefined
+  );
 
   // Para valores numéricos em intervalo
-  const [rangeValues, setRangeValues] = React.useState<[any, any]>([null, null]);
+  const [rangeValues, setRangeValues] = React.useState<[any, any]>([
+    null,
+    null,
+  ]);
 
   // Para seleção de valores únicos
-  const [selectedUniqueValues, setSelectedUniqueValues] = React.useState<string[]>([]);
+  const [selectedUniqueValues, setSelectedUniqueValues] = React.useState<
+    string[]
+  >([]);
   const [uniqueValueOpen, setUniqueValueOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [uniqueValues, setUniqueValues] = React.useState<UniqueValueOption[]>([]);
+  const [uniqueValues, setUniqueValues] = React.useState<UniqueValueOption[]>(
+    []
+  );
 
   // Carregar valores únicos ao montar o componente
   React.useEffect(() => {
     const loadUniqueValues = async () => {
       if (column.type === "text") {
         try {
-          const values = await fetchUniqueValues({ url: "/api/products" }, column.accessor, searchTerm);
+          const values = await fetchUniqueValues(
+            { url: "/api/products" },
+            column.accessor,
+            searchTerm
+          );
           setUniqueValues(values);
         } catch (error) {
           console.error("Erro ao carregar valores únicos:", error);
@@ -110,7 +143,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
     onFilterChange({
       id: column.accessor,
       operator,
-      value
+      value,
     });
 
     onClose();
@@ -123,14 +156,26 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className={cn("w-full justify-start text-left font-normal", !filterValue && "text-muted-foreground")}
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              !filterValue && "text-muted-foreground"
+            )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {filterValue ? format(filterValue, "PPP") : <span>Selecione uma data</span>}
+            {filterValue ? (
+              format(filterValue, "PPP")
+            ) : (
+              <span>Selecione uma data</span>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar mode="single" selected={filterValue} onSelect={setFilterValue} initialFocus />
+          <Calendar
+            mode="single"
+            selected={filterValue}
+            onSelect={setFilterValue}
+            initialFocus
+          />
         </PopoverContent>
       </Popover>
     );
@@ -144,13 +189,17 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={cn("w-full justify-start text-left font-normal", !dateRange && "text-muted-foreground")}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dateRange && "text-muted-foreground"
+              )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dateRange?.from ? (
                 dateRange.to ? (
                   <>
-                    {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")}
+                    {format(dateRange.from, "PPP")} -{" "}
+                    {format(dateRange.to, "PPP")}
                   </>
                 ) : (
                   format(dateRange.from, "PPP")
@@ -197,14 +246,25 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
           return (
             <Popover open={uniqueValueOpen} onOpenChange={setUniqueValueOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={uniqueValueOpen} className="w-full justify-between">
-                  {selectedUniqueValues.length === 0 ? "Selecione valores..." : `${selectedUniqueValues.length} selecionado(s)`}
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={uniqueValueOpen}
+                  className="w-full justify-between"
+                >
+                  {selectedUniqueValues.length === 0
+                    ? "Selecione valores..."
+                    : `${selectedUniqueValues.length} selecionado(s)`}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[200px] p-0">
                 <Command>
-                  <CommandInput placeholder="Buscar valores..." value={searchTerm} onValueChange={setSearchTerm} />
+                  <CommandInput
+                    placeholder="Buscar valores..."
+                    value={searchTerm}
+                    onValueChange={setSearchTerm}
+                  />
                   <CommandEmpty>Nenhum valor encontrado.</CommandEmpty>
                   <CommandGroup>
                     {uniqueValues.map((item: UniqueValueOption) => (
@@ -214,14 +274,23 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
                         onSelect={() => {
                           const valueStr = String(item.value);
                           setSelectedUniqueValues((prev) =>
-                            prev.includes(valueStr) ? prev.filter((v) => v !== valueStr) : [...prev, valueStr]
+                            prev.includes(valueStr)
+                              ? prev.filter((v) => v !== valueStr)
+                              : [...prev, valueStr]
                           );
                         }}
                       >
                         <div className="flex items-center">
-                          <Checkbox checked={selectedUniqueValues.includes(String(item.value))} className="mr-2" />
+                          <Checkbox
+                            checked={selectedUniqueValues.includes(
+                              String(item.value)
+                            )}
+                            className="mr-2"
+                          />
                           <span>{item.label}</span>
-                          <span className="ml-auto text-muted-foreground">({item.count})</span>
+                          <span className="text-muted-foreground ml-auto">
+                            ({item.count})
+                          </span>
                         </div>
                       </CommandItem>
                     ))}
@@ -235,7 +304,9 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
             <Input
               type="text"
               value={filterValue || ""}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterValue(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFilterValue(e.target.value)
+              }
               placeholder="Digite o valor..."
               className="w-full"
             />
@@ -249,7 +320,9 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
               <Input
                 type="number"
                 value={rangeValues[0] || ""}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeValues([e.target.value, rangeValues[1]])}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setRangeValues([e.target.value, rangeValues[1]])
+                }
                 placeholder="De"
                 className="w-full"
               />
@@ -257,7 +330,9 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
               <Input
                 type="number"
                 value={rangeValues[1] || ""}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRangeValues([rangeValues[0], e.target.value])}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setRangeValues([rangeValues[0], e.target.value])
+                }
                 placeholder="Até"
                 className="w-full"
               />
@@ -269,7 +344,9 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
           <Input
             type="number"
             value={filterValue || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterValue(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFilterValue(e.target.value)
+            }
             placeholder="Digite o valor..."
             className="w-full"
           />
@@ -307,7 +384,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, onFilterChange, onC
           <Label htmlFor="filter-operator">Operador</Label>
           <select
             id="filter-operator"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             value={operator}
             onChange={(e) => setOperator(e.target.value as FilterOperator)}
           >

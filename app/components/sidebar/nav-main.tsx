@@ -1,7 +1,11 @@
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "~/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -10,11 +14,11 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem
+  SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
 
 export function NavMain({
-  items
+  items,
 }: {
   items: {
     title: string;
@@ -39,15 +43,25 @@ export function NavMain({
           const isActive =
             pathname === item.url ||
             (pathname.startsWith(item.url) && item.url !== "/") ||
-            item.items?.some((subItem) => pathname === subItem.url.split("?")[0]);
+            item.items?.some(
+              (subItem) => pathname === subItem.url.split("?")[0]
+            );
 
           return (
-            <Collapsible key={item.title} asChild defaultOpen={isActive} className="group/collapsible">
+            <Collapsible
+              key={item.title}
+              asChild
+              defaultOpen={isActive}
+              className="group/collapsible"
+            >
               <SidebarMenuItem>
                 {item.items && item.items.length > 0 ? (
                   <>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title} className={isActive ? "bg-primary/10 text-primary" : ""}>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        className={isActive ? "bg-primary/10 text-primary" : ""}
+                      >
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -62,7 +76,14 @@ export function NavMain({
 
                           return (
                             <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton asChild className={isSubItemActive ? "font-medium text-primary" : ""}>
+                              <SidebarMenuSubButton
+                                asChild
+                                className={
+                                  isSubItemActive
+                                    ? "text-primary font-medium"
+                                    : ""
+                                }
+                              >
                                 <Link to={subItem.url} prefetch="intent">
                                   <span>{subItem.title}</span>
                                 </Link>
@@ -74,7 +95,10 @@ export function NavMain({
                     </CollapsibleContent>
                   </>
                 ) : (
-                  <SidebarMenuButton asChild className={isActive ? "bg-primary/10 text-primary" : ""}>
+                  <SidebarMenuButton
+                    asChild
+                    className={isActive ? "bg-primary/10 text-primary" : ""}
+                  >
                     <Link to={item.url} prefetch="intent">
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>

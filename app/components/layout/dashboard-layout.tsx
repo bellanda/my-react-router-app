@@ -10,7 +10,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator
+  BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
 import { Button } from "~/components/ui/button";
 import {
@@ -19,10 +19,14 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Separator } from "~/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "~/components/ui/sidebar";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
 
 type DashboardLayoutProps = {
@@ -36,7 +40,11 @@ function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function DashboardLayout({ children, showFooter = true, showBreadcrumbs = true }: DashboardLayoutProps) {
+export function DashboardLayout({
+  children,
+  showFooter = true,
+  showBreadcrumbs = true,
+}: DashboardLayoutProps) {
   const location = useLocation();
 
   // Cria um array com os segmentos da rota atual
@@ -54,7 +62,7 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear sticky top-0 z-20 bg-background">
+        <header className="bg-background sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -80,10 +88,15 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
                             <BreadcrumbSeparator />
                             <BreadcrumbItem>
                               {isLast ? (
-                                <BreadcrumbPage>{capitalizeFirstLetter(segment)}</BreadcrumbPage>
+                                <BreadcrumbPage>
+                                  {capitalizeFirstLetter(segment)}
+                                </BreadcrumbPage>
                               ) : (
                                 <BreadcrumbLink asChild>
-                                  <Link to={getPathUrl(index)} prefetch="intent">
+                                  <Link
+                                    to={getPathUrl(index)}
+                                    prefetch="intent"
+                                  >
                                     {capitalizeFirstLetter(segment)}
                                   </Link>
                                 </BreadcrumbLink>
@@ -111,7 +124,10 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
               <DropdownMenuTrigger>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+                    <AvatarImage
+                      src="https://github.com/shadcn.png"
+                      alt="User"
+                    />
                     <AvatarFallback>US</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -127,7 +143,9 @@ export function DashboardLayout({ children, showFooter = true, showBreadcrumbs =
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-2 p-6 bg-background">{children || <Outlet />}</div>
+        <div className="bg-background flex flex-1 flex-col gap-2 p-6">
+          {children || <Outlet />}
+        </div>
         {/* {showFooter && (
           <footer className="border-t py-4 px-6">
             <div className="container mx-auto">

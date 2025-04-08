@@ -8,7 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formata um valor para exibição com base no tipo
  */
-export function formatDisplayValue(value: any, type: "number" | "boolean" | "date" | "currency" | "datetime" | "decimal"): string {
+export function formatDisplayValue(
+  value: any,
+  type: "number" | "boolean" | "date" | "currency" | "datetime" | "decimal"
+): string {
   if (value === null || value === undefined) {
     return "-";
   }
@@ -18,15 +21,26 @@ export function formatDisplayValue(value: any, type: "number" | "boolean" | "dat
       case "number":
         return Number(value).toLocaleString("pt-BR");
       case "decimal":
-        return Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return Number(value).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
       case "boolean":
-        return value === true || value === "true" || value === 1 || value === "1" ? "Sim" : "Não";
+        return value === true ||
+          value === "true" ||
+          value === 1 ||
+          value === "1"
+          ? "Sim"
+          : "Não";
       case "date":
         return new Date(value).toLocaleDateString("pt-BR");
       case "datetime":
         return new Date(value).toLocaleString("pt-BR");
       case "currency":
-        return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        return Number(value).toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
       default:
         return String(value);
     }
@@ -154,7 +168,10 @@ export function getUniqueValues(data: any[], accessor: string): any[] {
   });
 }
 
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   return function (...args: Parameters<T>) {
@@ -171,7 +188,9 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait: numbe
 export function parseQueryParams(search: string): Record<string, string> {
   if (!search || search === "?") return {};
 
-  const params = new URLSearchParams(search.startsWith("?") ? search.substring(1) : search);
+  const params = new URLSearchParams(
+    search.startsWith("?") ? search.substring(1) : search
+  );
   const result: Record<string, string> = {};
 
   params.forEach((value, key) => {
@@ -199,7 +218,11 @@ export function extractNestedValue(obj: any, path: string): any {
   let current = obj;
 
   for (const part of parts) {
-    if (current === null || current === undefined || typeof current !== "object") {
+    if (
+      current === null ||
+      current === undefined ||
+      typeof current !== "object"
+    ) {
       return undefined;
     }
     current = current[part];

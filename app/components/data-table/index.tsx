@@ -795,7 +795,7 @@ export default function DataTable({ config, className }: DataTableProps) {
   // Memoizar cabeçalho da tabela
   const headerComponent = useMemo(() => {
     return (
-      <div className="flex border-b w-full">
+      <div className="flex w-full border-b">
         {visibleColumns.map((column) => (
           <DataTableHeader
             key={column.accessor}
@@ -832,7 +832,7 @@ export default function DataTable({ config, className }: DataTableProps) {
       <div
         key={`row-${rowIndex}`}
         className={cn(
-          "flex border-b w-full",
+          "flex w-full border-b",
           rowIndex % 2 === 0 ? "bg-background" : "bg-muted/20"
         )}
       >
@@ -897,7 +897,7 @@ export default function DataTable({ config, className }: DataTableProps) {
               }}
               title={String(displayValue || "")}
             >
-              <span className="truncate w-full">
+              <span className="w-full truncate">
                 {displayValue !== undefined && displayValue !== null
                   ? displayValue
                   : ""}
@@ -940,7 +940,7 @@ export default function DataTable({ config, className }: DataTableProps) {
   return (
     <div
       className={cn(
-        "flex flex-col border rounded-md w-full overflow-hidden bg-background",
+        "bg-background flex w-full flex-col overflow-hidden rounded-md border",
         className
       )}
     >
@@ -967,7 +967,7 @@ export default function DataTable({ config, className }: DataTableProps) {
       {/* Container principal com scroll interno */}
       <div
         ref={containerScrollRef}
-        className="w-full relative overflow-auto"
+        className="relative w-full overflow-auto"
         style={{
           maxHeight: config.maxHeight || "calc(100vh - 200px)",
           height: "calc(100vh - 320px)",
@@ -979,26 +979,26 @@ export default function DataTable({ config, className }: DataTableProps) {
           style={{ minWidth: "100%", width: "max-content" }}
         >
           {/* Cabeçalho da tabela - fixo na parte superior */}
-          <div className="sticky top-0 z-10 bg-background shadow-sm">
+          <div className="bg-background sticky top-0 z-10 shadow-sm">
             {headerComponent}
           </div>
 
           {/* Corpo da tabela */}
           {loading && data.length === 0 ? (
-            <div className="flex items-center justify-center h-[400px] w-full">
+            <div className="flex h-[400px] w-full items-center justify-center">
               <div className="flex items-center">
-                <Loader2 className="h-5 w-5 mr-2 animate-spin text-primary" />
+                <Loader2 className="text-primary mr-2 h-5 w-5 animate-spin" />
                 <span className="text-muted-foreground">Carregando...</span>
               </div>
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center h-[400px] w-full">
+            <div className="flex h-[400px] w-full items-center justify-center">
               <div className="text-destructive">
                 Erro ao carregar dados: {error?.message}
               </div>
             </div>
           ) : data.length === 0 ? (
-            <div className="flex items-center justify-center h-[400px] w-full">
+            <div className="flex h-[400px] w-full items-center justify-center">
               <div className="text-muted">Nenhum dado encontrado</div>
             </div>
           ) : (
@@ -1007,8 +1007,8 @@ export default function DataTable({ config, className }: DataTableProps) {
               {isFetchingMore && (
                 <div className="py-4 text-center">
                   <div className="inline-flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">
+                    <Loader2 className="text-primary h-4 w-4 animate-spin" />
+                    <span className="text-muted-foreground text-sm">
                       Carregando mais...
                     </span>
                   </div>
@@ -1018,14 +1018,14 @@ export default function DataTable({ config, className }: DataTableProps) {
               {data.length > 0 && hasNextPage && !isFetchingMore && !loading ? (
                 <div
                   ref={loadMoreTriggerRef}
-                  className="py-4 text-center text-sm text-muted-foreground cursor-pointer hover:bg-muted/20"
+                  className="text-muted-foreground hover:bg-muted/20 cursor-pointer py-4 text-center text-sm"
                   onClick={loadMoreData}
                 >
                   Mostrar mais resultados (Página{" "}
                   {tableState.pagination.pageIndex + 2})
                 </div>
               ) : data.length > 0 ? (
-                <div className="py-4 text-center text-sm text-muted-foreground">
+                <div className="text-muted-foreground py-4 text-center text-sm">
                   Fim dos resultados
                 </div>
               ) : null}
@@ -1035,7 +1035,7 @@ export default function DataTable({ config, className }: DataTableProps) {
       </div>
 
       {/* Barra de status */}
-      <div className="px-4 py-2 border-t bg-muted/20 text-sm flex justify-between">
+      <div className="bg-muted/20 flex justify-between border-t px-4 py-2 text-sm">
         <div>
           {data.length > 0
             ? `${data.length} de ${totalItems} itens carregados${
@@ -1048,18 +1048,18 @@ export default function DataTable({ config, className }: DataTableProps) {
         <div className="flex items-center gap-2">
           {loading || isFetchingMore ? (
             <div className="flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+              <Loader2 className="text-primary h-3 w-3 animate-spin" />
               <span className="text-muted-foreground">
                 {loading ? "Carregando..." : "Carregando mais itens..."}
               </span>
             </div>
           ) : hasNextPage ? (
-            <div className="text-blue-500 text-xs">Scroll para ver mais</div>
+            <div className="text-xs text-blue-500">Scroll para ver mais</div>
           ) : null}
           {/* Botão para forçar recarregamento da API */}
           <button
             onClick={() => fetchData(0)}
-            className="bg-blue-600 text-white px-2 py-1 text-xs rounded hover:bg-blue-700"
+            className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
           >
             Forçar Recarga API
           </button>

@@ -2,7 +2,12 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Check, Filter } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { fetchUniqueValues } from "~/lib/services/api";
-import type { ColumnDefinition, Filter as DataFilter, FilterOperator, SortingState } from "~/lib/types/data-table";
+import type {
+  ColumnDefinition,
+  Filter as DataFilter,
+  FilterOperator,
+  SortingState,
+} from "~/lib/types/data-table";
 import { cn } from "~/lib/utils";
 
 interface DataTableHeaderProps {
@@ -24,14 +29,17 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   onFilter,
   onRemoveFilter,
   endpoint,
-  style
+  style,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuReady, setMenuReady] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [uniqueValues, setUniqueValues] = useState<Array<{ value: any; label: string; count: number }>>([]);
+  const [uniqueValues, setUniqueValues] = useState<
+    Array<{ value: any; label: string; count: number }>
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFilterOperator, setSelectedFilterOperator] = useState<FilterOperator>("contains");
+  const [selectedFilterOperator, setSelectedFilterOperator] =
+    useState<FilterOperator>("contains");
   const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogFilterValue, setDialogFilterValue] = useState("");
@@ -50,7 +58,9 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
   // Verificar quais valores estão selecionados
   useEffect(() => {
-    const valuesForThisColumn = filters.filter((f) => f.id === column.accessor).map((f) => f.value);
+    const valuesForThisColumn = filters
+      .filter((f) => f.id === column.accessor)
+      .map((f) => f.value);
     setSelectedValues(valuesForThisColumn);
   }, [filters, column.accessor]);
 
@@ -62,13 +72,13 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
     if (!column.sortable) return null;
 
     if (!sortingState) {
-      return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />;
+      return <ArrowUpDown className="text-muted-foreground ml-2 h-4 w-4" />;
     }
 
     return sortingState.desc ? (
-      <ArrowDown className="ml-2 h-4 w-4 text-primary" />
+      <ArrowDown className="text-primary ml-2 h-4 w-4" />
     ) : (
-      <ArrowUp className="ml-2 h-4 w-4 text-primary" />
+      <ArrowUp className="text-primary ml-2 h-4 w-4" />
     );
   };
 
@@ -78,13 +88,20 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
     setIsLoading(true);
     try {
-      const values = await fetchUniqueValues(endpoint, column.accessor, searchTerm);
+      const values = await fetchUniqueValues(
+        endpoint,
+        column.accessor,
+        searchTerm
+      );
       // Limitar a 10 valores iniciais ou adicionar aos existentes
       if (reset) {
         setUniqueValues(values.slice(0, 10));
       } else {
         const currentLength = uniqueValues.length;
-        setUniqueValues((prev) => [...prev, ...values.slice(currentLength, currentLength + 10)]);
+        setUniqueValues((prev) => [
+          ...prev,
+          ...values.slice(currentLength, currentLength + 10),
+        ]);
       }
     } catch (error) {
       console.error("Erro ao carregar valores únicos:", error);
@@ -138,7 +155,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
         setPopoverPosition({
           top: initialTop,
-          left: initialLeft + window.scrollX
+          left: initialLeft + window.scrollX,
         });
       }
 
@@ -174,7 +191,9 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
         // Obter o container da tabela que pode estar com scroll
         const tableContainer = headerRef.current?.closest(".overflow-auto");
         const tableContainerRect = tableContainer?.getBoundingClientRect();
-        const visibleBottom = tableContainerRect ? tableContainerRect.top + tableContainerRect.height : windowHeight;
+        const visibleBottom = tableContainerRect
+          ? tableContainerRect.top + tableContainerRect.height
+          : windowHeight;
 
         // Verificar se o menu vai ultrapassar a parte inferior visível do container
         const estimatedMenuHeight = 350; // altura estimada do menu
@@ -188,7 +207,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
         setPopoverPosition({
           top,
-          left
+          left,
         });
       };
 
@@ -241,11 +260,14 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           const viewportHeight = window.innerHeight;
 
           // Ajustar posição vertical se necessário
-          const top = proposedTop + menuHeight > viewportHeight ? viewportHeight - menuHeight - 10 : proposedTop;
+          const top =
+            proposedTop + menuHeight > viewportHeight
+              ? viewportHeight - menuHeight - 10
+              : proposedTop;
 
           setSubmenuPosition({
             top: Math.max(10, top), // Nunca ficar muito no topo
-            left: adjustedLeft
+            left: adjustedLeft,
           });
         }
       };
@@ -271,7 +293,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
     onFilter({
       id: column.accessor,
       operator: selectedFilterOperator,
-      value: dialogFilterValue
+      value: dialogFilterValue,
     });
 
     setDialogOpen(false);
@@ -299,7 +321,10 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
     const isSelected = selectedValues.some(
       (v) =>
         // Comparação mais robusta para diferentes tipos de valores
-        v === value || (typeof v === "object" && typeof value === "object" && JSON.stringify(v) === JSON.stringify(value))
+        v === value ||
+        (typeof v === "object" &&
+          typeof value === "object" &&
+          JSON.stringify(v) === JSON.stringify(value))
     );
 
     if (isSelected) {
@@ -310,7 +335,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
       onFilter({
         id: column.accessor,
         operator: "exact",
-        value: value
+        value: value,
       });
     }
 
@@ -372,25 +397,25 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           { label: "Maior que", value: "gt" as FilterOperator },
           { label: "Maior ou igual a", value: "gte" as FilterOperator },
           { label: "Menor que", value: "lt" as FilterOperator },
-          { label: "Menor ou igual a", value: "lte" as FilterOperator }
+          { label: "Menor ou igual a", value: "lte" as FilterOperator },
         ];
       case "date":
         return [
           { label: "Igual a", value: "date" as FilterOperator },
           { label: "Depois de", value: "gt" as FilterOperator },
-          { label: "Antes de", value: "lt" as FilterOperator }
+          { label: "Antes de", value: "lt" as FilterOperator },
         ];
       case "boolean":
         return [
           { label: "É verdadeiro", value: "exact" as FilterOperator },
-          { label: "É falso", value: "exact" as FilterOperator }
+          { label: "É falso", value: "exact" as FilterOperator },
         ];
       default:
         return [
           { label: "Contém", value: "contains" as FilterOperator },
           { label: "Começa com", value: "startswith" as FilterOperator },
           { label: "Termina com", value: "endswith" as FilterOperator },
-          { label: "Igual a", value: "exact" as FilterOperator }
+          { label: "Igual a", value: "exact" as FilterOperator },
         ];
     }
   };
@@ -416,11 +441,19 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Não fechar o menu se o clique foi dentro do header, área de rolagem ou menu de opções
-      const clickedInsideHeader = headerRef.current?.contains(event.target as Node) || false;
-      const clickedInsideScrollArea = scrollAreaRef.current?.contains(event.target as Node) || false;
-      const clickedInsideFilterOptions = filterOptionsRef.current?.contains(event.target as Node) || false;
+      const clickedInsideHeader =
+        headerRef.current?.contains(event.target as Node) || false;
+      const clickedInsideScrollArea =
+        scrollAreaRef.current?.contains(event.target as Node) || false;
+      const clickedInsideFilterOptions =
+        filterOptionsRef.current?.contains(event.target as Node) || false;
 
-      if (menuOpen && !clickedInsideHeader && !clickedInsideScrollArea && !clickedInsideFilterOptions) {
+      if (
+        menuOpen &&
+        !clickedInsideHeader &&
+        !clickedInsideScrollArea &&
+        !clickedInsideFilterOptions
+      ) {
         setMenuOpen(false);
         setShowFilterOptions(false);
         setMenuReady(false);
@@ -438,7 +471,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   return (
     <div
       ref={headerRef}
-      className="flex items-center justify-between border-r last:border-r-0 py-1 px-4 select-none bg-muted/40 relative"
+      className="bg-muted/40 relative flex items-center justify-between border-r px-4 py-1 select-none last:border-r-0"
       style={style}
     >
       <div className="w-full">
@@ -447,24 +480,30 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           variant="ghost"
           size="sm"
           className={cn(
-            "flex items-center justify-between w-full px-3 py-1 hover:bg-muted text-left",
+            "hover:bg-muted flex w-full items-center justify-between px-3 py-1 text-left",
             hasActiveFilter && "text-primary font-medium"
           )}
           onClick={handleHeaderClick}
           title={column.header}
         >
-          <span className="flex-1 truncate text-left pr-2">{column.header}</span>
-          <div className="flex-shrink-0 flex items-center">
+          <span className="flex-1 truncate pr-2 text-left">
+            {column.header}
+          </span>
+          <div className="flex flex-shrink-0 items-center">
             {renderSortIcon()}
-            {hasActiveFilter && <Filter className="ml-1 h-3 w-3 text-primary" />}
+            {hasActiveFilter && (
+              <Filter className="text-primary ml-1 h-3 w-3" />
+            )}
           </div>
         </Button>
 
         {/* O menu com transição suave para evitar o 'piscar' */}
         <div
           className={cn(
-            "fixed shadow-lg rounded-md border bg-popover z-50 transition-opacity duration-75",
-            menuOpen && menuReady ? "opacity-100" : "opacity-0 pointer-events-none"
+            "bg-popover fixed z-50 rounded-md border shadow-lg transition-opacity duration-75",
+            menuOpen && menuReady
+              ? "opacity-100"
+              : "pointer-events-none opacity-0"
           )}
           style={{
             top: `${popoverPosition.top}px`,
@@ -472,36 +511,54 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
             width: "240px",
             maxHeight: "90vh",
             overflowY: "auto",
-            maxWidth: "calc(100vw - 20px)"
+            maxWidth: "calc(100vw - 20px)",
           }}
         >
-          <div className="p-1.5 font-semibold border-b bg-muted/20 text-sm">{column.header}</div>
+          <div className="bg-muted/20 border-b p-1.5 text-sm font-semibold">
+            {column.header}
+          </div>
           <div className="p-1.5">
             {/* Opções de ordenação */}
             {column.sortable && (
               <div className="space-y-0.5">
                 <Button
-                  variant={sortingState && !sortingState.desc ? "secondary" : "ghost"}
+                  variant={
+                    sortingState && !sortingState.desc ? "secondary" : "ghost"
+                  }
                   size="sm"
-                  className={`w-full justify-start pl-8 relative h-7 text-xs ${
-                    sortingState && !sortingState.desc ? "bg-primary/20 font-medium" : ""
+                  className={`relative h-7 w-full justify-start pl-8 text-xs ${
+                    sortingState && !sortingState.desc
+                      ? "bg-primary/20 font-medium"
+                      : ""
                   }`}
                   onClick={() => applySorting(false)}
                 >
-                  {sortingState && !sortingState.desc && <Check className="h-3 w-3 absolute left-2 text-primary" />}
-                  <ArrowUp className={`mr-2 h-3 w-3 ${sortingState && !sortingState.desc ? "text-primary" : ""}`} />
+                  {sortingState && !sortingState.desc && (
+                    <Check className="text-primary absolute left-2 h-3 w-3" />
+                  )}
+                  <ArrowUp
+                    className={`mr-2 h-3 w-3 ${sortingState && !sortingState.desc ? "text-primary" : ""}`}
+                  />
                   <span>Ordenar de A a Z</span>
                 </Button>
                 <Button
-                  variant={sortingState && sortingState.desc ? "secondary" : "ghost"}
+                  variant={
+                    sortingState && sortingState.desc ? "secondary" : "ghost"
+                  }
                   size="sm"
-                  className={`w-full justify-start pl-8 relative h-7 text-xs ${
-                    sortingState && sortingState.desc ? "bg-primary/20 font-medium" : ""
+                  className={`relative h-7 w-full justify-start pl-8 text-xs ${
+                    sortingState && sortingState.desc
+                      ? "bg-primary/20 font-medium"
+                      : ""
                   }`}
                   onClick={() => applySorting(true)}
                 >
-                  {sortingState && sortingState.desc && <Check className="h-3 w-3 absolute left-2 text-primary" />}
-                  <ArrowDown className={`mr-2 h-3 w-3 ${sortingState && sortingState.desc ? "text-primary" : ""}`} />
+                  {sortingState && sortingState.desc && (
+                    <Check className="text-primary absolute left-2 h-3 w-3" />
+                  )}
+                  <ArrowDown
+                    className={`mr-2 h-3 w-3 ${sortingState && sortingState.desc ? "text-primary" : ""}`}
+                  />
                   <span>Ordenar de Z a A</span>
                 </Button>
               </div>
@@ -511,8 +568,8 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
             {column.filterable && (
               <>
                 <div className="mt-2 mb-1">
-                  <div className="border-t my-1.5" />
-                  <div className="font-medium text-xs mb-1">Filtros</div>
+                  <div className="my-1.5 border-t" />
+                  <div className="mb-1 text-xs font-medium">Filtros</div>
 
                   {/* Filtros avançados - movidos para cima */}
                   <div
@@ -520,10 +577,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                     ref={filterOptionsRef}
                     onMouseEnter={() => {
                       if (filterOptionsRef.current) {
-                        const rect = filterOptionsRef.current.getBoundingClientRect();
+                        const rect =
+                          filterOptionsRef.current.getBoundingClientRect();
                         setSubmenuPosition({
                           top: 0, // Posicionar no topo do botão
-                          left: rect.width + 5 // Posicionar à direita do botão com um pequeno espaço
+                          left: rect.width + 5, // Posicionar à direita do botão com um pequeno espaço
                         });
                       }
                       setShowFilterOptions(true);
@@ -531,7 +589,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                     onMouseLeave={() => {
                       // Usar timeout para permitir que o mouse se mova para o submenu
                       setTimeout(() => {
-                        if (!document.querySelector(".filter-options-submenu:hover")) {
+                        if (
+                          !document.querySelector(
+                            ".filter-options-submenu:hover"
+                          )
+                        ) {
                           setShowFilterOptions(false);
                         }
                       }, 100);
@@ -540,7 +602,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full justify-between text-xs h-7"
+                      className="h-7 w-full justify-between text-xs"
                       onClick={() => setShowFilterOptions(!showFilterOptions)}
                     >
                       Filtros avançados
@@ -552,12 +614,12 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                       <>
                         {/* Área "ponte" invisível para facilitar o mouse se mover entre botão e submenu */}
                         <div
-                          className="fixed z-50 hover-bridge"
+                          className="hover-bridge fixed z-50"
                           style={{
                             top: `${popoverPosition.top + 30}px`,
                             left: `${popoverPosition.left + 220}px`,
                             width: "30px",
-                            height: "150px"
+                            height: "150px",
                             // backgroundColor: "rgba(255,0,0,0.1)", // Descomente para debug
                           }}
                           onMouseOver={() => setShowFilterOptions(true)}
@@ -565,12 +627,12 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                         />
 
                         <div
-                          className="fixed border rounded shadow-md bg-background z-50 filter-options-submenu"
+                          className="bg-background filter-options-submenu fixed z-50 rounded border shadow-md"
                           style={{
                             top: `${popoverPosition.top + 50}px`,
                             left: `${popoverPosition.left + 245}px`,
                             width: "180px",
-                            padding: "4px 0"
+                            padding: "4px 0",
                           }}
                           onMouseEnter={() => setShowFilterOptions(true)}
                           onMouseLeave={() => setShowFilterOptions(false)}
@@ -578,7 +640,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                           {getFilterOptions().map((option, index) => (
                             <div
                               key={index}
-                              className="px-2 py-1.5 text-xs hover:bg-muted cursor-pointer"
+                              className="hover:bg-muted cursor-pointer px-2 py-1.5 text-xs"
                               onClick={() => openFilterDialog(option.value)}
                             >
                               {option.label}
@@ -593,7 +655,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full p-1.5 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="bg-background focus:ring-primary w-full rounded border p-1.5 text-xs focus:ring-1 focus:outline-none"
                       placeholder="Pesquisar valores..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -602,36 +664,46 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
                   {/* Lista de valores únicos */}
                   <div
-                    className="mt-2 max-h-[150px] overflow-y-auto rounded border bg-background"
+                    className="bg-background mt-2 max-h-[150px] overflow-y-auto rounded border"
                     ref={scrollAreaRef}
                     onScroll={handleScroll}
                   >
                     {isLoading && uniqueValues.length === 0 ? (
-                      <div className="flex justify-center items-center p-4 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center justify-center p-4 text-xs">
                         Carregando valores...
                       </div>
                     ) : uniqueValues.length === 0 ? (
-                      <div className="p-2 text-xs text-muted-foreground text-center">Nenhum valor encontrado</div>
+                      <div className="text-muted-foreground p-2 text-center text-xs">
+                        Nenhum valor encontrado
+                      </div>
                     ) : (
                       uniqueValues.map((item, index) => (
                         <div
                           key={index}
-                          className={`px-2 py-1.5 text-xs flex items-center hover:bg-muted cursor-pointer ${
+                          className={`hover:bg-muted flex cursor-pointer items-center px-2 py-1.5 text-xs ${
                             isValueSelected(item.value) ? "bg-primary/10" : ""
                           }`}
                           onClick={(e) => toggleValueFilter(item.value, e)}
                         >
                           <div
                             className={cn(
-                              "w-4 h-4 rounded border mr-2 flex items-center justify-center",
-                              isValueSelected(item.value) ? "bg-primary border-primary" : "border-gray-300"
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded border",
+                              isValueSelected(item.value)
+                                ? "bg-primary border-primary"
+                                : "border-gray-300"
                             )}
                           >
-                            {isValueSelected(item.value) && <Check className="h-3 w-3 text-primary-foreground" />}
+                            {isValueSelected(item.value) && (
+                              <Check className="text-primary-foreground h-3 w-3" />
+                            )}
                           </div>
                           <span className="flex-1 truncate">
                             {item.label || String(item.value)}
-                            {item.count > 1 && <span className="ml-1 text-muted-foreground">({item.count})</span>}
+                            {item.count > 1 && (
+                              <span className="text-muted-foreground ml-1">
+                                ({item.count})
+                              </span>
+                            )}
                           </span>
                         </div>
                       ))
@@ -645,7 +717,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full text-xs text-destructive justify-start"
+                      className="text-destructive w-full justify-start text-xs"
                       onClick={removeFilter}
                     >
                       Remover filtros para {column.header}
@@ -655,18 +727,24 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
 
                 {/* Diálogo para filtros personalizados */}
                 {dialogOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-                    <div className="border rounded-md shadow-lg bg-background p-4 w-[300px] max-w-[90vw]">
-                      <h3 className="text-sm font-medium mb-3">Filtro personalizado</h3>
+                  <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="bg-background w-[300px] max-w-[90vw] rounded-md border p-4 shadow-lg">
+                      <h3 className="mb-3 text-sm font-medium">
+                        Filtro personalizado
+                      </h3>
                       <input
                         type="text"
-                        className="w-full p-2 text-sm border rounded bg-background mb-3"
+                        className="bg-background mb-3 w-full rounded border p-2 text-sm"
                         placeholder="Digite o valor..."
                         value={dialogFilterValue}
                         onChange={(e) => setDialogFilterValue(e.target.value)}
                       />
                       <div className="flex justify-end space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDialogOpen(false)}
+                        >
                           Cancelar
                         </Button>
                         <Button size="sm" onClick={applyDialogFilter}>

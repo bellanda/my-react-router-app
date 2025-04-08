@@ -17,7 +17,14 @@ interface ModelTableConfig {
  * Cria uma configuração de tabela para um modelo específico
  */
 export function createTableConfig(config: ModelTableConfig): TableConfig {
-  const { modelName, endpoint, defaultColumns, excludeColumns = [], initialSort = undefined, customColumns = {} } = config;
+  const {
+    modelName,
+    endpoint,
+    defaultColumns,
+    excludeColumns = [],
+    initialSort = undefined,
+    customColumns = {},
+  } = config;
 
   // Mapeamentos padrão para tipos comuns de campos
   const defaultColumnTypes: Record<string, Partial<ColumnDefinition>> = {
@@ -26,7 +33,7 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       header: "ID",
       type: "text",
       sortable: true,
-      filterable: true
+      filterable: true,
     },
 
     // Campos de preço
@@ -35,7 +42,7 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       type: "number",
       sortable: true,
       filterable: true,
-      formatFn: (value) => formatDisplayValue(value, "currency")
+      formatFn: (value) => formatDisplayValue(value, "currency"),
     },
 
     // Campos de quantidade
@@ -44,7 +51,7 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       type: "number",
       sortable: true,
       filterable: true,
-      formatFn: (value) => formatDisplayValue(value, "number")
+      formatFn: (value) => formatDisplayValue(value, "number"),
     },
 
     // Campos booleanos
@@ -53,7 +60,7 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       type: "boolean",
       sortable: true,
       filterable: true,
-      formatFn: (value) => formatDisplayValue(value, "boolean")
+      formatFn: (value) => formatDisplayValue(value, "boolean"),
     },
 
     // Campos de data
@@ -62,14 +69,14 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       type: "date",
       sortable: true,
       filterable: true,
-      formatFn: (value) => formatDisplayValue(value, "datetime")
+      formatFn: (value) => formatDisplayValue(value, "datetime"),
     },
     updated_at: {
       header: "Atualizado em",
       type: "date",
       sortable: true,
       filterable: true,
-      formatFn: (value) => formatDisplayValue(value, "datetime")
+      formatFn: (value) => formatDisplayValue(value, "datetime"),
     },
 
     // Campos de usuário
@@ -77,14 +84,14 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       header: "Criado por",
       type: "text",
       sortable: true,
-      filterable: true
+      filterable: true,
     },
     updated_by: {
       header: "Atualizado por",
       type: "text",
       sortable: true,
-      filterable: true
-    }
+      filterable: true,
+    },
   };
 
   // Função para gerar uma coluna com base no nome
@@ -101,7 +108,7 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
         type: "text",
         sortable: true,
         filterable: true,
-        ...customColumns[accessor]
+        ...customColumns[accessor],
       };
     }
 
@@ -115,7 +122,7 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
           accessor
             .split("_")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")
+            .join(" "),
       } as ColumnDefinition;
     }
 
@@ -128,12 +135,14 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
         .join(" "),
       type: "text",
       sortable: true,
-      filterable: true
+      filterable: true,
     };
   };
 
   // Gerar colunas
-  const columns = (defaultColumns || []).filter((col) => !excludeColumns.includes(col)).map(generateColumn);
+  const columns = (defaultColumns || [])
+    .filter((col) => !excludeColumns.includes(col))
+    .map(generateColumn);
 
   return {
     columns,
@@ -141,17 +150,19 @@ export function createTableConfig(config: ModelTableConfig): TableConfig {
       url: endpoint,
       sortParam: "ordering",
       pageParam: "offset",
-      limitParam: "limit"
+      limitParam: "limit",
     },
     initialSort,
-    defaultPageSize: 50
+    defaultPageSize: 50,
   };
 }
 
 /**
  * Cria configuração de tabela para um modelo de produto
  */
-export function createProductTableConfig(endpoint: string = "/api/products/"): TableConfig {
+export function createProductTableConfig(
+  endpoint: string = "/api/products/"
+): TableConfig {
   return createTableConfig({
     modelName: "Product",
     endpoint,
@@ -173,56 +184,56 @@ export function createProductTableConfig(endpoint: string = "/api/products/"): T
       "short_description",
       "created_at",
       "updated_at",
-      "created_by__email"
+      "created_by__email",
     ],
     customColumns: {
       group__name: {
         header: "Grupo",
-        type: "text"
+        type: "text",
       },
       category__name: {
         header: "Categoria",
-        type: "text"
+        type: "text",
       },
       brand__name: {
         header: "Marca",
-        type: "text"
+        type: "text",
       },
       model__name: {
         header: "Modelo",
-        type: "text"
+        type: "text",
       },
       compatible_brand__name: {
         header: "Marca Compatível",
-        type: "text"
+        type: "text",
       },
       compatible_model__name: {
         header: "Modelo Compatível",
-        type: "text"
+        type: "text",
       },
       color__name: {
         header: "Cor",
-        type: "text"
+        type: "text",
       },
       min_stock: {
         header: "Estoque Mín.",
         type: "number",
-        formatFn: (value) => formatDisplayValue(value, "number")
+        formatFn: (value) => formatDisplayValue(value, "number"),
       },
       max_stock: {
         header: "Estoque Máx.",
         type: "number",
-        formatFn: (value) => formatDisplayValue(value, "number")
+        formatFn: (value) => formatDisplayValue(value, "number"),
       },
       warranty_period: {
         header: "Garantia (dias)",
         type: "number",
-        formatFn: (value) => formatDisplayValue(value, "number")
+        formatFn: (value) => formatDisplayValue(value, "number"),
       },
       created_by__email: {
         header: "Criado por",
-        type: "text"
-      }
-    }
+        type: "text",
+      },
+    },
   });
 }

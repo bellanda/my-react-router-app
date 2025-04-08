@@ -11,7 +11,13 @@ interface SortingPanelProps {
   columns: any[];
 }
 
-const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onClearAllSorts, onReorderSorts, columns }) => {
+const SortingPanel: React.FC<SortingPanelProps> = ({
+  sorting,
+  onRemoveSort,
+  onClearAllSorts,
+  onReorderSorts,
+  columns,
+}) => {
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [draggedOver, setDraggedOver] = useState<number | null>(null);
   const [items, setItems] = useState<SortingState[]>(sorting);
@@ -107,17 +113,17 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
   };
 
   return (
-    <div className="p-2 border-b bg-muted/30">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="bg-muted/30 border-b p-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium">Ordenação:</span>
         {items.map((sort, index) => {
           const column = columns.find((c) => c.accessor === sort.id);
           return (
             <div
               key={index}
-              className={`bg-muted px-3 py-1 rounded-md text-sm flex items-center gap-2 cursor-move ${
-                draggedItem === index ? "opacity-50 bg-primary/10" : ""
-              } ${draggedOver === index ? "border-2 border-primary" : ""}`}
+              className={`bg-muted flex cursor-move items-center gap-2 rounded-md px-3 py-1 text-sm ${
+                draggedItem === index ? "bg-primary/10 opacity-50" : ""
+              } ${draggedOver === index ? "border-primary border-2" : ""}`}
               draggable={true}
               onDragStart={(e) => handleDragStart(index, e)}
               onDragOver={(e) => handleDragOver(e, index)}
@@ -126,7 +132,10 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
               onDragEnd={handleDragEnd}
               data-index={index}
             >
-              <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()}>
+              <div
+                className="cursor-grab"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <GripVertical size={14} className="text-muted-foreground" />
               </div>
               <div className="flex items-center gap-1">
@@ -134,7 +143,7 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
                 {sort.desc ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
               </div>
               <button
-                className="ml-1 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground ml-1"
                 onClick={(e) => handleRemoveSort(sort.id, e)}
                 onMouseDown={(e) => e.stopPropagation()}
                 title="Remover esta ordenação"
@@ -145,7 +154,12 @@ const SortingPanel: React.FC<SortingPanelProps> = ({ sorting, onRemoveSort, onCl
           );
         })}
         <div className="ml-auto">
-          <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-primary hover:text-primary/90">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearAll}
+            className="text-primary hover:text-primary/90"
+          >
             Limpar ordenação
           </Button>
         </div>

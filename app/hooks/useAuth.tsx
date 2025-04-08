@@ -23,7 +23,9 @@ export function useAuth(options: UseAuthOptions = {}) {
 
       // Se não estiver autenticado, tentar login automático
       if (!isAuth && autoLogin && retries < retryCount) {
-        console.log(`Não autenticado, tentando login automático (tentativa ${retries + 1} de ${retryCount})...`);
+        console.log(
+          `Não autenticado, tentando login automático (tentativa ${retries + 1} de ${retryCount})...`
+        );
         setRetries((prev) => prev + 1);
         return await login();
       }
@@ -71,7 +73,7 @@ export function useAuth(options: UseAuthOptions = {}) {
     authenticated,
     loading,
     checkAuth,
-    login
+    login,
   };
 }
 

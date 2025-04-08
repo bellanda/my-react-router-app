@@ -15,7 +15,7 @@ type ThemeProviderState = {
 
 const initialState: ThemeProviderState = {
   theme: "system",
-  setTheme: () => null
+  setTheme: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
@@ -23,7 +23,12 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 // Verificar se estamos no navegador
 const isBrowser = typeof window !== "undefined";
 
-export function ThemeProvider({ children, defaultTheme = "system", storageKey = "ui-theme", ...props }: ThemeProviderProps) {
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+  storageKey = "ui-theme",
+  ...props
+}: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     // Só acessar localStorage se estiver no navegador
     if (isBrowser) {
@@ -40,7 +45,10 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
     root.classList.remove("light", "dark");
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
 
       root.classList.add(systemTheme);
       return;
@@ -56,7 +64,7 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
         localStorage.setItem(storageKey, theme);
       }
       setTheme(theme);
-    }
+    },
   };
 
   return (
@@ -69,7 +77,8 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
 
-  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
+  if (context === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider");
 
   return context;
 };

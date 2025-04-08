@@ -1,4 +1,12 @@
-import { ArrowRight, BarChart, Check, Globe, Layers, Shield, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart,
+  Check,
+  Globe,
+  Layers,
+  Shield,
+  Zap,
+} from "lucide-react";
 import { Link } from "react-router";
 import { LandingLayout } from "~/components/layout";
 import { Button } from "~/components/ui/button";
@@ -6,7 +14,10 @@ import { Button } from "~/components/ui/button";
 export function meta() {
   return [
     { title: "Features - React Router v7 Demo" },
-    { name: "description", content: "Explore the powerful features of React Router v7" }
+    {
+      name: "description",
+      content: "Explore the powerful features of React Router v7",
+    },
   ];
 }
 
@@ -14,11 +25,14 @@ export default function FeaturesPage() {
   return (
     <LandingLayout>
       {/* Hero Section */}
-      <section className="px-4 py-20 bg-gradient-to-b from-muted/50 to-background">
+      <section className="from-muted/50 to-background bg-gradient-to-b px-4 py-20">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Powerful Features</h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Everything you need to build modern web applications with React Router v7.
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
+            Powerful Features
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-3xl text-xl">
+            Everything you need to build modern web applications with React
+            Router v7.
           </p>
         </div>
       </section>
@@ -26,13 +40,13 @@ export default function FeaturesPage() {
       {/* Feature List Section */}
       <section className="px-4 py-16">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid gap-12 md:grid-cols-2">
             <FeatureItem
-              icon={<Zap className="h-8 w-8 text-primary" />}
+              icon={<Zap className="text-primary h-8 w-8" />}
               title="Declarative Routing"
               description="Define your routes with a simple, intuitive syntax that makes your code more readable and maintainable."
             >
-              <pre className="bg-muted p-4 rounded-md text-sm mt-4 overflow-x-auto">
+              <pre className="bg-muted mt-4 overflow-x-auto rounded-md p-4 text-sm">
                 {`// Define routes declaratively
 export default [
   index("routes/home.tsx"),
@@ -45,7 +59,7 @@ export default [
             </FeatureItem>
 
             <FeatureItem
-              icon={<Layers className="h-8 w-8 text-primary" />}
+              icon={<Layers className="text-primary h-8 w-8" />}
               title="Nested Routes"
               description="Create complex UIs with nested routes that mirror your application's component hierarchy."
             >
@@ -53,42 +67,52 @@ export default [
                 <ListItem>Organize routes hierarchically</ListItem>
                 <ListItem>Share layouts between related routes</ListItem>
                 <ListItem>Load data for specific sections of your UI</ListItem>
-                <ListItem>Maintain clean URLs that reflect your app structure</ListItem>
+                <ListItem>
+                  Maintain clean URLs that reflect your app structure
+                </ListItem>
               </ul>
             </FeatureItem>
 
             <FeatureItem
-              icon={<Globe className="h-8 w-8 text-primary" />}
+              icon={<Globe className="text-primary h-8 w-8" />}
               title="Dynamic Route Matching"
               description="Handle dynamic segments, optional parameters, and catch-all routes with ease."
             >
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="bg-muted p-3 rounded-md">
-                  <p className="font-mono text-sm mb-1">:userId</p>
-                  <p className="text-xs text-muted-foreground">Dynamic segments</p>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="bg-muted rounded-md p-3">
+                  <p className="mb-1 font-mono text-sm">:userId</p>
+                  <p className="text-muted-foreground text-xs">
+                    Dynamic segments
+                  </p>
                 </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <p className="font-mono text-sm mb-1">:category?</p>
-                  <p className="text-xs text-muted-foreground">Optional parameters</p>
+                <div className="bg-muted rounded-md p-3">
+                  <p className="mb-1 font-mono text-sm">:category?</p>
+                  <p className="text-muted-foreground text-xs">
+                    Optional parameters
+                  </p>
                 </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <p className="font-mono text-sm mb-1">*</p>
-                  <p className="text-xs text-muted-foreground">Catch-all routes</p>
+                <div className="bg-muted rounded-md p-3">
+                  <p className="mb-1 font-mono text-sm">*</p>
+                  <p className="text-muted-foreground text-xs">
+                    Catch-all routes
+                  </p>
                 </div>
-                <div className="bg-muted p-3 rounded-md">
-                  <p className="font-mono text-sm mb-1">?filter=active</p>
-                  <p className="text-xs text-muted-foreground">Search params</p>
+                <div className="bg-muted rounded-md p-3">
+                  <p className="mb-1 font-mono text-sm">?filter=active</p>
+                  <p className="text-muted-foreground text-xs">Search params</p>
                 </div>
               </div>
             </FeatureItem>
 
             <FeatureItem
-              icon={<BarChart className="h-8 w-8 text-primary" />}
+              icon={<BarChart className="text-primary h-8 w-8" />}
               title="Data Loading"
               description="Load data for your routes before they render, with built-in loading states and error handling."
             >
               <ul className="mt-4 space-y-2">
-                <ListItem>Parallel data loading for multiple components</ListItem>
+                <ListItem>
+                  Parallel data loading for multiple components
+                </ListItem>
                 <ListItem>Automatic loading indicators</ListItem>
                 <ListItem>Graceful error boundaries</ListItem>
                 <ListItem>Data revalidation strategies</ListItem>
@@ -96,11 +120,11 @@ export default [
             </FeatureItem>
 
             <FeatureItem
-              icon={<Shield className="h-8 w-8 text-primary" />}
+              icon={<Shield className="text-primary h-8 w-8" />}
               title="Authentication & Authorization"
               description="Protect routes with middleware that runs before your components render."
             >
-              <pre className="bg-muted p-4 rounded-md text-sm mt-4 overflow-x-auto">
+              <pre className="bg-muted mt-4 overflow-x-auto rounded-md p-4 text-sm">
                 {`// Auth middleware example
                   export const loader = async ({ request }) => {
                     const user = await getUser(request);
@@ -113,7 +137,7 @@ export default [
             </FeatureItem>
 
             <FeatureItem
-              icon={<Zap className="h-8 w-8 text-primary" />}
+              icon={<Zap className="text-primary h-8 w-8" />}
               title="Performance Optimizations"
               description="Automatically optimize your application with code splitting and prefetching."
             >
@@ -121,7 +145,9 @@ export default [
                 <ListItem>Automatic code-splitting by route</ListItem>
                 <ListItem>Prefetching for instant page transitions</ListItem>
                 <ListItem>Optimized bundle sizes</ListItem>
-                <ListItem>Deferred data loading for non-critical content</ListItem>
+                <ListItem>
+                  Deferred data loading for non-critical content
+                </ListItem>
               </ul>
             </FeatureItem>
           </div>
@@ -129,13 +155,14 @@ export default [
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 py-16 bg-muted/30">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-3xl font-bold mb-6">Ready to get started?</h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Try our demo or check out the documentation to see how React Router v7 can help you build better web applications.
+      <section className="bg-muted/30 px-4 py-16">
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="mb-6 text-3xl font-bold">Ready to get started?</h2>
+          <p className="text-muted-foreground mb-8 text-xl">
+            Try our demo or check out the documentation to see how React Router
+            v7 can help you build better web applications.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link to="/dashboard">
               <Button size="lg" className="gap-2">
                 Try the Demo <ArrowRight className="h-4 w-4" />
@@ -157,7 +184,7 @@ function FeatureItem({
   icon,
   title,
   description,
-  children
+  children,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -167,7 +194,7 @@ function FeatureItem({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <div className="bg-primary/10 p-3 rounded-lg">{icon}</div>
+        <div className="bg-primary/10 rounded-lg p-3">{icon}</div>
         <div>
           <h3 className="text-xl font-semibold">{title}</h3>
           <p className="text-muted-foreground">{description}</p>
@@ -181,7 +208,7 @@ function FeatureItem({
 function ListItem({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+      <Check className="text-primary mt-0.5 h-5 w-5 shrink-0" />
       <span>{children}</span>
     </li>
   );

@@ -7,7 +7,10 @@ import { Input } from "~/components/ui/input";
 export function meta() {
   return [
     { title: "FAQs - React Router v7 Demo" },
-    { name: "description", content: "Frequently asked questions about React Router v7" }
+    {
+      name: "description",
+      content: "Frequently asked questions about React Router v7",
+    },
   ];
 }
 
@@ -15,19 +18,26 @@ export default function FaqPage() {
   return (
     <LandingLayout>
       {/* Hero Section */}
-      <section className="px-4 py-20 bg-gradient-to-b from-muted/50 to-background">
+      <section className="from-muted/50 to-background bg-gradient-to-b px-4 py-20">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Frequently Asked Questions</h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Find answers to common questions about React Router v7 and how to use it in your projects.
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
+            Frequently Asked Questions
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-3xl text-xl">
+            Find answers to common questions about React Router v7 and how to
+            use it in your projects.
           </p>
 
           {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-muted-foreground" />
+          <div className="relative mx-auto max-w-2xl">
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <Search className="text-muted-foreground h-5 w-5" />
             </div>
-            <Input type="search" placeholder="Search for answers..." className="pl-10 pr-4 py-6 text-lg rounded-full" />
+            <Input
+              type="search"
+              placeholder="Search for answers..."
+              className="rounded-full py-6 pr-4 pl-10 text-lg"
+            />
           </div>
         </div>
       </section>
@@ -35,30 +45,47 @@ export default function FaqPage() {
       {/* Categories Section */}
       <section className="px-4 py-16">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             <CategoryCard
               title="Getting Started"
               description="Basic concepts and setup instructions"
-              items={["Installation", "Basic Setup", "Configuration", "First Route"]}
+              items={[
+                "Installation",
+                "Basic Setup",
+                "Configuration",
+                "First Route",
+              ]}
             />
             <CategoryCard
               title="Core Concepts"
               description="Understanding routes, loaders and actions"
-              items={["Defining Routes", "Nested Routes", "Data Loading", "Form Actions"]}
+              items={[
+                "Defining Routes",
+                "Nested Routes",
+                "Data Loading",
+                "Form Actions",
+              ]}
             />
             <CategoryCard
               title="Advanced Usage"
               description="Advanced techniques and patterns"
-              items={["Code Splitting", "Error Handling", "Authentication", "Lazy Loading"]}
+              items={[
+                "Code Splitting",
+                "Error Handling",
+                "Authentication",
+                "Lazy Loading",
+              ]}
             />
           </div>
         </div>
       </section>
 
       {/* FAQ Items Section */}
-      <section className="px-4 py-16 bg-muted/30">
+      <section className="bg-muted/30 px-4 py-16">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">Common Questions</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">
+            Common Questions
+          </h2>
 
           <div className="space-y-8">
             <FaqItem
@@ -112,12 +139,13 @@ export default function FaqPage() {
 
       {/* CTA Section */}
       <section className="px-4 py-16">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-3xl font-bold mb-6">Still have questions?</h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            If you couldn't find the answer you were looking for, reach out to our support team.
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="mb-6 text-3xl font-bold">Still have questions?</h2>
+          <p className="text-muted-foreground mb-8 text-xl">
+            If you couldn't find the answer you were looking for, reach out to
+            our support team.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link to="/contact">
               <Button size="lg" className="gap-2">
                 Contact Support <ArrowRight className="h-4 w-4" />
@@ -135,20 +163,28 @@ export default function FaqPage() {
   );
 }
 
-function CategoryCard({ title, description, items }: { title: string; description: string; items: string[] }) {
+function CategoryCard({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description: string;
+  items: string[];
+}) {
   return (
-    <div className="bg-card rounded-lg p-6 shadow-sm border">
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
+    <div className="bg-card rounded-lg border p-6 shadow-sm">
+      <h3 className="mb-2 text-xl font-bold">{title}</h3>
       <p className="text-muted-foreground mb-4">{description}</p>
       <ul className="space-y-2">
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+            <div className="bg-primary h-1.5 w-1.5 rounded-full"></div>
             <span>{item}</span>
           </li>
         ))}
       </ul>
-      <Button variant="link" className="mt-4 p-0 h-auto gap-1" asChild>
+      <Button variant="link" className="mt-4 h-auto gap-1 p-0" asChild>
         <Link to={`/docs/${title.toLowerCase().replace(/\s+/g, "-")}`}>
           View all <ArrowRight className="h-3 w-3" />
         </Link>
@@ -160,7 +196,7 @@ function CategoryCard({ title, description, items }: { title: string; descriptio
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
     <div className="border-b pb-6">
-      <h3 className="text-lg font-semibold mb-2">{question}</h3>
+      <h3 className="mb-2 text-lg font-semibold">{question}</h3>
       <p className="text-muted-foreground">{answer}</p>
     </div>
   );

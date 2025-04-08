@@ -206,20 +206,20 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Produtos</h1>
         </div>
         <div className="flex items-end gap-1">
           <AuthStatus />
-          <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-2 rounded-md">
+          <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-2 py-2">
             Novo Produto
           </button>
         </div>
       </div>
 
-      <div className="py-2 w-full">
+      <div className="w-full py-2">
         <DataTable config={tableConfig} />
       </div>
     </div>

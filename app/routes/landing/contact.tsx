@@ -10,7 +10,10 @@ import { Textarea } from "~/components/ui/textarea";
 export function meta() {
   return [
     { title: "Contact Us - React Router v7 Demo" },
-    { name: "description", content: "Get in touch with the React Router v7 team" }
+    {
+      name: "description",
+      content: "Get in touch with the React Router v7 team",
+    },
   ];
 }
 
@@ -18,12 +21,12 @@ export default function ContactPage() {
   return (
     <LandingLayout>
       {/* Hero Section */}
-      <section className="px-4 py-20 bg-gradient-to-b from-muted/50 to-background">
+      <section className="from-muted/50 to-background bg-gradient-to-b px-4 py-20">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Contact Us</h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Have a question or feedback? We'd love to hear from you. Fill out the form below and we'll get back to you as soon as
-            possible.
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl">Contact Us</h1>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-3xl text-xl">
+            Have a question or feedback? We'd love to hear from you. Fill out
+            the form below and we'll get back to you as soon as possible.
           </p>
         </div>
       </section>
@@ -31,14 +34,17 @@ export default function ContactPage() {
       {/* Contact Form Section */}
       <section className="px-4 py-16">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid gap-12 md:grid-cols-2">
             <div>
-              <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
+              <h2 className="mb-6 text-2xl font-bold">Get in Touch</h2>
               <form className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="first-name">First name</Label>
-                    <Input id="first-name" placeholder="Enter your first name" />
+                    <Input
+                      id="first-name"
+                      placeholder="Enter your first name"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="last-name">Last name</Label>
@@ -48,11 +54,17 @@ export default function ContactPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email address" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email address"
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">What are you contacting us about?</p>
+                  <p className="text-sm font-medium">
+                    What are you contacting us about?
+                  </p>
                   <RadioGroup defaultValue="general">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="general" id="general" />
@@ -75,7 +87,11 @@ export default function ContactPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" placeholder="Enter your message" className="min-h-32" />
+                  <Textarea
+                    id="message"
+                    placeholder="Enter your message"
+                    className="min-h-32"
+                  />
                 </div>
 
                 <Button type="submit" className="w-full sm:w-auto">
@@ -85,30 +101,36 @@ export default function ContactPage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
+              <h2 className="mb-6 text-2xl font-bold">Contact Information</h2>
               <div className="space-y-6">
                 <ContactInfo
-                  icon={<Mail className="h-6 w-6 text-primary" />}
+                  icon={<Mail className="text-primary h-6 w-6" />}
                   title="Email"
                   content={
-                    <a href="mailto:info@reactrouterv7.com" className="text-primary hover:underline">
+                    <a
+                      href="mailto:info@reactrouterv7.com"
+                      className="text-primary hover:underline"
+                    >
                       info@reactrouterv7.com
                     </a>
                   }
                 />
 
                 <ContactInfo
-                  icon={<Phone className="h-6 w-6 text-primary" />}
+                  icon={<Phone className="text-primary h-6 w-6" />}
                   title="Phone"
                   content={
-                    <a href="tel:+1234567890" className="text-primary hover:underline">
+                    <a
+                      href="tel:+1234567890"
+                      className="text-primary hover:underline"
+                    >
                       +1 (234) 567-890
                     </a>
                   }
                 />
 
                 <ContactInfo
-                  icon={<MapPin className="h-6 w-6 text-primary" />}
+                  icon={<MapPin className="text-primary h-6 w-6" />}
                   title="Office"
                   content={
                     <>
@@ -122,10 +144,15 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className="mt-8 p-6 bg-muted rounded-lg">
-                <h3 className="text-lg font-semibold mb-3">Office Hours</h3>
-                <p className="text-muted-foreground mb-2">Monday - Friday: 9AM - 5PM (PST)</p>
-                <p className="text-muted-foreground">We typically respond to inquiries within 24-48 hours during business days.</p>
+              <div className="bg-muted mt-8 rounded-lg p-6">
+                <h3 className="mb-3 text-lg font-semibold">Office Hours</h3>
+                <p className="text-muted-foreground mb-2">
+                  Monday - Friday: 9AM - 5PM (PST)
+                </p>
+                <p className="text-muted-foreground">
+                  We typically respond to inquiries within 24-48 hours during
+                  business days.
+                </p>
               </div>
             </div>
           </div>
@@ -133,9 +160,11 @@ export default function ContactPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="px-4 py-16 bg-muted/30">
+      <section className="bg-muted/30 px-4 py-16">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">Frequently Asked Questions</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">
+            Frequently Asked Questions
+          </h2>
 
           <div className="space-y-8">
             <FaqItem
@@ -162,13 +191,14 @@ export default function ContactPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 py-20 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-3xl font-bold mb-6">Ready to get started?</h2>
-          <p className="text-xl text-primary-foreground/90 mb-8">
-            Try React Router v7 today and see how it can improve your application's routing.
+      <section className="bg-primary text-primary-foreground px-4 py-20">
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="mb-6 text-3xl font-bold">Ready to get started?</h2>
+          <p className="text-primary-foreground/90 mb-8 text-xl">
+            Try React Router v7 today and see how it can improve your
+            application's routing.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link to="/dashboard">
               <Button size="lg" variant="secondary" className="gap-2">
                 Try the Demo <ArrowRight className="h-4 w-4" />
@@ -178,7 +208,7 @@ export default function ContactPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10"
+                className="border-primary-foreground/20 hover:bg-primary-foreground/10 bg-transparent"
               >
                 Read the Docs
               </Button>
@@ -190,12 +220,20 @@ export default function ContactPage() {
   );
 }
 
-function ContactInfo({ icon, title, content }: { icon: React.ReactNode; title: string; content: React.ReactNode }) {
+function ContactInfo({
+  icon,
+  title,
+  content,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  content: React.ReactNode;
+}) {
   return (
     <div className="flex gap-4">
       <div className="mt-1">{icon}</div>
       <div>
-        <h3 className="font-medium mb-1">{title}</h3>
+        <h3 className="mb-1 font-medium">{title}</h3>
         <div className="text-muted-foreground">{content}</div>
       </div>
     </div>
@@ -205,7 +243,7 @@ function ContactInfo({ icon, title, content }: { icon: React.ReactNode; title: s
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
     <div className="border-b pb-6">
-      <h3 className="text-lg font-semibold mb-2">{question}</h3>
+      <h3 className="mb-2 text-lg font-semibold">{question}</h3>
       <p className="text-muted-foreground">{answer}</p>
     </div>
   );

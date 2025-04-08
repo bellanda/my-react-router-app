@@ -10,7 +10,12 @@ interface FilterPanelProps {
   columns: any[];
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onRemoveFilter, onClearAllFilters, columns }) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({
+  filters,
+  onRemoveFilter,
+  onClearAllFilters,
+  columns,
+}) => {
   if (filters.length === 0) return null;
 
   // Formatar o valor do filtro para exibição
@@ -56,20 +61,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onRemoveFilter, onCl
   };
 
   return (
-    <div className="p-2 border-b bg-muted/30">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="bg-muted/30 border-b p-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium">Filtros ativos:</span>
         {filters.map((filter, index) => {
           const column = columns.find((c) => c.accessor === filter.id);
           const columnName = column?.header || filter.id;
 
           return (
-            <div key={index} className="bg-muted/70 px-2 py-1 rounded-md text-sm flex items-center gap-1">
+            <div
+              key={index}
+              className="bg-muted/70 flex items-center gap-1 rounded-md px-2 py-1 text-sm"
+            >
               <span className="font-medium">{columnName}</span>
-              <span className="text-muted-foreground">{formatOperator(filter.operator)}</span>
+              <span className="text-muted-foreground">
+                {formatOperator(filter.operator)}
+              </span>
               <span>{formatFilterValue(filter.value)}</span>
               <button
-                className="ml-1 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted ml-1 rounded-full p-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemoveFilter(filter.id, filter.value);
@@ -82,7 +92,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onRemoveFilter, onCl
           );
         })}
         <div className="ml-auto">
-          <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="text-primary hover:text-primary/90">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearAllFilters}
+            className="text-primary hover:text-primary/90"
+          >
             Limpar filtros
           </Button>
         </div>

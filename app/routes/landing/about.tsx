@@ -1,4 +1,11 @@
-import { ArrowRight, Building2, Calendar, Github, Linkedin, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Calendar,
+  Github,
+  Linkedin,
+  Users,
+} from "lucide-react";
 import { Link } from "react-router";
 import { LandingLayout } from "~/components/layout";
 import { Button } from "~/components/ui/button";
@@ -6,7 +13,10 @@ import { Button } from "~/components/ui/button";
 export function meta() {
   return [
     { title: "About Us - React Router v7 Demo" },
-    { name: "description", content: "Learn about the team behind React Router v7 Demo" }
+    {
+      name: "description",
+      content: "Learn about the team behind React Router v7 Demo",
+    },
   ];
 }
 
@@ -14,12 +24,13 @@ export default function AboutPage() {
   return (
     <LandingLayout>
       {/* Hero Section */}
-      <section className="px-4 py-20 bg-gradient-to-b from-muted/50 to-background">
+      <section className="from-muted/50 to-background bg-gradient-to-b px-4 py-20">
         <div className="container mx-auto">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">About Us</h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              We're a team of passionate developers building tools to make web development easier, faster, and more enjoyable.
+            <h1 className="mb-6 text-4xl font-bold md:text-5xl">About Us</h1>
+            <p className="text-muted-foreground mb-8 text-xl">
+              We're a team of passionate developers building tools to make web
+              development easier, faster, and more enjoyable.
             </p>
           </div>
         </div>
@@ -28,43 +39,53 @@ export default function AboutPage() {
       {/* Mission Section */}
       <section className="px-4 py-16">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
-              <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
+              <h2 className="mb-6 text-3xl font-bold">Our Mission</h2>
               <p className="text-muted-foreground mb-4">
-                We believe that routing shouldn't be complicated. Our mission is to provide the most intuitive and powerful routing
-                solution for React applications, helping developers build better user experiences with less effort.
+                We believe that routing shouldn't be complicated. Our mission is
+                to provide the most intuitive and powerful routing solution for
+                React applications, helping developers build better user
+                experiences with less effort.
               </p>
               <p className="text-muted-foreground mb-4">
-                React Router v7 is designed to be approachable for beginners yet powerful enough for the most demanding
-                applications. We're committed to maintaining a balance between simplicity and flexibility, ensuring that developers
-                of all skill levels can leverage the full power of routing in their applications.
+                React Router v7 is designed to be approachable for beginners yet
+                powerful enough for the most demanding applications. We're
+                committed to maintaining a balance between simplicity and
+                flexibility, ensuring that developers of all skill levels can
+                leverage the full power of routing in their applications.
               </p>
               <p className="text-muted-foreground">
-                With a focus on performance, developer experience, and best practices, we're constantly pushing the boundaries of
-                what's possible with client-side routing.
+                With a focus on performance, developer experience, and best
+                practices, we're constantly pushing the boundaries of what's
+                possible with client-side routing.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted p-6 rounded-lg">
-                <Users className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">For Developers</h3>
+              <div className="bg-muted rounded-lg p-6">
+                <Users className="text-primary mb-4 h-10 w-10" />
+                <h3 className="mb-2 text-xl font-semibold">For Developers</h3>
                 <p className="text-muted-foreground">
-                  Building tools that make developers more productive and help them create better applications.
+                  Building tools that make developers more productive and help
+                  them create better applications.
                 </p>
               </div>
-              <div className="bg-muted p-6 rounded-lg">
-                <Building2 className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Open Source</h3>
+              <div className="bg-muted rounded-lg p-6">
+                <Building2 className="text-primary mb-4 h-10 w-10" />
+                <h3 className="mb-2 text-xl font-semibold">Open Source</h3>
                 <p className="text-muted-foreground">
-                  Committed to the open source community and collaborating with developers worldwide.
+                  Committed to the open source community and collaborating with
+                  developers worldwide.
                 </p>
               </div>
-              <div className="bg-muted p-6 rounded-lg col-span-2">
-                <Calendar className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Continuous Improvement</h3>
+              <div className="bg-muted col-span-2 rounded-lg p-6">
+                <Calendar className="text-primary mb-4 h-10 w-10" />
+                <h3 className="mb-2 text-xl font-semibold">
+                  Continuous Improvement
+                </h3>
                 <p className="text-muted-foreground">
-                  Always learning, iterating, and improving our tools based on user feedback and emerging best practices.
+                  Always learning, iterating, and improving our tools based on
+                  user feedback and emerging best practices.
                 </p>
               </div>
             </div>
@@ -73,11 +94,13 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="px-4 py-16 bg-muted/30">
+      <section className="bg-muted/30 px-4 py-16">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold mb-12 text-center">Meet Our Team</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">
+            Meet Our Team
+          </h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid gap-8 md:grid-cols-3">
             <TeamMember
               name="Gustavo C. Bellanda"
               role="AI Engineer"
@@ -87,8 +110,22 @@ export default function AboutPage() {
               linkedin="https://www.linkedin.com/in/gustavo-casadei-bellanda-410a351bb/"
             />
 
-            <TeamMember name="" role="" bio="" image="" github="#" linkedin="#" />
-            <TeamMember name="" role="" bio="" image="" github="#" linkedin="#" />
+            <TeamMember
+              name=""
+              role=""
+              bio=""
+              image=""
+              github="#"
+              linkedin="#"
+            />
+            <TeamMember
+              name=""
+              role=""
+              bio=""
+              image=""
+              github="#"
+              linkedin="#"
+            />
           </div>
         </div>
       </section>
@@ -96,7 +133,7 @@ export default function AboutPage() {
       {/* Values Section */}
       <section className="px-4 py-16">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold mb-12 text-center">Our Values</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold">Our Values</h2>
 
           <div className="space-y-12">
             <ValueItem
@@ -124,12 +161,13 @@ export default function AboutPage() {
 
       {/* CTA Section */}
       <section className="px-4 py-20">
-        <div className="container mx-auto text-center max-w-3xl">
-          <h2 className="text-3xl font-bold mb-6">Join Our Community</h2>
-          <p className="text-xl mb-8">
-            Become part of our growing community of developers building amazing applications with React Router v7.
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="mb-6 text-3xl font-bold">Join Our Community</h2>
+          <p className="mb-8 text-xl">
+            Become part of our growing community of developers building amazing
+            applications with React Router v7.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link to="/auth/register">
               <Button size="lg" className="gap-2">
                 Sign Up Now <ArrowRight className="h-4 w-4" />
@@ -139,7 +177,7 @@ export default function AboutPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10"
+                className="border-primary-foreground/20 hover:bg-primary-foreground/10 bg-transparent"
               >
                 Get in Touch
               </Button>
@@ -158,7 +196,7 @@ function TeamMember({
   image,
   github,
   twitter,
-  linkedin
+  linkedin,
 }: {
   name: string;
   role: string;
@@ -169,20 +207,28 @@ function TeamMember({
   linkedin?: string;
 }) {
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <img src={image} alt={name} className="w-full h-64 object-cover" />
+    <div className="bg-card overflow-hidden rounded-lg border">
+      <img src={image} alt={name} className="h-64 w-full object-cover" />
       <div className="p-6">
-        <h3 className="text-xl font-semibold mb-1">{name}</h3>
-        <p className="text-primary font-medium mb-3">{role}</p>
+        <h3 className="mb-1 text-xl font-semibold">{name}</h3>
+        <p className="text-primary mb-3 font-medium">{role}</p>
         <p className="text-muted-foreground mb-4">{bio}</p>
         <div className="flex gap-3">
           {github && (
-            <a href={github} className="text-muted-foreground hover:text-foreground" target="_blank">
+            <a
+              href={github}
+              className="text-muted-foreground hover:text-foreground"
+              target="_blank"
+            >
               <Github className="h-5 w-5" />
             </a>
           )}
           {linkedin && (
-            <a href={linkedin} className="text-muted-foreground hover:text-foreground" target="_blank">
+            <a
+              href={linkedin}
+              className="text-muted-foreground hover:text-foreground"
+              target="_blank"
+            >
               <Linkedin className="h-5 w-5" />
             </a>
           )}
@@ -192,12 +238,18 @@ function TeamMember({
   );
 }
 
-function ValueItem({ title, description }: { title: string; description: string }) {
+function ValueItem({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <div className="flex gap-6">
-      <div className="h-16 w-1 bg-primary rounded-full"></div>
+      <div className="bg-primary h-16 w-1 rounded-full"></div>
       <div>
-        <h3 className="text-xl font-semibold mb-3">{title}</h3>
+        <h3 className="mb-3 text-xl font-semibold">{title}</h3>
         <p className="text-muted-foreground">{description}</p>
       </div>
     </div>
