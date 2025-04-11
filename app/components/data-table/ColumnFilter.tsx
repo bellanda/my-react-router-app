@@ -1,7 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
-import { CalendarIcon, ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "~/components/ui/button";
@@ -29,14 +28,13 @@ import type {
   FilterOperator,
   UniqueValueOption,
 } from "~/lib/types/data-table";
-import { cn } from "~/lib/utils";
 
 // Operadores de filtro por tipo de coluna
 const FILTER_OPERATORS: Record<string, FilterOperator[]> = {
-  text: ["contains", "exact", "startswith", "endswith", "isnull"],
-  number: ["exact", "lt", "lte", "gt", "gte", "range", "isnull"],
-  date: ["exact", "lt", "lte", "gt", "gte", "range", "isnull"],
-  boolean: ["exact", "isnull"],
+  text: ["contains", "exact", "startswith", "endswith", "isnull", "in"],
+  number: ["exact", "lt", "lte", "gt", "gte", "range", "isnull", "in"],
+  date: ["exact", "lt", "lte", "gt", "gte", "range", "isnull", "in"],
+  boolean: ["exact", "isnull", "in"],
 };
 
 // Rótulos amigáveis para operadores
@@ -100,6 +98,16 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
     []
   );
 
+  // Referência para o input
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // Foco automático no input quando componente é montado
+  React.useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   // Carregar valores únicos ao montar o componente
   React.useEffect(() => {
     const loadUniqueValues = async () => {
@@ -130,7 +138,18 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
     let value;
     if (operator === "range") {
       if (column.type === "date") {
-        value = [dateRange?.from, dateRange?.to];
+        if (dateRange?.from && dateRange?.to) {
+          // Enviar apenas a parte da data como strings no formato YYYY-MM-DD
+          const fromDate = new Date(dateRange.from);
+          const toDate = new Date(dateRange.to);
+
+          value = [
+            fromDate.toISOString().split("T")[0],
+            toDate.toISOString().split("T")[0],
+          ];
+        } else {
+          value = null;
+        }
       } else {
         value = rangeValues;
       }
@@ -138,6 +157,10 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
       value = true;
     } else if (column.type === "text" && selectedUniqueValues.length > 0) {
       value = selectedUniqueValues;
+    } else if (column.type === "date" && filterValue) {
+      // Enviar apenas a parte da data como string no formato YYYY-MM-DD
+      const date = new Date(filterValue);
+      value = date.toISOString().split("T")[0];
     } else {
       value = filterValue;
     }
@@ -151,77 +174,47 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
     onClose();
   };
 
+  // Lidar com a tecla Enter para aplicar o filtro
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      applyFilter();
+    }
+  };
+
   // Componente DatePicker para data única
   const DatePickerSingle = () => {
     return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !filterValue && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {filterValue ? (
-              format(filterValue, "PPP")
-            ) : (
-              <span>Selecione uma data</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={filterValue}
-            onSelect={setFilterValue}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
+      <div className="space-y-2">
+        <Calendar
+          mode="single"
+          selected={filterValue}
+          onSelect={setFilterValue}
+          initialFocus
+          className="rounded-md border"
+        />
+      </div>
     );
   };
 
   // Componente DatePicker para intervalo de datas
   const DatePickerRange = () => {
     return (
-      <div className="grid gap-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !dateRange && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "PPP")} -{" "}
-                    {format(dateRange.to, "PPP")}
-                  </>
-                ) : (
-                  format(dateRange.from, "PPP")
-                )
-              ) : (
-                <span>Selecione o intervalo de datas</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={setDateRange}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
+      <div className="flex flex-col justify-center space-y-2">
+        <Calendar
+          initialFocus
+          mode="range"
+          defaultMonth={dateRange?.from}
+          selected={dateRange}
+          onSelect={setDateRange}
+          numberOfMonths={2}
+          className="mx-auto rounded-md border"
+        />
+        {dateRange?.from && dateRange?.to && (
+          <div className="text-center text-sm">
+            {dateRange.from.toISOString().split("T")[0]} até{" "}
+            {dateRange.to.toISOString().split("T")[0]}
+          </div>
+        )}
       </div>
     );
   };
@@ -311,6 +304,8 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
               }
               placeholder="Digite o valor..."
               className="w-full"
+              ref={inputRef}
+              onKeyDown={handleKeyDown}
             />
           );
         }
@@ -327,6 +322,8 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
                 }
                 placeholder="De"
                 className="w-full"
+                ref={inputRef}
+                onKeyDown={handleKeyDown}
               />
               <span>-</span>
               <Input
@@ -337,6 +334,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
                 }
                 placeholder="Até"
                 className="w-full"
+                onKeyDown={handleKeyDown}
               />
             </div>
           );
@@ -351,6 +349,8 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
             }
             placeholder="Digite o valor..."
             className="w-full"
+            ref={inputRef}
+            onKeyDown={handleKeyDown}
           />
         );
 

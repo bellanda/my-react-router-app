@@ -1,6 +1,9 @@
+import { format } from "date-fns";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Filter } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { Button } from "~/components/ui/button";
+import { Calendar } from "~/components/ui/calendar";
 import { fetchUniqueValues } from "~/lib/services/api";
 import type {
   ColumnDefinition,
@@ -21,7 +24,7 @@ interface DataTableHeaderProps {
   style?: React.CSSProperties;
 }
 
-const DataTableHeader: React.FC<DataTableHeaderProps> = ({
+const DataTableHeader = ({
   column,
   sorting,
   filters,
@@ -30,7 +33,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   onRemoveFilter,
   endpoint,
   style,
-}) => {
+}: DataTableHeaderProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuReady, setMenuReady] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +50,8 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const [filterValue, setFilterValue] = useState("");
   const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -286,26 +291,64 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
     }
   }, [showFilterOptions]);
 
-  // Aplicar filtro do diálogo
-  const applyDialogFilter = () => {
-    if (!dialogFilterValue) return;
-
-    onFilter({
-      id: column.accessor,
-      operator: selectedFilterOperator,
-      value: dialogFilterValue,
-    });
-
-    setDialogOpen(false);
-    setDialogFilterValue("");
-  };
-
   // Função para abrir o diálogo de filtro ao clicar em uma opção
   const openFilterDialog = (operator: FilterOperator) => {
     setSelectedFilterOperator(operator);
     setDialogFilterValue("");
+    setSelectedDate(undefined);
+    setDateRange(undefined);
     setDialogOpen(true);
     setShowFilterOptions(false);
+  };
+
+  // Aplicar filtro do diálogo
+  const applyDialogFilter = () => {
+    // Para filtros de data
+    if (column.type === "date") {
+      let value;
+
+      if (selectedFilterOperator === "range" && dateRange) {
+        if (dateRange.from && dateRange.to) {
+          // Extrair apenas a parte da data (sem tempo)
+          const fromDate = new Date(dateRange.from);
+          fromDate.setHours(0, 0, 0, 0);
+
+          const toDate = new Date(dateRange.to);
+          toDate.setHours(23, 59, 59, 999); // Fim do dia
+
+          onFilter({
+            id: column.accessor,
+            operator: selectedFilterOperator,
+            value: [
+              fromDate.toISOString().split("T")[0],
+              toDate.toISOString().split("T")[0],
+            ],
+          });
+        }
+      } else if (selectedDate) {
+        // Extrair apenas a parte da data (sem tempo) no formato ISO
+        const date = new Date(selectedDate);
+
+        onFilter({
+          id: column.accessor,
+          operator: selectedFilterOperator,
+          value: date.toISOString().split("T")[0], // Formato YYYY-MM-DD
+        });
+      }
+    }
+    // Para outros tipos de filtro
+    else if (dialogFilterValue) {
+      onFilter({
+        id: column.accessor,
+        operator: selectedFilterOperator,
+        value: dialogFilterValue,
+      });
+    }
+
+    setDialogOpen(false);
+    setDialogFilterValue("");
+    setSelectedDate(undefined);
+    setDateRange(undefined);
   };
 
   // Aplicar filtro para um valor específico
@@ -398,12 +441,14 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
           { label: "Maior ou igual a", value: "gte" as FilterOperator },
           { label: "Menor que", value: "lt" as FilterOperator },
           { label: "Menor ou igual a", value: "lte" as FilterOperator },
+          { label: "Entre", value: "range" as FilterOperator },
         ];
       case "date":
         return [
           { label: "Igual a", value: "date" as FilterOperator },
           { label: "Depois de", value: "gt" as FilterOperator },
           { label: "Antes de", value: "lt" as FilterOperator },
+          { label: "Entre", value: "range" as FilterOperator },
         ];
       case "boolean":
         return [
@@ -728,17 +773,66 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = ({
                 {/* Diálogo para filtros personalizados */}
                 {dialogOpen && (
                   <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="bg-background w-[300px] max-w-[90vw] rounded-md border p-4 shadow-lg">
+                    <div
+                      className={`bg-background ${selectedFilterOperator === "range" && column.type === "date" ? "w-auto min-w-[500px]" : "w-[300px]"} max-w-[90vw] rounded-md border p-4 shadow-lg`}
+                    >
                       <h3 className="mb-3 text-sm font-medium">
                         Filtro personalizado
                       </h3>
-                      <input
-                        type="text"
-                        className="bg-background mb-3 w-full rounded border p-2 text-sm"
-                        placeholder="Digite o valor..."
-                        value={dialogFilterValue}
-                        onChange={(e) => setDialogFilterValue(e.target.value)}
-                      />
+
+                      {column.type === "date" ? (
+                        <div className="mb-3">
+                          {selectedFilterOperator === "range" ? (
+                            <div className="space-y-2">
+                              <Calendar
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={2}
+                                className="mx-auto rounded-md border"
+                              />
+                              {dateRange?.from && dateRange?.to && (
+                                <div className="text-center text-sm">
+                                  {format(dateRange.from, "PPP")} até{" "}
+                                  {format(dateRange.to, "PPP")}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                initialFocus
+                                className="rounded-md border"
+                              />
+                              {selectedDate && (
+                                <div className="text-center text-sm">
+                                  {format(selectedDate, "PPP")}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <input
+                          type={column.type === "number" ? "number" : "text"}
+                          className="bg-background mb-3 w-full rounded border p-2 text-sm"
+                          placeholder="Digite o valor..."
+                          value={dialogFilterValue}
+                          onChange={(e) => setDialogFilterValue(e.target.value)}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              applyDialogFilter();
+                            }
+                          }}
+                        />
+                      )}
+
                       <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"

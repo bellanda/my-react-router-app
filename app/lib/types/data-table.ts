@@ -12,6 +12,7 @@ export type FilterOperator =
   | "range"
   | "date"
   | "isnull"
+  | "in"
   | "remove";
 
 export interface ColumnDefinition {

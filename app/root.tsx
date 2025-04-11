@@ -1,5 +1,4 @@
-import { ptBR } from "date-fns/locale";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -9,7 +8,6 @@ import {
   ScrollRestoration,
 } from "react-router";
 import "~/app.css";
-import { Calendar } from "~/components/ui/calendar";
 import { Toaster } from "~/components/ui/sonner";
 import { useAuth } from "~/hooks/useAuth";
 import { ThemeProvider } from "~/lib/theme-provider";
@@ -29,7 +27,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
   return (
     <html lang="en" className="antialiased">
       <head>
@@ -57,13 +54,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body className="bg-background min-h-screen font-sans antialiased">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          locale={ptBR}
-          className="mx-auto"
-        />
         <ThemeProvider defaultTheme="system" storageKey="react-router-ui-theme">
           {children}
           <Toaster />
