@@ -204,8 +204,15 @@ export const convertFiltersToDjangoQuery = (
       filtersForId.length > 1 &&
       !filtersForId.some((f) => f.operator === "range")
     ) {
-      // Construir o parâmetro com __in
-      const paramName = `${id}__in`;
+      // Verificar se estamos lidando com um campo de data pelo formato do valor
+      const isDateField = filtersForId.some(
+        (f) =>
+          typeof f.value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f.value)
+      );
+
+      // Construir o parâmetro com __in ou __date__in para datas
+      const paramName = isDateField ? `${id}__date__in` : `${id}__in`;
+
       // Juntar todos os valores como uma string separada por vírgulas
       queryParams[paramName] = filtersForId
         .map((f) => String(f.value))
@@ -215,8 +222,33 @@ export const convertFiltersToDjangoQuery = (
       filtersForId.forEach((filter) => {
         const { id, operator, value } = filter;
 
-        // Montar o parâmetro de filtro conforme o padrão Django: field__operator=value
-        const paramName = operator === "exact" ? id : `${id}__${operator}`;
+        // Montar o parâmetro de filtro conforme o padrão Django
+        let paramName;
+
+        // Verificar se é um valor de data pelo formato
+        const isDateValue =
+          (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) ||
+          (Array.isArray(value) &&
+            value.every(
+              (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)
+            ));
+
+        if (isDateValue) {
+          // Tratamento específico para filtros de data
+          if (operator === "range") {
+            paramName = `${id}__date__range`;
+          } else if (operator === "date") {
+            paramName = `${id}__date`;
+          } else if (operator === "exact") {
+            paramName = `${id}__date`;
+          } else {
+            // Para outros operadores (gt, lt, etc.) adicionar __date ao id
+            paramName = `${id}__date__${operator}`;
+          }
+        } else {
+          // Para valores não-data, usar formatação padrão
+          paramName = operator === "exact" ? id : `${id}__${operator}`;
+        }
 
         // Tratar diferentes tipos de valores
         if (operator === "range" && Array.isArray(value)) {
@@ -686,12 +718,43 @@ export const fetchUniqueValues = async (
 
     if (DEBUG_API) console.log("Valores únicos da API:", data);
 
+    // Determinar se estamos lidando com uma coluna de data pelo formato dos valores
+    const isDateColumn =
+      Array.isArray(data) &&
+      data.length > 0 &&
+      typeof data[0] === "string" &&
+      /^\d{4}-\d{2}-\d{2}/.test(data[0]);
+
     // Formatar a resposta
-    return data.map((value: any) => ({
-      value,
-      label: value !== null && value !== undefined ? String(value) : "(Vazio)",
-      count: 1, // A API não retorna contagem, então usamos 1 como padrão
-    }));
+    return data.map((value: any) => {
+      if (value === null || value === undefined) {
+        return {
+          value,
+          label: "(Vazio)",
+          count: 1,
+        };
+      }
+
+      // Se for uma coluna de data, formatar o label adequadamente
+      if (
+        isDateColumn &&
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2}/.test(value)
+      ) {
+        const dateObj = new Date(value);
+        return {
+          value, // Manter o valor original para o filtro
+          label: dateObj.toLocaleDateString("pt-BR"), // Formatar como DD/MM/YYYY
+          count: 1,
+        };
+      }
+
+      return {
+        value,
+        label: String(value),
+        count: 1, // A API não retorna contagem, então usamos 1 como padrão
+      };
+    });
   } catch (error) {
     console.error("Erro ao buscar valores únicos:", error);
     throw error; // Propagar o erro para ser tratado pelo componente

@@ -743,7 +743,11 @@ const DataTableHeader = ({
                             )}
                           </div>
                           <span className="flex-1 truncate">
-                            {item.label || String(item.value)}
+                            {column.type === "date" &&
+                            typeof item.value === "string" &&
+                            /^\d{4}-\d{2}-\d{2}$/.test(item.value)
+                              ? format(new Date(item.value), "dd/MM/yyyy")
+                              : item.label || String(item.value)}
                             {item.count > 1 && (
                               <span className="text-muted-foreground ml-1">
                                 ({item.count})
@@ -760,12 +764,12 @@ const DataTableHeader = ({
                 {hasActiveFilter && (
                   <div className="mt-2">
                     <Button
-                      variant="ghost"
+                      variant="destructive"
                       size="sm"
-                      className="text-destructive w-full justify-start text-xs"
+                      className="w-full justify-center text-xs"
                       onClick={removeFilter}
                     >
-                      Remover filtros para {column.header}
+                      Remover filtros
                     </Button>
                   </div>
                 )}
@@ -795,8 +799,8 @@ const DataTableHeader = ({
                               />
                               {dateRange?.from && dateRange?.to && (
                                 <div className="text-center text-sm">
-                                  {format(dateRange.from, "PPP")} até{" "}
-                                  {format(dateRange.to, "PPP")}
+                                  {format(dateRange.from, "dd/MM/yyyy")} até{" "}
+                                  {format(dateRange.to, "dd/MM/yyyy")}
                                 </div>
                               )}
                             </div>
@@ -811,7 +815,7 @@ const DataTableHeader = ({
                               />
                               {selectedDate && (
                                 <div className="text-center text-sm">
-                                  {format(selectedDate, "PPP")}
+                                  {format(selectedDate, "dd/MM/yyyy")}
                                 </div>
                               )}
                             </div>
