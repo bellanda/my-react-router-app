@@ -199,10 +199,17 @@ export const convertFiltersToDjangoQuery = (
 
   // Processar cada grupo de filtros
   Object.entries(filterGroups).forEach(([id, filtersForId]) => {
-    // Se temos múltiplos valores e não são filtros range, usar __in
+    // Verificar se estamos lidando com operadores de comparação (gt, lt, etc.)
+    const hasComparisonOperators = filtersForId.some((f) =>
+      ["gt", "lt", "gte", "lte"].includes(f.operator)
+    );
+
+    // Se temos múltiplos valores com MESMO operador e não são comparação ou range, usar __in
     if (
       filtersForId.length > 1 &&
-      !filtersForId.some((f) => f.operator === "range")
+      !hasComparisonOperators &&
+      !filtersForId.some((f) => f.operator === "range") &&
+      new Set(filtersForId.map((f) => f.operator)).size === 1 // todos operadores são iguais
     ) {
       // Verificar se estamos lidando com um campo de data pelo formato do valor
       const isDateField = filtersForId.some(
@@ -725,6 +732,13 @@ export const fetchUniqueValues = async (
       typeof data[0] === "string" &&
       /^\d{4}-\d{2}-\d{2}/.test(data[0]);
 
+    // Verificar se estamos lidando com valores booleanos
+    const isBooleanColumn =
+      Array.isArray(data) &&
+      data.length > 0 &&
+      (data.every((v) => v === true || v === false) ||
+        data.every((v) => v === "true" || v === "false"));
+
     // Formatar a resposta
     return data.map((value: any) => {
       if (value === null || value === undefined) {
@@ -745,6 +759,17 @@ export const fetchUniqueValues = async (
         return {
           value, // Manter o valor original para o filtro
           label: dateObj.toLocaleDateString("pt-BR"), // Formatar como DD/MM/YYYY
+          count: 1,
+        };
+      }
+
+      // Formatar valores booleanos como "Sim" e "Não"
+      if (isBooleanColumn) {
+        const boolValue =
+          typeof value === "string" ? value === "true" : Boolean(value);
+        return {
+          value, // Manter o valor original para o filtro
+          label: boolValue ? "Sim" : "Não",
           count: 1,
         };
       }

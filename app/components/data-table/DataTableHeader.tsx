@@ -46,6 +46,7 @@ const DataTableHeader = ({
   const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogFilterValue, setDialogFilterValue] = useState("");
+  const [rangeValues, setRangeValues] = useState<[string, string]>(["", ""]);
   const [selectedValues, setSelectedValues] = useState<any[]>([]);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const [filterValue, setFilterValue] = useState("");
@@ -292,9 +293,26 @@ const DataTableHeader = ({
   }, [showFilterOptions]);
 
   // Função para abrir o diálogo de filtro ao clicar em uma opção
-  const openFilterDialog = (operator: FilterOperator) => {
+  const openFilterDialog = (operator: FilterOperator, index?: number) => {
+    // Para campos booleanos, aplicar filtro diretamente sem abrir diálogo
+    if (column.type === "boolean") {
+      // O índice da opção determina se é filtro para verdadeiro (0) ou falso (1)
+      const isTrueFilter = index === 0;
+
+      onFilter({
+        id: column.accessor,
+        operator: "exact",
+        value: isTrueFilter, // true para "É verdadeiro", false para "É falso"
+      });
+
+      setShowFilterOptions(false);
+      return;
+    }
+
+    // Para outros tipos de coluna, abrir diálogo normalmente
     setSelectedFilterOperator(operator);
     setDialogFilterValue("");
+    setRangeValues(["", ""]);
     setSelectedDate(undefined);
     setDateRange(undefined);
     setDialogOpen(true);
@@ -336,6 +354,17 @@ const DataTableHeader = ({
         });
       }
     }
+    // Para filtros de range numérico
+    else if (column.type === "number" && selectedFilterOperator === "range") {
+      // Verificar se ambos os valores do intervalo foram fornecidos
+      if (rangeValues[0] && rangeValues[1]) {
+        onFilter({
+          id: column.accessor,
+          operator: selectedFilterOperator,
+          value: [Number(rangeValues[0]), Number(rangeValues[1])],
+        });
+      }
+    }
     // Para outros tipos de filtro
     else if (dialogFilterValue) {
       onFilter({
@@ -347,6 +376,7 @@ const DataTableHeader = ({
 
     setDialogOpen(false);
     setDialogFilterValue("");
+    setRangeValues(["", ""]);
     setSelectedDate(undefined);
     setDateRange(undefined);
   };
@@ -686,7 +716,9 @@ const DataTableHeader = ({
                             <div
                               key={index}
                               className="hover:bg-muted cursor-pointer px-2 py-1.5 text-xs"
-                              onClick={() => openFilterDialog(option.value)}
+                              onClick={() =>
+                                openFilterDialog(option.value, index)
+                              }
                             >
                               {option.label}
                             </div>
@@ -747,7 +779,12 @@ const DataTableHeader = ({
                             typeof item.value === "string" &&
                             /^\d{4}-\d{2}-\d{2}$/.test(item.value)
                               ? format(new Date(item.value), "dd/MM/yyyy")
-                              : item.label || String(item.value)}
+                              : column.type === "boolean" &&
+                                  (item.value === true || item.value === false)
+                                ? item.value
+                                  ? "Sim"
+                                  : "Não"
+                                : item.label || String(item.value)}
                             {item.count > 1 && (
                               <span className="text-muted-foreground ml-1">
                                 ({item.count})
@@ -822,19 +859,67 @@ const DataTableHeader = ({
                           )}
                         </div>
                       ) : (
-                        <input
-                          type={column.type === "number" ? "number" : "text"}
-                          className="bg-background mb-3 w-full rounded border p-2 text-sm"
-                          placeholder="Digite o valor..."
-                          value={dialogFilterValue}
-                          onChange={(e) => setDialogFilterValue(e.target.value)}
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              applyDialogFilter();
-                            }
-                          }}
-                        />
+                        <>
+                          {column.type === "number" &&
+                          selectedFilterOperator === "range" ? (
+                            <div className="mb-3 flex items-center space-x-2">
+                              <input
+                                type="number"
+                                className="bg-background w-full rounded border p-2 text-sm"
+                                placeholder="Valor mínimo"
+                                value={rangeValues[0]}
+                                onChange={(e) =>
+                                  setRangeValues([
+                                    e.target.value,
+                                    rangeValues[1],
+                                  ])
+                                }
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    applyDialogFilter();
+                                  }
+                                }}
+                              />
+                              <span>até</span>
+                              <input
+                                type="number"
+                                className="bg-background w-full rounded border p-2 text-sm"
+                                placeholder="Valor máximo"
+                                value={rangeValues[1]}
+                                onChange={(e) =>
+                                  setRangeValues([
+                                    rangeValues[0],
+                                    e.target.value,
+                                  ])
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    applyDialogFilter();
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <input
+                              type={
+                                column.type === "number" ? "number" : "text"
+                              }
+                              className="bg-background mb-3 w-full rounded border p-2 text-sm"
+                              placeholder="Digite o valor..."
+                              value={dialogFilterValue}
+                              onChange={(e) =>
+                                setDialogFilterValue(e.target.value)
+                              }
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  applyDialogFilter();
+                                }
+                              }}
+                            />
+                          )}
+                        </>
                       )}
 
                       <div className="flex justify-end space-x-2">
