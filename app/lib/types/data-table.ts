@@ -25,6 +25,8 @@ export interface ColumnDefinition {
   formatFn?: (value: any) => any;
   width?: string;
   displayAccessor?: string;
+  renderCell?: (row: any) => React.ReactNode;
+  virtual?: boolean;
 }
 
 export interface ApiEndpoint {

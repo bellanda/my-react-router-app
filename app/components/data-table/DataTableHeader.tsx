@@ -75,7 +75,8 @@ const DataTableHeader = ({
 
   // Ícone de ordenação
   const renderSortIcon = () => {
-    if (!column.sortable) return null;
+    // Se for uma coluna virtual ou não ordenável, não mostrar ícone
+    if (column.virtual || !column.sortable) return null;
 
     if (!sortingState) {
       return <ArrowUpDown className="text-muted-foreground ml-2 h-4 w-4" />;
@@ -129,6 +130,11 @@ const DataTableHeader = ({
 
   // Função para lidar com o clique no cabeçalho
   const handleHeaderClick = () => {
+    // Se for uma coluna virtual, não permitir ordenação nem filtro
+    if (column.virtual) {
+      return;
+    }
+
     if (menuOpen) {
       // Se o menu já está aberto, apenas fechamos
       setMenuOpen(false);

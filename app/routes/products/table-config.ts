@@ -1,8 +1,19 @@
 import type { TableConfig } from "~/lib/types/data-table";
 import { formatDisplayValue } from "~/lib/utils";
+import { renderProductActions } from "./product-actions";
 
 export const productTableConfig: TableConfig = {
   columns: [
+    {
+      accessor: "actions",
+      header: "Ações",
+      type: "text",
+      sortable: false,
+      filterable: false,
+      width: "120px",
+      renderCell: renderProductActions,
+      virtual: true,
+    },
     {
       accessor: "id",
       header: "ID",

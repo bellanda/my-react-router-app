@@ -843,44 +843,50 @@ export default function DataTable({ config, className }: DataTableProps) {
           // Determinar qual accessor usar para exibição (displayAccessor ou accessor)
           const accessorToUse = column.displayAccessor || column.accessor;
 
-          // Suporte a accessors aninhados usando notação de ponto ou __
-          const keys = accessorToUse.split(".");
+          // Para colunas virtuais ou com renderCell, pular o processamento do valor
           let value = row;
+          let displayValue: any = null;
 
-          // Processar accessors com notação de ponto (ex: additional_info.field)
-          for (const key of keys) {
-            // Verificar se estamos lidando com um campo adicional usando notação __
-            if (key.includes("__") && (!value || value[key] === undefined)) {
-              // Tentar extrair os valores usando o campo additional_info
-              // ex: group__name -> procurar em additional_info.group
-              const [prefix, field] = key.split("__");
+          // Se não for uma coluna virtual, processar o valor normalmente
+          if (!column.virtual) {
+            // Suporte a accessors aninhados usando notação de ponto ou __
+            const keys = accessorToUse.split(".");
 
-              // Verificar se temos additional_info e se o campo existe lá
-              if (
-                value?.additional_info &&
-                value.additional_info[field] !== undefined
-              ) {
-                value = value.additional_info[field];
-              } else if (value?.[key] !== undefined) {
-                // Se o campo com __ existir diretamente, usá-lo
-                value = value[key];
+            // Processar accessors com notação de ponto (ex: additional_info.field)
+            for (const key of keys) {
+              // Verificar se estamos lidando com um campo adicional usando notação __
+              if (key.includes("__") && (!value || value[key] === undefined)) {
+                // Tentar extrair os valores usando o campo additional_info
+                // ex: group__name -> procurar em additional_info.group
+                const [prefix, field] = key.split("__");
+
+                // Verificar se temos additional_info e se o campo existe lá
+                if (
+                  value?.additional_info &&
+                  value.additional_info[field] !== undefined
+                ) {
+                  value = value.additional_info[field];
+                } else if (value?.[key] !== undefined) {
+                  // Se o campo com __ existir diretamente, usá-lo
+                  value = value[key];
+                } else {
+                  // Se não encontramos o valor, definir como indefinido
+                  value = undefined;
+                  break;
+                }
               } else {
-                // Se não encontramos o valor, definir como indefinido
-                value = undefined;
-                break;
+                // Caso normal, sem __ no nome do campo
+                value = value?.[key];
+                if (value === undefined) break;
               }
-            } else {
-              // Caso normal, sem __ no nome do campo
-              value = value?.[key];
-              if (value === undefined) break;
             }
-          }
 
-          const displayValue = column.formatFn ? column.formatFn(value) : value;
+            displayValue = column.formatFn ? column.formatFn(value) : value;
+          }
 
           // Determinar classe CSS com base no tipo de coluna
           const cellClass = cn(
-            "py-2 px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm flex items-center",
+            "py-[2px] px-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm flex items-center",
             {
               "text-right justify-end": column.type === "number",
               "text-center justify-center": column.type === "boolean",
@@ -898,13 +904,17 @@ export default function DataTable({ config, className }: DataTableProps) {
                 minWidth: getColumnWidth(column),
                 maxWidth: getColumnWidth(column),
               }}
-              title={String(displayValue || "")}
+              title={column.renderCell ? undefined : String(displayValue || "")}
             >
-              <span className="w-full truncate">
-                {displayValue !== undefined && displayValue !== null
-                  ? displayValue
-                  : ""}
-              </span>
+              {column.renderCell ? (
+                column.renderCell(row)
+              ) : (
+                <span className="w-full truncate">
+                  {displayValue !== undefined && displayValue !== null
+                    ? displayValue
+                    : ""}
+                </span>
+              )}
             </div>
           );
         })}
