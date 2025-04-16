@@ -33,6 +33,23 @@ export function formatDisplayValue(
           ? "Sim"
           : "Não";
       case "date":
+        // Garantir que a data não seja afetada pelo fuso horário
+        if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          // Se é uma string no formato YYYY-MM-DD, separar os componentes
+          const parts = value.split("-");
+          // Formatar diretamente como DD/MM/YYYY sem criar objeto Date
+          return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else if (
+          typeof value === "string" &&
+          /^\d{4}-\d{2}-\d{2}T/.test(value)
+        ) {
+          // Para formato ISO, extrair apenas a parte da data
+          const datePart = value.split("T")[0];
+          const parts = datePart.split("-");
+          // Formatar diretamente como DD/MM/YYYY
+          return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        // Para outros formatos, tentar usar o método padrão (mas pode ter problemas de fuso horário)
         return new Date(value).toLocaleDateString("pt-BR");
       case "datetime":
         return new Date(value).toLocaleString("pt-BR");
@@ -63,7 +80,13 @@ export function uniqueId(): string {
 export function inferColumnType(columnName: string, sampleValue: any): string {
   if (sampleValue === null || sampleValue === undefined) {
     // Tentar inferir pelo nome
-    if (/date|data|dt_|created_at|updated_at/.test(columnName.toLowerCase())) {
+    if (
+      /datetime|timestamp|created_at|updated_at/.test(columnName.toLowerCase())
+    ) {
+      return "datetime";
+    }
+
+    if (/date|data|dt_/.test(columnName.toLowerCase())) {
       return "date";
     }
 

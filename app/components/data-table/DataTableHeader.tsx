@@ -327,36 +327,63 @@ const DataTableHeader = ({
 
   // Aplicar filtro do diálogo
   const applyDialogFilter = () => {
-    // Para filtros de data
-    if (column.type === "date") {
+    // Para filtros de data e datetime
+    if (column.type === "date" || column.type === "datetime") {
       let value;
 
       if (selectedFilterOperator === "range" && dateRange) {
         if (dateRange.from && dateRange.to) {
-          // Extrair apenas a parte da data (sem tempo)
-          const fromDate = new Date(dateRange.from);
-          fromDate.setHours(0, 0, 0, 0);
+          // Em vez de usar objetos Date, vamos formatar diretamente as datas
+          // para evitar problemas de fuso horário
+          const formatDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          };
 
-          const toDate = new Date(dateRange.to);
-          toDate.setHours(23, 59, 59, 999); // Fim do dia
+          const fromDateStr = formatDate(dateRange.from);
+          const toDateStr = formatDate(dateRange.to);
 
           onFilter({
             id: column.accessor,
             operator: selectedFilterOperator,
-            value: [
-              fromDate.toISOString().split("T")[0],
-              toDate.toISOString().split("T")[0],
-            ],
+            value: [fromDateStr, toDateStr],
+            _fieldType: column.type,
           });
         }
-      } else if (selectedDate) {
-        // Extrair apenas a parte da data (sem tempo) no formato ISO
+      } else if (
+        ["year", "month", "day"].includes(selectedFilterOperator) &&
+        selectedDate
+      ) {
+        // Para operadores específicos de data (ano, mês, dia)
         const date = new Date(selectedDate);
+        let value;
+
+        if (selectedFilterOperator === "year") {
+          value = date.getFullYear();
+        } else if (selectedFilterOperator === "month") {
+          value = date.getMonth() + 1; // JavaScript meses são 0-11
+        } else if (selectedFilterOperator === "day") {
+          value = date.getDate();
+        }
 
         onFilter({
           id: column.accessor,
           operator: selectedFilterOperator,
-          value: date.toISOString().split("T")[0], // Formato YYYY-MM-DD
+          value,
+          _fieldType: column.type,
+        });
+      } else if (selectedDate) {
+        // Extrair apenas a parte da data (sem tempo) no formato ISO
+        const date = new Date(selectedDate);
+        const dateStr = date.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+
+        onFilter({
+          id: column.accessor,
+          operator: selectedFilterOperator,
+          value: dateStr,
+          _fieldType: column.type,
         });
       }
     }
@@ -368,6 +395,7 @@ const DataTableHeader = ({
           id: column.accessor,
           operator: selectedFilterOperator,
           value: [Number(rangeValues[0]), Number(rangeValues[1])],
+          _fieldType: column.type,
         });
       }
     }
@@ -377,6 +405,7 @@ const DataTableHeader = ({
         id: column.accessor,
         operator: selectedFilterOperator,
         value: dialogFilterValue,
+        _fieldType: column.type,
       });
     }
 
@@ -413,8 +442,9 @@ const DataTableHeader = ({
       // Adicionar novo filtro
       onFilter({
         id: column.accessor,
-        operator: "exact",
+        operator: column.type === "datetime" ? "date" : "exact",
         value: value,
+        _fieldType: column.type,
       });
     }
 
@@ -481,10 +511,20 @@ const DataTableHeader = ({
         ];
       case "date":
         return [
-          { label: "Igual a", value: "date" as FilterOperator },
+          { label: "Igual a", value: "exact" as FilterOperator },
           { label: "Depois de", value: "gt" as FilterOperator },
           { label: "Antes de", value: "lt" as FilterOperator },
           { label: "Entre", value: "range" as FilterOperator },
+        ];
+      case "datetime":
+        return [
+          { label: "Na data", value: "date" as FilterOperator },
+          { label: "Depois de", value: "gt" as FilterOperator },
+          { label: "Antes de", value: "lt" as FilterOperator },
+          { label: "Entre", value: "range" as FilterOperator },
+          { label: "Ano", value: "year" as FilterOperator },
+          { label: "Mês", value: "month" as FilterOperator },
+          { label: "Dia", value: "day" as FilterOperator },
         ];
       case "boolean":
         return [
@@ -781,10 +821,16 @@ const DataTableHeader = ({
                             )}
                           </div>
                           <span className="flex-1 truncate">
-                            {column.type === "date" &&
+                            {(column.type === "date" ||
+                              column.type === "datetime") &&
                             typeof item.value === "string" &&
                             /^\d{4}-\d{2}-\d{2}$/.test(item.value)
-                              ? format(new Date(item.value), "dd/MM/yyyy")
+                              ? (() => {
+                                  // Formatar diretamente como DD/MM/YYYY sem criar objeto Date
+                                  // Isso evita qualquer problema com fuso horário
+                                  const parts = item.value.split("-");
+                                  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                })()
                               : column.type === "boolean" &&
                                   (item.value === true || item.value === false)
                                 ? item.value
@@ -821,13 +867,13 @@ const DataTableHeader = ({
                 {dialogOpen && (
                   <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center">
                     <div
-                      className={`bg-background ${selectedFilterOperator === "range" && column.type === "date" ? "w-auto min-w-[500px]" : "w-[300px]"} max-w-[90vw] rounded-md border p-4 shadow-lg`}
+                      className={`bg-background ${selectedFilterOperator === "range" && (column.type === "date" || column.type === "datetime") ? "w-auto min-w-[500px]" : "w-[300px]"} max-w-[90vw] rounded-md border p-4 shadow-lg`}
                     >
                       <h3 className="mb-3 text-sm font-medium">
                         Filtro personalizado
                       </h3>
 
-                      {column.type === "date" ? (
+                      {column.type === "date" || column.type === "datetime" ? (
                         <div className="mb-3">
                           {selectedFilterOperator === "range" ? (
                             <div className="space-y-2">
@@ -844,6 +890,36 @@ const DataTableHeader = ({
                                 <div className="text-center text-sm">
                                   {format(dateRange.from, "dd/MM/yyyy")} até{" "}
                                   {format(dateRange.to, "dd/MM/yyyy")}
+                                </div>
+                              )}
+                            </div>
+                          ) : ["year", "month", "day"].includes(
+                              selectedFilterOperator
+                            ) ? (
+                            <div className="space-y-2">
+                              <div className="mb-2 text-center text-sm">
+                                Selecione a data para extrair o{" "}
+                                {selectedFilterOperator === "year"
+                                  ? "ano"
+                                  : selectedFilterOperator === "month"
+                                    ? "mês"
+                                    : "dia"}
+                              </div>
+                              <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                initialFocus
+                                className="rounded-md border"
+                              />
+                              {selectedDate && (
+                                <div className="text-center text-sm">
+                                  {selectedFilterOperator === "year" &&
+                                    `Ano: ${selectedDate.getFullYear()}`}
+                                  {selectedFilterOperator === "month" &&
+                                    `Mês: ${selectedDate.getMonth() + 1}`}
+                                  {selectedFilterOperator === "day" &&
+                                    `Dia: ${selectedDate.getDate()}`}
                                 </div>
                               )}
                             </div>

@@ -33,7 +33,33 @@ import type {
 const FILTER_OPERATORS: Record<string, FilterOperator[]> = {
   text: ["contains", "exact", "startswith", "endswith", "isnull", "in"],
   number: ["exact", "lt", "lte", "gt", "gte", "range", "isnull", "in"],
-  date: ["exact", "lt", "lte", "gt", "gte", "range", "isnull", "in"],
+  date: [
+    "exact",
+    "lt",
+    "lte",
+    "gt",
+    "gte",
+    "range",
+    "year",
+    "month",
+    "day",
+    "isnull",
+    "in",
+  ],
+  datetime: [
+    "exact",
+    "lt",
+    "lte",
+    "gt",
+    "gte",
+    "range",
+    "date",
+    "year",
+    "month",
+    "day",
+    "isnull",
+    "in",
+  ],
   boolean: ["exact", "isnull", "in"],
 };
 
@@ -54,6 +80,7 @@ const OPERATOR_LABELS: Record<string, string> = {
   day: "Dia",
   week: "Semana",
   isnull: "É nulo",
+  in: "Em",
 };
 
 interface ColumnFilterProps {
@@ -69,6 +96,11 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
   onClose,
   endpoint,
 }) => {
+  console.log(`Inicializando ColumnFilter para ${column.header}`, {
+    type: column.type,
+    accessor: column.accessor,
+  });
+
   // Estado para operador selecionado
   const [operator, setOperator] = React.useState<FilterOperator>(
     FILTER_OPERATORS[column.type][0]
@@ -111,22 +143,51 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
   // Carregar valores únicos ao montar o componente
   React.useEffect(() => {
     const loadUniqueValues = async () => {
-      if (column.type === "text") {
+      if (
+        column.type === "text" ||
+        column.type === "date" ||
+        column.type === "datetime"
+      ) {
         try {
+          console.log(
+            `Carregando valores únicos para ${column.header} (${column.accessor}), tipo: ${column.type}, operador: ${operator}`
+          );
+
+          // Forçar o tipo correto
+          const columnType = column.type;
+
           const values = await fetchUniqueValues(
             endpoint || { url: "/api/products" },
             column.accessor,
-            searchTerm
+            searchTerm,
+            columnType
+          );
+          console.log(
+            `Valores únicos carregados para ${column.header}:`,
+            values
           );
           setUniqueValues(values);
+
+          // Resetar valores selecionados quando mudamos a lista de valores disponíveis
+          setSelectedUniqueValues([]);
         } catch (error) {
-          console.error("Erro ao carregar valores únicos:", error);
+          console.error(
+            `Erro ao carregar valores únicos para ${column.header}:`,
+            error
+          );
         }
       }
     };
 
     loadUniqueValues();
-  }, [column.accessor, column.type, searchTerm, endpoint]);
+  }, [
+    column.accessor,
+    column.type,
+    searchTerm,
+    endpoint,
+    column.header,
+    operator,
+  ]);
 
   // Lista de operadores disponíveis
   const operatorOptions = FILTER_OPERATORS[column.type];
@@ -137,16 +198,17 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
 
     let value;
     if (operator === "range") {
-      if (column.type === "date") {
+      if (column.type === "date" || column.type === "datetime") {
         if (dateRange?.from && dateRange?.to) {
-          // Enviar apenas a parte da data como strings no formato YYYY-MM-DD
-          const fromDate = new Date(dateRange.from);
-          const toDate = new Date(dateRange.to);
+          // Formatação correta para YYYY-MM-DD sem timezone
+          const formatDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          };
 
-          value = [
-            fromDate.toISOString().split("T")[0],
-            toDate.toISOString().split("T")[0],
-          ];
+          value = [formatDate(dateRange.from), formatDate(dateRange.to)];
         } else {
           value = null;
         }
@@ -155,21 +217,66 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
       }
     } else if (operator === "isnull") {
       value = true;
-    } else if (column.type === "text" && selectedUniqueValues.length > 0) {
+    } else if (operator === "in" && selectedUniqueValues.length > 0) {
+      // Usar os valores selecionados (não precisamos converter, pois já estão no formato correto)
       value = selectedUniqueValues;
-    } else if (column.type === "date" && filterValue) {
-      // Enviar apenas a parte da data como string no formato YYYY-MM-DD
-      const date = new Date(filterValue);
-      value = date.toISOString().split("T")[0];
+    } else if (
+      (column.type === "date" || column.type === "datetime") &&
+      filterValue
+    ) {
+      if (
+        operator === "year" ||
+        operator === "month" ||
+        operator === "day" ||
+        operator === "week"
+      ) {
+        // Para operadores de parte de data, extrair a parte correspondente
+        const date = new Date(filterValue);
+        if (operator === "year") {
+          value = date.getFullYear();
+        } else if (operator === "month") {
+          value = date.getMonth() + 1; // JavaScript meses são 0-11
+        } else if (operator === "day") {
+          value = date.getDate();
+        } else if (operator === "week") {
+          // Implementar cálculo da semana se necessário
+          value = 1; // Placeholder
+        }
+      } else {
+        // Formatação correta para YYYY-MM-DD sem usar timezone
+        const date = new Date(filterValue);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        value = `${year}-${month}-${day}`;
+      }
     } else {
       value = filterValue;
     }
 
-    onFilterChange({
+    console.log(
+      `Aplicando filtro para ${column.accessor} (${column.type}): ${operator} = `,
+      value
+    );
+
+    // Garantir que não enviamos valores nulos ou undefined para filtros que não sejam isnull
+    if ((value === null || value === undefined) && operator !== "isnull") {
+      console.log("Ignorando filtro com valor nulo ou undefined");
+      onClose();
+      return;
+    }
+
+    // Criar filtro com o tipo de campo explícito para permitir processamento correto
+    const filter = {
       id: column.accessor,
       operator,
       value,
-    });
+      _fieldType: column.type,
+    };
+
+    console.log("Filtro final enviado:", filter);
+
+    onFilterChange(filter);
 
     onClose();
   };
@@ -183,21 +290,50 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
 
   // Componente DatePicker para data única
   const DatePickerSingle = () => {
+    // Função para formatar a data para YYYY-MM-DD local
+    const handleDateSelect = (date: Date | undefined) => {
+      if (!date) {
+        setFilterValue(null);
+        return;
+      }
+
+      console.log("Data selecionada no calendário:", date);
+
+      // Armazenar o objeto Date para uso nos campos de filtro
+      setFilterValue(date);
+    };
+
     return (
       <div className="space-y-2">
         <Calendar
           mode="single"
           selected={filterValue}
-          onSelect={setFilterValue}
+          onSelect={handleDateSelect}
           initialFocus
           className="rounded-md border"
         />
+        {filterValue && (
+          <div className="text-muted-foreground mt-1 text-xs">
+            Data selecionada: {new Date(filterValue).toLocaleDateString()}
+          </div>
+        )}
       </div>
     );
   };
 
   // Componente DatePicker para intervalo de datas
   const DatePickerRange = () => {
+    const handleDateRangeSelect = (range: DateRange | undefined) => {
+      setDateRange(range);
+
+      if (range?.from && range?.to) {
+        console.log("Intervalo de datas selecionado:", {
+          from: range.from,
+          to: range.to,
+        });
+      }
+    };
+
     return (
       <div className="flex flex-col justify-center space-y-2">
         <Calendar
@@ -205,14 +341,14 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
           mode="range"
           defaultMonth={dateRange?.from}
           selected={dateRange}
-          onSelect={setDateRange}
+          onSelect={handleDateRangeSelect}
           numberOfMonths={2}
           className="mx-auto rounded-md border"
         />
         {dateRange?.from && dateRange?.to && (
           <div className="text-center text-sm">
-            {dateRange.from.toISOString().split("T")[0]} até{" "}
-            {dateRange.to.toISOString().split("T")[0]}
+            {dateRange.from.toLocaleDateString()} até{" "}
+            {dateRange.to.toLocaleDateString()}
           </div>
         )}
       </div>
@@ -221,6 +357,11 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
 
   // Renderizar o campo de entrada com base no tipo e operador
   const renderInputField = () => {
+    console.log(
+      `Renderizando campo de entrada para ${column.header} (${column.type}), operador: ${operator}`
+    );
+    console.log(`Valores únicos disponíveis: ${uniqueValues.length}`);
+
     if (operator === "isnull") {
       return (
         <div className="flex items-center space-x-2">
@@ -238,6 +379,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
       case "text":
         // Para valores únicos, exibimos o seletor de múltiplos
         if (uniqueValues && uniqueValues.length > 0) {
+          console.log("Renderizando seletor de valores únicos para texto");
           return (
             <Popover open={uniqueValueOpen} onOpenChange={setUniqueValueOpen}>
               <PopoverTrigger asChild>
@@ -295,6 +437,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
             </Popover>
           );
         } else {
+          console.log("Renderizando input de texto");
           return (
             <Input
               type="text"
@@ -355,10 +498,102 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
         );
 
       case "date":
-        if (operator === "range") {
+      case "datetime":
+        // Se estamos usando operador "in" e temos valores únicos, mostrar o seletor
+        if (operator === "in" && uniqueValues && uniqueValues.length > 0) {
+          console.log(
+            `Renderizando seletor de valores únicos para ${column.type}`,
+            uniqueValues
+          );
+          return (
+            <Popover open={uniqueValueOpen} onOpenChange={setUniqueValueOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={uniqueValueOpen}
+                  className="w-full justify-between"
+                >
+                  {selectedUniqueValues.length === 0
+                    ? "Selecione valores..."
+                    : `${selectedUniqueValues.length} selecionado(s)`}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Buscar datas..."
+                    value={searchTerm}
+                    onValueChange={setSearchTerm}
+                  />
+                  <CommandEmpty>Nenhuma data encontrada.</CommandEmpty>
+                  <CommandGroup>
+                    {uniqueValues.map((item: UniqueValueOption) => (
+                      <CommandItem
+                        key={String(item.value)}
+                        value={String(item.value)}
+                        onSelect={() => {
+                          const valueStr = String(item.value);
+                          setSelectedUniqueValues((prev) =>
+                            prev.includes(valueStr)
+                              ? prev.filter((v) => v !== valueStr)
+                              : [...prev, valueStr]
+                          );
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <Checkbox
+                            checked={selectedUniqueValues.includes(
+                              String(item.value)
+                            )}
+                            className="mr-2"
+                          />
+                          <span>{item.label}</span>
+                          <span className="text-muted-foreground ml-auto">
+                            ({item.count})
+                          </span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          );
+        } else if (operator === "range") {
+          console.log(`Renderizando seletor de intervalo para ${column.type}`);
           return <DatePickerRange />;
+        } else if (["year", "month", "day", "week"].includes(operator)) {
+          // Para operadores de parte de data, mostrar input numérico
+          console.log(`Renderizando input numérico para ${operator}`);
+          return (
+            <Input
+              type="number"
+              value={filterValue || ""}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFilterValue(parseInt(e.target.value, 10))
+              }
+              placeholder={`Digite o ${OPERATOR_LABELS[operator].toLowerCase()}...`}
+              className="w-full"
+              ref={inputRef}
+              min={operator === "year" ? 1900 : operator === "month" ? 1 : 1}
+              max={
+                operator === "year"
+                  ? 2100
+                  : operator === "month"
+                    ? 12
+                    : operator === "day"
+                      ? 31
+                      : 53
+              }
+              onKeyDown={handleKeyDown}
+            />
+          );
+        } else {
+          console.log(`Renderizando calendário para ${column.type}`);
+          return <DatePickerSingle />;
         }
-        return <DatePickerSingle />;
 
       case "boolean":
         return (
@@ -388,7 +623,18 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
             id="filter-operator"
             className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             value={operator}
-            onChange={(e) => setOperator(e.target.value as FilterOperator)}
+            onChange={(e) => {
+              const newOperator = e.target.value as FilterOperator;
+              console.log(
+                `Operador alterado: ${operator} -> ${newOperator} para coluna tipo ${column.type}`
+              );
+              setOperator(newOperator);
+              // Limpar valores quando o operador muda
+              setFilterValue(null);
+              setDateRange(undefined);
+              setRangeValues([null, null]);
+              setSelectedUniqueValues([]);
+            }}
           >
             {operatorOptions.map((op: FilterOperator) => (
               <option key={op} value={op}>

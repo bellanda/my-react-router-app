@@ -1,4 +1,4 @@
-import { index, prefix, route, layout } from "@react-router/dev/routes";
+import { index, layout, prefix, route } from "@react-router/dev/routes";
 
 import type { RouteConfig } from "@react-router/dev/routes";
 
@@ -26,6 +26,9 @@ export default [
     index("routes/products/index.tsx"),
     route(":produtoId", "routes/products/produto.tsx"),
   ]),
+
+  // Sales section (MainLayout)
+  route("sales", "routes/sales/layout.tsx", [index("routes/sales/index.tsx")]),
 
   // User section with prefixed routes (MainLayout)
   ...prefix("users", [

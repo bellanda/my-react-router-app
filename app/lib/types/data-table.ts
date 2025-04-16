@@ -1,4 +1,4 @@
-export type ColumnType = "text" | "number" | "date" | "boolean";
+export type ColumnType = "text" | "number" | "date" | "datetime" | "boolean";
 
 export type FilterOperator =
   | "exact"
@@ -13,7 +13,11 @@ export type FilterOperator =
   | "date"
   | "isnull"
   | "in"
-  | "remove";
+  | "remove"
+  | "year"
+  | "month"
+  | "day"
+  | "week";
 
 export interface ColumnDefinition {
   accessor: string;
@@ -50,6 +54,7 @@ export interface Filter {
   operator: FilterOperator;
   value: any;
   _updatedFilters?: Filter[];
+  _fieldType?: ColumnType;
 }
 
 export interface SortingState {

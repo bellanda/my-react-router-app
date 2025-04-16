@@ -59,6 +59,12 @@ const data = {
       items: [],
     },
     {
+      title: "Vendas",
+      url: "/sales",
+      icon: Package,
+      items: [],
+    },
+    {
       title: "Usuários",
       url: "/users",
       icon: User,

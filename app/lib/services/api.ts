@@ -180,6 +180,16 @@ export const convertFiltersToDjangoQuery = (
 ): Record<string, string> => {
   const queryParams: Record<string, string> = {};
 
+  console.log(
+    "Convertendo filtros para formato Django:",
+    JSON.stringify(filters, null, 2)
+  );
+
+  // Se não houver filtros, retornar objeto vazio
+  if (!filters || filters.length === 0) {
+    return queryParams;
+  }
+
   // Agrupar filtros pelo ID para processar valores múltiplos como __in
   const filterGroups: Record<string, Filter[]> = {};
 
@@ -197,6 +207,8 @@ export const convertFiltersToDjangoQuery = (
     }
   });
 
+  console.log("Filtros agrupados:", JSON.stringify(filterGroups, null, 2));
+
   // Processar cada grupo de filtros
   Object.entries(filterGroups).forEach(([id, filtersForId]) => {
     // Verificar se estamos lidando com operadores de comparação (gt, lt, etc.)
@@ -211,19 +223,36 @@ export const convertFiltersToDjangoQuery = (
       !filtersForId.some((f) => f.operator === "range") &&
       new Set(filtersForId.map((f) => f.operator)).size === 1 // todos operadores são iguais
     ) {
-      // Verificar se estamos lidando com um campo de data pelo formato do valor
-      const isDateField = filtersForId.some(
-        (f) =>
-          typeof f.value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f.value)
-      );
+      // Verificar tipo de campo pelo primeiro filtro do grupo
+      const firstFilter = filtersForId[0];
+      const isDateTimeField = firstFilter?._fieldType === "datetime";
+      const isDateField = firstFilter?._fieldType === "date";
 
-      // Construir o parâmetro com __in ou __date__in para datas
-      const paramName = isDateField ? `${id}__date__in` : `${id}__in`;
+      console.log(`Múltiplos valores de filtro para ${id}:`, {
+        isDateTimeField,
+        isDateField,
+        values: filtersForId.map((f) => f.value),
+        fieldType: firstFilter?._fieldType,
+      });
+
+      // Construir o parâmetro com __in para valores múltiplos
+      let paramName;
+      if (isDateTimeField) {
+        paramName = `${id}__date__in`; // Para datetime, sempre usar __date__in
+      } else if (isDateField) {
+        paramName = `${id}__in`; // Para date normal, usar __in sem __date
+      } else {
+        paramName = `${id}__in`; // Para outros tipos, usar __in
+      }
 
       // Juntar todos os valores como uma string separada por vírgulas
       queryParams[paramName] = filtersForId
         .map((f) => String(f.value))
         .join(",");
+
+      console.log(
+        `Parâmetro construído para múltiplos valores: ${paramName}=${queryParams[paramName]}`
+      );
     } else {
       // Caso contrário, processar cada filtro individualmente
       filtersForId.forEach((filter) => {
@@ -232,43 +261,86 @@ export const convertFiltersToDjangoQuery = (
         // Montar o parâmetro de filtro conforme o padrão Django
         let paramName;
 
-        // Verificar se é um valor de data pelo formato
-        const isDateValue =
-          (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) ||
-          (Array.isArray(value) &&
-            value.every(
-              (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)
-            ));
+        // Verificar o tipo do campo diretamente do filtro
+        const isDateTimeField = filter._fieldType === "datetime";
+        const isDateField = filter._fieldType === "date";
 
-        if (isDateValue) {
-          // Tratamento específico para filtros de data
+        console.log(`Processando filtro para ${id} (${filter._fieldType}):`, {
+          operator,
+          value,
+          isDateValue:
+            (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) ||
+            (Array.isArray(value) &&
+              value.every(
+                (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)
+              )),
+          isDateTimeField,
+          isDateField,
+        });
+
+        // Para campos datetime, sempre usar __date para todos os operadores
+        if (isDateTimeField) {
           if (operator === "range") {
             paramName = `${id}__date__range`;
-          } else if (operator === "date") {
-            paramName = `${id}__date`;
-          } else if (operator === "exact") {
-            paramName = `${id}__date`;
+          } else if (operator === "exact" || operator === "date") {
+            paramName = `${id}__date`; // Sempre usar __date para campos datetime
+          } else if (operator === "in") {
+            paramName = `${id}__date__in`;
+          } else if (["year", "month", "day", "week"].includes(operator)) {
+            paramName = `${id}__${operator}`;
           } else {
-            // Para outros operadores (gt, lt, etc.) adicionar __date ao id
+            // Para outros operadores (gt, lt, etc.)
             paramName = `${id}__date__${operator}`;
           }
-        } else {
-          // Para valores não-data, usar formatação padrão
+        }
+        // Para campos date, NUNCA adicionar o sufixo __date
+        else if (isDateField) {
+          if (operator === "range") {
+            paramName = `${id}__range`;
+          } else if (operator === "exact" || operator === "date") {
+            paramName = id; // Para date, NUNCA usar __date
+          } else if (operator === "in") {
+            paramName = `${id}__in`;
+          } else if (["year", "month", "day", "week"].includes(operator)) {
+            paramName = `${id}__${operator}`;
+          } else {
+            // Para outros operadores (gt, lt, etc.)
+            paramName = `${id}__${operator}`;
+          }
+        }
+        // Para valores não-data, usar formatação padrão
+        else {
           paramName = operator === "exact" ? id : `${id}__${operator}`;
         }
+
+        // Log adicional para diagnóstico
+        console.log(
+          `Montagem final do parâmetro: ${id} (${filter._fieldType}) -> ${paramName}`
+        );
 
         // Tratar diferentes tipos de valores
         if (operator === "range" && Array.isArray(value)) {
           queryParams[paramName] = `${value[0]},${value[1]}`;
         } else if (operator === "isnull") {
           queryParams[paramName] = value ? "True" : "False";
+        } else if (
+          ["year", "month", "day", "week"].includes(operator) &&
+          typeof value === "number"
+        ) {
+          // Para operadores de parte de data com valor numérico
+          queryParams[paramName] = String(value);
         } else {
           queryParams[paramName] = String(value);
         }
+
+        console.log(
+          `Parâmetro construído: ${paramName}=${queryParams[paramName]}`
+        );
       });
     }
   });
 
+  console.log("Parâmetros finais para query:", queryParams);
   return queryParams;
 };
 
@@ -497,6 +569,7 @@ export const fetchTableData = async (
     queryParams.set("page_size", String(pageSize));
 
     // Adicionar parâmetros de filtros
+    console.log("Construindo filtros para query:", filters);
     const filterParams = convertFiltersToDjangoQuery(filters);
     Object.entries(filterParams).forEach(([key, value]) => {
       queryParams.set(key, value);
@@ -508,6 +581,11 @@ export const fetchTableData = async (
         queryParams.set(key, String(value));
       });
     }
+
+    console.log(
+      "Query params construídos:",
+      Object.fromEntries(queryParams.entries())
+    );
 
     // Construir URL final
     const url = `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${queryParams.toString()}`;
@@ -683,7 +761,8 @@ export const fetchTableData = async (
 export const fetchUniqueValues = async (
   endpoint: ApiEndpoint,
   columnId: string,
-  searchTerm?: string
+  searchTerm?: string,
+  columnType?: string
 ) => {
   try {
     // Se a URL base da API não está configurada ou está vazia, lançar erro
@@ -705,14 +784,30 @@ export const fetchUniqueValues = async (
       : `${API_BASE_URL}${endpoint.url}`;
 
     // Construir URL com parâmetros
-    let url = `${baseUrl}unique/?column=${columnId}&range=0-100`;
+    let url;
+
+    if (columnType === "datetime") {
+      // Para datetime, usamos o sufixo __date para obter apenas as datas
+      url = `${baseUrl}unique/?column=${columnId}__date&range=0-500`;
+      console.log(
+        `Buscando valores únicos para coluna DATETIME ${columnId} com sufixo __date`
+      );
+    } else {
+      // Para outros tipos, incluindo date, usamos o nome da coluna normalmente
+      url = `${baseUrl}unique/?column=${columnId}&range=0-500`;
+      console.log(
+        `Buscando valores únicos para coluna tipo ${columnType} sem sufixo __date`
+      );
+    }
 
     // Adicionar parâmetro de pesquisa se fornecido
     if (searchTerm) {
       url += `&search=${encodeURIComponent(searchTerm)}`;
     }
 
-    if (DEBUG_API) console.log(`Tentando buscar valores únicos de: ${url}`);
+    console.log(
+      `Buscando valores únicos para ${columnId} (${columnType || "unknown"}): ${url}`
+    );
 
     // Usar requisição autenticada para valores únicos
     const response = await authenticatedFetch(url);
@@ -723,14 +818,15 @@ export const fetchUniqueValues = async (
 
     const data = await response.json();
 
-    if (DEBUG_API) console.log("Valores únicos da API:", data);
+    console.log(`Valores únicos recebidos para ${columnId}:`, data);
 
     // Determinar se estamos lidando com uma coluna de data pelo formato dos valores
     const isDateColumn =
       Array.isArray(data) &&
       data.length > 0 &&
       typeof data[0] === "string" &&
-      /^\d{4}-\d{2}-\d{2}/.test(data[0]);
+      (/^\d{4}-\d{2}-\d{2}$/.test(data[0]) ||
+        /^\d{4}-\d{2}-\d{2}T/.test(data[0]));
 
     // Verificar se estamos lidando com valores booleanos
     const isBooleanColumn =
@@ -753,12 +849,20 @@ export const fetchUniqueValues = async (
       if (
         isDateColumn &&
         typeof value === "string" &&
-        /^\d{4}-\d{2}-\d{2}/.test(value)
+        (/^\d{4}-\d{2}-\d{2}$/.test(value) || /^\d{4}-\d{2}-\d{2}T/.test(value))
       ) {
-        const dateObj = new Date(value);
+        // Extrair apenas a parte da data (YYYY-MM-DD) para formatos ISO
+        const datePart = value.split("T")[0];
+        const parts = datePart.split("-");
+
+        // Formatar diretamente como DD/MM/YYYY sem criar objeto Date
+        // Isso evita qualquer problema com fuso horário
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+        // Para filtros, devemos manter apenas a parte da data em YYYY-MM-DD
         return {
-          value, // Manter o valor original para o filtro
-          label: dateObj.toLocaleDateString("pt-BR"), // Formatar como DD/MM/YYYY
+          value: datePart, // Manter apenas a parte da data para o filtro (YYYY-MM-DD)
+          label: formattedDate, // Formatar como DD/MM/YYYY para exibição
           count: 1,
         };
       }
